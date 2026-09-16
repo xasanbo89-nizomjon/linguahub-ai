@@ -1,0 +1,2331 @@
+/* LinguaHub AI - component styles. Consumes tokens from theme.css only -
+   no repeated hardcoded colors/spacing/shadows here. Breakpoints used below:
+   1440px, 1280px, 1024px, 768px, 430px, 390px, 360px (see each @media). */
+
+*, *::before, *::after{
+box-sizing: border-box;
+}
+
+html, body{
+height: 100%;
+}
+
+body{
+margin: 0;
+background: var(--color-bg);
+color: var(--color-text);
+font-family: var(--font-family);
+font-size: var(--font-size-md);
+line-height: var(--line-height-normal);
+-webkit-font-smoothing: antialiased;
+transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard);
+}
+
+body.lh-scroll-locked{
+overflow: hidden;
+}
+
+/* WOW Effects is deliberately an opt-in enhancement. Its pseudo-elements
+   never receive pointer events; normal mode has none of these layers. */
+html[data-wow-effects] body::before,
+html[data-wow-effects] body::after{
+content: "";
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: var(--z-background);
+}
+
+html[data-wow-effects] body::before{
+background:
+radial-gradient(circle at 12% 16%, rgba(16,185,129,.10), transparent 20rem),
+radial-gradient(circle at 88% 80%, rgba(5,150,105,.08), transparent 24rem);
+}
+
+html[data-wow-effects] body::after{
+inset: 0;
+opacity: .38;
+background-image: radial-gradient(circle, rgba(5,150,105,.32) 1px, transparent 1.5px);
+background-size: 72px 72px;
+animation: lh-particles-drift 22s linear infinite;
+}
+
+html[data-wow-effects] .sidebar,
+html[data-wow-effects] .container,
+html[data-wow-effects] .lh-dialog{
+background: var(--color-glass);
+backdrop-filter: blur(var(--blur-md));
+-webkit-backdrop-filter: blur(var(--blur-md));
+box-shadow: var(--shadow-md), 0 0 0 1px rgba(16,185,129,.10);
+}
+
+html[data-wow-effects] .sidebar,
+html[data-wow-effects] .container{
+position: relative;
+overflow: hidden;
+}
+
+html[data-wow-effects] .sidebar::after,
+html[data-wow-effects] .container::after{
+content: "";
+position: absolute;
+inset: 0;
+pointer-events: none;
+border: 1px solid transparent;
+border-radius: inherit;
+background: linear-gradient(115deg, transparent 20%, rgba(16,185,129,.52), transparent 58%) border-box;
+mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+mask-composite: exclude;
+opacity: .58;
+animation: lh-border-shimmer 7s linear infinite;
+}
+
+html[data-wow-effects] .lh-mark{
+animation: lh-logo-glow 3.4s ease-in-out infinite;
+}
+
+html[data-wow-effects] #send-btn{
+box-shadow: 0 8px 22px rgba(5,150,105,.24), 0 0 0 1px rgba(255,255,255,.18) inset;
+}
+
+html[data-wow-effects] #send-btn:hover:not(:disabled){
+box-shadow: 0 10px 28px rgba(5,150,105,.34), 0 0 22px rgba(16,185,129,.22);
+transform: translateY(-1px);
+}
+
+html[data-wow-effects] :focus-visible{
+outline-color: var(--color-accent-vivid);
+box-shadow: 0 0 0 4px rgba(16,185,129,.16);
+transition: outline-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
+}
+
+html[data-wow-effects] button:not(:disabled),
+html[data-wow-effects] .conversation-item{
+transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+@keyframes lh-logo-glow{
+0%,100%{ box-shadow: 0 1px 2px rgba(5,150,105,.25), 0 0 10px rgba(16,185,129,.10); }
+50%{ box-shadow: 0 2px 8px rgba(5,150,105,.28), 0 0 20px rgba(16,185,129,.26); }
+}
+
+@keyframes lh-border-shimmer{
+from{ background-position: 0 0; }
+to{ background-position: 340px 0; }
+}
+
+@keyframes lh-particles-drift{
+from{ background-position: 0 0; }
+to{ background-position: 72px -144px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+html[data-wow-effects] body::after,
+html[data-wow-effects] .sidebar::after,
+html[data-wow-effects] .container::after,
+html[data-wow-effects] .lh-mark{ animation: none; }
+}
+
+h1, h2, h3, p{
+margin: 0;
+}
+
+button, input, textarea, select{
+font-family: inherit;
+color: inherit;
+}
+
+/* Base <button> look (solid green pill - what #send-btn and any other
+   unclassed button uses) PLUS its hover/active/focus-visible/disabled
+   states, all placed here deliberately - as early, low-specificity
+   "reset" rules, matching this file's own `button, input, textarea,
+   select{ color: inherit }` reset immediately above.
+
+   Why position matters here and nowhere else in this file: every
+   component button class below (.sidebar-icon-btn, .header-icon-btn,
+   .new-chat-btn, .message-action-btn, .code-block-copy-btn, etc.)
+   defines its OWN :hover/:active/:focus-visible with the exact same
+   specificity as `button:hover:not(:disabled)` (one class-or-pseudo
+   column each) - CSS only falls back to source order on a true tie, so
+   if this generic block appeared AFTER those component rules (as it
+   briefly did during Phase 14 implementation), it would win that tie
+   and silently force every button's hover into a solid dark-green fill
+   regardless of what the component rule intended (e.g. a light mint
+   hover tint), which also produced dark-on-dark-green text in several
+   places. Keeping this block first, before any component class, lets
+   every later same-specificity rule win by normal cascade order - no
+   !important, no inflated selectors needed. */
+button{
+padding: var(--space-3) var(--space-5);
+border: none;
+border-radius: var(--radius-xl);
+background: var(--color-accent);
+color: var(--color-accent-contrast);
+cursor: pointer;
+font-weight: 700;
+min-height: var(--touch-target-min);
+box-shadow: var(--shadow-sm);
+transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+button:hover:not(:disabled){
+background: var(--color-accent-hover);
+box-shadow: var(--glow-accent-strong);
+}
+
+button:active:not(:disabled){
+transform: scale(0.97);
+}
+
+button:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 2px;
+}
+
+button:disabled{
+background: var(--color-border-strong);
+color: var(--color-text-muted);
+cursor: not-allowed;
+box-shadow: none;
+}
+
+/* The [hidden] attribute's built-in `display: none` comes from the
+   browser's user-agent stylesheet, which loses to any author rule of equal
+   or higher specificity that also sets `display` (e.g. `.empty-state{
+   display: flex }`, `.user-profile{ display: flex }`) - author styles beat
+   UA styles regardless of specificity, so those elements stayed visible
+   even with hidden=true. Found via real browser testing (Phase 7): the
+   empty-state welcome card rendered on top of an active conversation.
+   Restores hidden's actual meaning everywhere in one place instead of
+   patching every affected component's CSS individually. */
+[hidden]{
+display: none !important;
+}
+
+/* Visible, consistent focus ring everywhere - never removed without a
+   replacement (Task 13: visible focus). */
+:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 2px;
+border-radius: var(--radius-sm);
+}
+
+.sr-only{
+position: absolute;
+width: 1px;
+height: 1px;
+padding: 0;
+margin: -1px;
+overflow: hidden;
+clip: rect(0,0,0,0);
+white-space: nowrap;
+border: 0;
+}
+
+/* ---------------------------------------------------------------------
+   App shell
+   --------------------------------------------------------------------- */
+
+body{
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.app-shell{
+width: 96%;
+max-width: 1400px;
+height: 92vh;
+display: flex;
+gap: var(--space-4);
+}
+
+/* ---- Sidebar ---- */
+
+.sidebar{
+width: var(--sidebar-width);
+flex-shrink: 0;
+background: var(--color-surface);
+border: 1px solid var(--color-border-hairline);
+border-radius: var(--radius-xl);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+box-shadow: var(--shadow-sm);
+transition: width var(--duration-slow) var(--ease-standard);
+}
+
+.sidebar-brand{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+padding: var(--space-4) var(--space-4) var(--space-3);
+}
+
+/* ---------------------------------------------------------------------
+   LH mark (Phase 14) - the one, official, reusable brand mark. Emerald
+   background, bold white "LH", a very subtle top-light gradient and an
+   even more subtle glow - never a robot/mascot/cartoon character
+   anywhere in this product. Used identically for the sidebar brand, the
+   header assistant identity, empty-state icon, and every assistant
+   message avatar - one logo system, sized via modifier classes only. */
+.lh-mark{
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+border-radius: var(--radius-md);
+background: linear-gradient(155deg, var(--color-accent-vivid), var(--color-accent));
+color: #ffffff;
+font-family: var(--font-family);
+font-weight: 700;
+line-height: 1;
+letter-spacing: -0.02em;
+box-shadow: 0 1px 2px rgba(5, 150, 105, 0.25);
+}
+
+.lh-mark-sm{
+width: 30px;
+height: 30px;
+font-size: 0.6875rem;
+border-radius: var(--radius-sm);
+}
+
+.lh-mark-md{
+width: 34px;
+height: 34px;
+font-size: var(--font-size-xs);
+}
+
+.lh-mark-lg{
+width: 56px;
+height: 56px;
+font-size: var(--font-size-md);
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow-xs), 0 0 24px rgba(16, 185, 129, 0.14);
+}
+
+.sidebar-brand-name{
+font-weight: 700;
+font-size: var(--font-size-lg);
+letter-spacing: -0.01em;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+/* Phase 14: var(--color-accent) is now the AA-verified solid-fill/text
+   shade (see theme.css's own comment on the accent/accent-vivid split) -
+   safe to use directly here, unlike the previous gold accent which
+   needed a separately darkened override for this exact usage. */
+.sidebar-brand-accent{
+color: var(--color-accent);
+}
+
+.sidebar-search{
+position: relative;
+padding: 0 var(--space-4) var(--space-3);
+}
+
+.sidebar-search-icon{
+position: absolute;
+left: calc(var(--space-4) + var(--space-2));
+top: 50%;
+transform: translateY(-50%);
+color: var(--color-text-muted);
+font-size: var(--font-size-md);
+pointer-events: none;
+}
+
+/* Subtle Ctrl K indicator - a real, wired shortcut (see www/app.js), not
+   just decoration; hidden below 1024px where a physical keyboard is
+   unlikely (see the responsive breakpoints section). */
+.sidebar-search-kbd{
+position: absolute;
+right: calc(var(--space-4) + var(--space-2));
+top: 50%;
+transform: translateY(-50%);
+padding: 1px 6px;
+border: 1px solid var(--color-border);
+border-radius: var(--radius-sm);
+background: var(--color-surface);
+color: var(--color-text-muted);
+font-family: var(--font-family);
+font-size: 0.6875rem;
+font-weight: 600;
+pointer-events: none;
+}
+
+.sidebar-search input{
+width: 100%;
+min-height: var(--touch-target-min);
+padding: var(--space-2) var(--space-8) var(--space-2) var(--space-8);
+border: 1px solid transparent;
+border-radius: var(--radius-md);
+background: var(--color-bg);
+color: var(--color-text);
+font-size: var(--font-size-sm);
+transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.sidebar-search input:focus-visible{
+border-color: var(--color-accent);
+outline: none;
+box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.conversation-list{
+flex: 1;
+overflow-y: auto;
+padding: 0 var(--space-2) var(--space-2);
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
+
+.conversation-item{
+position: relative;
+display: flex;
+align-items: center;
+gap: var(--space-2);
+padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+border-radius: var(--radius-md);
+cursor: pointer;
+background: transparent;
+border: none;
+transition: background-color var(--duration-fast) var(--ease-standard);
+min-height: var(--touch-target-min);
+}
+
+.conversation-item:hover{
+background: var(--color-bg);
+}
+
+/* Elegant accent: a soft-tinted background plus a thin accent bar on the
+   leading edge, not a full bordered box (Phase 13 - "selected conversation
+   uses elegant accent", less boxy than the previous full-outline treatment). */
+.conversation-item.active{
+background: var(--color-accent-soft);
+}
+
+.conversation-item.active::before{
+content: "";
+position: absolute;
+left: 2px;
+top: 20%;
+bottom: 20%;
+width: 3px;
+border-radius: var(--radius-full);
+background: var(--color-accent-vivid);
+box-shadow: var(--glow-accent);
+}
+
+.conversation-item:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: -2px;
+}
+
+.conversation-item-main{
+flex: 1;
+min-width: 0;
+display: flex;
+flex-direction: column;
+}
+
+.conversation-item-title{
+font-size: var(--font-size-sm);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+color: var(--color-text);
+}
+
+.conversation-item-meta{
+/* Font-size only, not opacity: --color-text-muted's exact value was
+   tuned against a real axe-core contrast scan (see theme.css's own
+   comment on this token, Phase 7) - adding opacity here would multiply
+   that already-carefully-tuned color and could silently drop it back
+   below the 4.5:1 WCAG AA threshold the token was specifically fixed to
+   meet. Size alone gives the same "less visually dominant" effect the
+   product-polish direction asks for, without touching contrast. */
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+}
+
+.conversation-item-actions{
+display: flex;
+gap: 2px;
+opacity: 0;
+transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.conversation-item:hover .conversation-item-actions,
+.conversation-item:focus-within .conversation-item-actions{
+opacity: 1;
+}
+
+.conversation-item-actions button{
+min-width: 32px;
+min-height: 32px;
+padding: var(--space-1);
+font-size: var(--font-size-sm);
+background: transparent;
+color: var(--color-text-muted);
+border: none;
+border-radius: var(--radius-sm);
+cursor: pointer;
+}
+
+.conversation-item-actions button:hover:not(:disabled){
+background: var(--color-surface-elevated);
+color: var(--color-text);
+}
+
+.conversation-empty-state{
+padding: var(--space-5);
+text-align: center;
+color: var(--color-text-muted);
+font-size: var(--font-size-sm);
+}
+
+/* ---------------------------------------------------------------------
+   Sidebar bottom section (Phase 14, approved order): account/profile
+   card, then New Chat, then utility controls. New Chat is deliberately
+   NOT at the top any more.
+   --------------------------------------------------------------------- */
+
+.sidebar-bottom{
+display: flex;
+flex-direction: column;
+gap: var(--space-2);
+padding: var(--space-3);
+border-top: 1px solid var(--color-border-hairline);
+}
+
+.sidebar-profile-card{
+display: flex;
+}
+
+.sidebar-profile-guest{
+width: 100%;
+display: flex;
+align-items: center;
+gap: var(--space-2);
+padding: var(--space-2);
+background: transparent;
+border: 1px solid transparent;
+border-radius: var(--radius-md);
+text-align: left;
+cursor: pointer;
+transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.sidebar-profile-guest:hover:not(:disabled){
+background: var(--color-accent-soft);
+border-color: var(--color-border-hairline);
+color: var(--color-text-secondary);
+}
+
+.sidebar-profile-text{
+display: flex;
+flex-direction: column;
+min-width: 0;
+gap: 1px;
+}
+
+.sidebar-profile-name{
+font-size: var(--font-size-sm);
+font-weight: 600;
+color: var(--color-text);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.sidebar-profile-sub{
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+/* Signed-in profile row reuses .user-profile/.user-avatar/.user-info
+   (unchanged structure/IDs, just relocated from the header - see
+   index.html) - only the outer padding/width needs to match the guest
+   row's footprint now that it lives in the sidebar. */
+.sidebar-profile-card .user-profile{
+width: 100%;
+padding: var(--space-2);
+}
+
+.sidebar-profile-card .user-info{
+flex: 1;
+min-width: 0;
+}
+
+/* Logout keeps its real label/function - just sized to match this row's
+   density (avatar + name/email + action) instead of the full-size button
+   used standalone elsewhere. Untested against real Firebase sign-in in
+   this phase (no Firebase project configured in this environment, same
+   as every prior phase) - verified by layout/contrast math only. */
+.sidebar-profile-card #logout-btn{
+flex-shrink: 0;
+padding: var(--space-1) var(--space-3);
+min-height: 32px;
+font-size: var(--font-size-xs);
+}
+
+/* New Chat (Phase 14): white/light surface with a green border and green
+   text/icon by default - a real, discoverable secondary-styled action,
+   not an oversized solid button. Hover adds a soft green tint and a
+   subtle glow (see --glow-accent, theme.css). */
+.new-chat-btn{
+display: flex;
+align-items: center;
+justify-content: center;
+gap: var(--space-2);
+width: 100%;
+min-height: var(--touch-target-min);
+padding: var(--space-2) var(--space-4);
+background: var(--color-surface);
+color: var(--color-accent);
+border: 1px solid var(--color-accent-vivid);
+border-radius: var(--radius-full);
+font-size: var(--font-size-sm);
+font-weight: 600;
+cursor: pointer;
+transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+.new-chat-btn-icon{
+font-size: var(--font-size-md);
+line-height: 1;
+}
+
+.new-chat-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+box-shadow: var(--glow-accent);
+}
+
+.new-chat-btn:active:not(:disabled){
+transform: scale(0.98);
+}
+
+.new-chat-btn:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 2px;
+}
+
+.sidebar-footer{
+display: flex;
+gap: var(--space-1);
+}
+
+/* Compact icon-only actions (Export/Import/Settings/theme) - Phase 13: these
+   used to be three full text-labeled bordered buttons crowding the sidebar
+   footer; a real accessible label survives for every user via the
+   sr-only span each button still contains (and the title= tooltip for
+   sighted mouse users), so nothing here is a functionality reduction. */
+.sidebar-icon-btn{
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+min-height: var(--touch-target-min);
+padding: var(--space-2);
+font-size: var(--font-size-md);
+text-align: center;
+background: transparent;
+color: var(--color-text-secondary);
+border: 1px solid transparent;
+border-radius: var(--radius-md);
+cursor: pointer;
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.sidebar-icon-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+color: var(--color-accent);
+}
+
+.sidebar-icon-btn:active:not(:disabled){
+transform: scale(0.96);
+}
+
+.sidebar-icon-btn:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 1px;
+}
+
+.sidebar-import-label{
+cursor: pointer;
+}
+
+.history-status{
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+padding: 0 var(--space-4) var(--space-2);
+min-height: 14px;
+}
+
+.sidebar-collapse-btn{
+margin-left: auto;
+width: 32px;
+height: 32px;
+min-height: 0;
+padding: 0;
+background: transparent;
+color: var(--color-text-muted);
+border: 1px solid var(--color-border);
+border-radius: var(--radius-sm);
+font-size: var(--font-size-sm);
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.sidebar-collapse-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+color: var(--color-accent);
+border-color: var(--color-accent-vivid);
+}
+
+.sidebar-collapse-btn:active:not(:disabled){
+transform: scale(0.92);
+}
+
+.sidebar-collapse-btn:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 1px;
+}
+
+/* Collapsed desktop sidebar: icons-only rail. Text labels hide, layout
+   stays intact (no reflow of the main content width beyond the rail). */
+.app-shell.sidebar-collapsed .sidebar{
+width: var(--sidebar-width-collapsed);
+}
+.app-shell.sidebar-collapsed .sidebar-brand-name,
+.app-shell.sidebar-collapsed .sidebar-search,
+.app-shell.sidebar-collapsed .conversation-item-main,
+.app-shell.sidebar-collapsed .conversation-item-actions,
+.app-shell.sidebar-collapsed .history-status,
+.app-shell.sidebar-collapsed .new-chat-btn span:not(.new-chat-btn-icon),
+.app-shell.sidebar-collapsed .sidebar-profile-text,
+.app-shell.sidebar-collapsed .user-info{
+display: none;
+}
+.app-shell.sidebar-collapsed .new-chat-btn{
+justify-content: center;
+padding-left: 0;
+padding-right: 0;
+}
+.app-shell.sidebar-collapsed .sidebar-collapse-btn{
+transform: rotate(180deg);
+}
+/* .sidebar-footer's 4 icons (theme/export/import/settings) are laid out
+   in a horizontal row (flex:1 each) for the full-width sidebar - inside
+   the 72px collapsed rail that squeezes all 4 into slivers a few px
+   wide, unreadable/unclickable (found via real screenshot review, Phase
+   14 regression pass - this got worse specifically because this phase
+   added a 4th icon, quick-theme-btn, to what was previously 3). Stack
+   them vertically instead, each at its natural (--touch-target-min)
+   size rather than stretched to fill available height. */
+.app-shell.sidebar-collapsed .sidebar-footer{
+flex-direction: column;
+}
+.app-shell.sidebar-collapsed .sidebar-icon-btn{
+flex: 0 0 auto;
+}
+
+/* ---- Buttons (shared) ---- */
+
+.auth-btn, .lh-btn{
+padding: var(--space-2) var(--space-4);
+font-size: var(--font-size-sm);
+border: 1px solid transparent;
+border-radius: var(--radius-md);
+background: var(--color-accent);
+color: var(--color-accent-contrast);
+cursor: pointer;
+font-weight: 600;
+min-height: var(--touch-target-min);
+transition: background-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+.auth-btn:hover:not(:disabled), .lh-btn:hover:not(:disabled){
+background: var(--color-accent-hover);
+}
+
+.auth-btn:active:not(:disabled), .lh-btn:active:not(:disabled){
+transform: scale(0.98);
+}
+
+.auth-btn:disabled, .lh-btn:disabled{
+background: var(--color-border-strong);
+color: var(--color-text-muted);
+cursor: not-allowed;
+}
+
+.auth-btn-secondary, .lh-btn-secondary{
+background: var(--color-surface-elevated);
+color: var(--color-text);
+border-color: var(--color-border);
+}
+
+.auth-btn-secondary:hover:not(:disabled), .lh-btn-secondary:hover:not(:disabled){
+background: var(--color-bg);
+}
+
+.lh-btn-danger{
+background: var(--color-danger);
+color: #fff;
+}
+
+.lh-btn-danger:hover:not(:disabled){
+filter: brightness(1.08);
+}
+
+/* Guest account state, disabled/enabled (Phase 14 - moved into the
+   sidebar profile card, see .sidebar-profile-guest above for the resting/
+   hover styles). This is deliberately understated in every state - a
+   real, working sign-in call-to-action when Firebase is configured, and
+   an unobtrusive, honestly-disabled item when it isn't - never a large
+   dominant element either way. Real login logic (www/auth.js,
+   www/app.js) is unchanged. */
+.sidebar-profile-guest:disabled{
+color: var(--color-text-muted);
+cursor: not-allowed;
+opacity: 0.7;
+}
+
+.sidebar-profile-guest:disabled .lh-mark{
+filter: grayscale(0.4);
+box-shadow: none;
+}
+
+/* Compact icon-only header action (Clear chat). A single quiet icon
+   button in place of the previous bordered text button - "reduce
+   visually heavy buttons" / "minimal action menu" (Phase 13). */
+.header-icon-btn{
+display: flex;
+align-items: center;
+justify-content: center;
+width: var(--touch-target-min);
+min-height: var(--touch-target-min);
+padding: 0;
+font-size: var(--font-size-md);
+background: transparent;
+color: var(--color-text-secondary);
+border: none;
+border-radius: var(--radius-md);
+cursor: pointer;
+flex-shrink: 0;
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+.header-icon-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+color: var(--color-accent);
+}
+
+.header-icon-btn:active:not(:disabled){
+transform: scale(0.94);
+}
+
+.header-icon-btn:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 1px;
+}
+
+/* ---------------------------------------------------------------------
+   Main column
+   --------------------------------------------------------------------- */
+
+.container{
+flex: 1;
+min-width: 0;
+background: var(--color-surface);
+border: 1px solid var(--color-border-hairline);
+border-radius: var(--radius-xl);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+box-shadow: var(--shadow-sm);
+}
+
+.header{
+padding: var(--space-3) var(--space-5);
+background: var(--color-glass);
+backdrop-filter: blur(var(--blur-md));
+-webkit-backdrop-filter: blur(var(--blur-md));
+border-bottom: 1px solid var(--color-border-hairline);
+display: flex;
+align-items: center;
+gap: var(--space-3);
+flex-wrap: wrap;
+position: relative;
+z-index: var(--z-header);
+}
+
+#sidebar-toggle-btn{
+display: none;
+width: 40px;
+height: 40px;
+min-height: 0;
+padding: 0;
+background: transparent;
+border: none;
+color: var(--color-text-secondary);
+border-radius: var(--radius-md);
+flex-shrink: 0;
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+#sidebar-toggle-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+color: var(--color-accent);
+}
+
+.header-title-group{
+flex: 1;
+min-width: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+gap: 2px;
+}
+
+.header-conversation-title{
+font-size: var(--font-size-md);
+font-weight: 600;
+letter-spacing: -0.005em;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.status-bar{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+min-height: 16px;
+}
+
+/* Reusable context chip (Phase 13 / future LinguaHub integration -
+   see docs/linguahub-ai-integration-handoff.md). Hidden and unpopulated
+   by default - [hidden] already forces display:none (see the global
+   rule near the top of this file), so this rule only governs its
+   appearance for whenever a future phase actually shows it. */
+.context-chip{
+display: flex;
+align-items: center;
+gap: var(--space-1);
+padding: 2px var(--space-2) 2px var(--space-1);
+border-radius: var(--radius-full);
+background: var(--color-bg);
+border: 1px solid var(--color-border-hairline);
+font-size: var(--font-size-xs);
+font-weight: 600;
+color: var(--color-text-muted);
+transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+/* Future-ready hook (Phase 14): once a future LinguaHub-embedded phase
+   actually has real page context to show, toggling this class is the
+   intended way to visually promote the chip from "quiet default" to
+   "carries real information" - a subtle glow, per the approved design
+   direction's "active context chip" glow example. Inert today (nothing
+   in this codebase adds this class yet - no fake context, no fake glow). */
+.context-chip.has-context{
+background: var(--color-accent-soft);
+color: var(--color-text-secondary);
+box-shadow: var(--glow-accent);
+}
+
+.context-chip-dot{
+width: 5px;
+height: 5px;
+border-radius: 50%;
+background: var(--color-accent-vivid);
+flex-shrink: 0;
+}
+
+.context-chip-text{
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+max-width: 260px;
+}
+
+/* Static green "online" indicator by default (Phase 14 - "● Online"),
+   pulsing during active generation - an honest distinction between "the
+   app is ready" and "actively working", not just a re-hue. */
+.status-dot{
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: var(--color-accent-vivid);
+flex-shrink: 0;
+transition: background-color var(--duration-base) var(--ease-standard);
+}
+
+.status-dot.active{
+background: var(--color-success);
+animation: lh-pulse 1.4s ease-in-out infinite;
+}
+
+#status{
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+min-height: 14px;
+}
+
+.header-controls{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+flex-wrap: wrap;
+}
+
+.wow-mode-btn{
+display: inline-flex;
+align-items: center;
+gap: 6px;
+min-height: var(--touch-target-min);
+padding: var(--space-2) var(--space-3);
+border: 1px solid var(--color-border-hairline);
+background: var(--color-surface);
+color: var(--color-text-secondary);
+font-size: var(--font-size-xs);
+letter-spacing: .055em;
+box-shadow: none;
+}
+
+.wow-mode-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+color: var(--color-accent);
+box-shadow: var(--glow-accent);
+transform: translateY(-1px);
+}
+
+.wow-mode-btn[aria-pressed="true"]{
+border-color: rgba(16,185,129,.44);
+background: linear-gradient(135deg, rgba(16,185,129,.16), rgba(52,211,153,.06));
+color: var(--color-accent);
+box-shadow: 0 0 18px rgba(16,185,129,.15);
+}
+
+#mode-select{
+background: transparent;
+color: var(--color-text-secondary);
+border: 1px solid var(--color-border-hairline);
+border-radius: var(--radius-full);
+padding: var(--space-2) var(--space-3);
+font-size: var(--font-size-sm);
+font-weight: 600;
+min-height: var(--touch-target-min);
+transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+}
+
+#mode-select:hover{
+background: var(--color-bg);
+border-color: var(--color-border);
+}
+
+#mode-select:focus-visible{
+border-color: var(--color-accent-vivid);
+box-shadow: var(--glow-accent);
+}
+
+/* #clear-chat-btn is styled entirely by the shared .header-icon-btn class
+   now (Phase 13) - no ID-specific rule needed. */
+
+.auth-area{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+}
+
+.user-profile{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+position: relative;
+}
+
+.user-avatar, .user-avatar-fallback{
+width: 32px;
+height: 32px;
+border-radius: 50%;
+object-fit: cover;
+flex-shrink: 0;
+}
+
+.user-avatar-fallback{
+display: flex;
+align-items: center;
+justify-content: center;
+background: var(--color-accent);
+color: var(--color-accent-contrast);
+font-weight: 700;
+font-size: var(--font-size-sm);
+}
+
+.user-info{
+display: flex;
+flex-direction: column;
+line-height: 1.2;
+max-width: 140px;
+}
+
+.user-name{
+font-size: var(--font-size-sm);
+font-weight: 600;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.user-email{
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+#auth-status{
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+padding: 0 var(--space-5);
+min-height: 14px;
+}
+
+/* ---------------------------------------------------------------------
+   Chat area
+   --------------------------------------------------------------------- */
+
+.chat-scroll-wrapper{
+position: relative;
+flex: 1;
+min-height: 0;
+display: flex;
+}
+
+/* Extremely subtle abstract background detail (approved design direction:
+   "may include a very subtle abstract green visual pattern... must NEVER
+   reduce text readability"). Two soft, static radial gradients, no
+   animation, no image asset, opacity low enough that it reads as a
+   faint room-tone rather than a visible shape - verified by eye against
+   real chat content, and left out of dark mode entirely (a dark
+   background makes even this faint a highlight noticeably more visible,
+   and the approved direction is explicit that dark mode stays
+   restrained). Purely decorative and inert - never intercepts a click
+   (pointer-events: none) and sits behind every real child, which all
+   explicitly use var(--z-content) below - it needs no z-index of its own
+   (generated content paints first/behind at the implicit level). */
+.chat-scroll-wrapper::before{
+content: "";
+position: absolute;
+inset: 0;
+pointer-events: none;
+background-image:
+radial-gradient(ellipse 640px 420px at 12% 8%, rgba(16, 185, 129, 0.05), transparent 65%),
+radial-gradient(ellipse 560px 380px at 88% 92%, rgba(5, 150, 105, 0.04), transparent 65%);
+}
+
+:root[data-theme="dark"] .chat-scroll-wrapper::before{
+display: none;
+}
+
+.chat-box{
+position: relative;
+z-index: var(--z-content);
+flex: 1;
+padding: var(--space-6) var(--space-5);
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: var(--space-5);
+scroll-behavior: smooth;
+}
+
+.chat-box, .empty-state, .message-content{
+max-width: 100%;
+}
+
+.message{
+display: flex;
+flex-direction: column;
+gap: var(--space-1);
+max-width: min(800px, 88%);
+align-self: flex-start;
+}
+
+.message.user{
+align-self: flex-end;
+align-items: flex-end;
+max-width: min(640px, 80%);
+}
+
+/* Assistant messages: a two-column grid (LH avatar | text column) rather
+   than the vertical flex stack .message/.message.user use - the avatar
+   spans every row in the text column (content, status label, actions)
+   regardless of how many of those exist or get replaced later (see
+   www/app.js's refreshMessageActions/setMessageStatusLabel, which append
+   directly to .message - grid-column placement on the children handles
+   this correctly without any JS change). */
+.message.ai{
+align-self: flex-start;
+display: grid;
+grid-template-columns: 34px 1fr;
+column-gap: var(--space-3);
+row-gap: var(--space-1);
+max-width: min(840px, 90%);
+}
+
+.message-avatar{
+grid-column: 1;
+grid-row: 1 / -1;
+}
+
+.message.ai .message-content,
+.message.ai .message-status-label,
+.message.ai .message-actions{
+grid-column: 2;
+}
+
+.message-content{
+word-wrap: break-word;
+overflow-wrap: anywhere;
+white-space: pre-wrap;
+line-height: var(--line-height-relaxed);
+}
+
+.message.user .message-content{
+padding: var(--space-2) var(--space-4);
+border-radius: var(--radius-lg);
+background: var(--color-accent);
+color: var(--color-accent-contrast);
+border-bottom-right-radius: var(--radius-sm);
+box-shadow: var(--shadow-xs);
+}
+
+/* Assistant replies are text-first with minimal container treatment
+   (Phase 13 - "reduce heavy boxed layout" was the single most-requested
+   change): no border, no card background, generous horizontal padding
+   only - the reply simply reads as part of the page, closer to a
+   document than a dashboard tile. The error state below remains a real,
+   visually distinct exception on purpose (a failure is meaningfully
+   different information, not decoration). */
+.message.ai .message-content{
+padding: 0 var(--space-1);
+background: transparent;
+color: var(--color-text);
+}
+
+.message.ai.error .message-content{
+padding: var(--space-3) var(--space-4);
+border-radius: var(--radius-lg);
+background: var(--color-danger-soft);
+border: 1px solid var(--color-danger);
+color: var(--color-text);
+}
+
+.message-avatar{
+margin-top: 2px;
+}
+
+.message-content pre{
+overflow-x: auto;
+max-width: 100%;
+padding: var(--space-3);
+border-radius: var(--radius-md);
+/* Fixed dark color, not an alpha-blend (was rgba(0,0,0,0.28)): that
+   overlay's effective color depended on whatever surface sat behind it,
+   which in light theme blended down to only a medium gray (~#b2b0ad) - far
+   too light for the syntax-highlighter's token colors below (.tok-keyword
+   etc., lifted from a real dark editor theme), which measured as low as
+   1.28:1 contrast there (a real axe-core scan, Phase 7; WCAG AA needs
+   4.5:1). A fixed near-black background matches what those token colors
+   were actually designed against, in both themes. */
+background: #14151a;
+color: #f1efe9;
+font-family: var(--font-family-mono);
+font-size: var(--font-size-sm);
+}
+
+.message-content code{
+font-family: var(--font-family-mono);
+font-size: 0.9em;
+}
+
+.message-content table{
+display: block;
+overflow-x: auto;
+max-width: 100%;
+border-collapse: collapse;
+}
+
+.message-content a{
+color: inherit;
+text-decoration: underline;
+word-break: break-all;
+}
+
+.message-actions{
+display: flex;
+gap: var(--space-1);
+opacity: 0;
+transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.message:hover .message-actions,
+.message:focus-within .message-actions{
+opacity: 1;
+}
+
+.message-action-btn{
+min-width: 30px;
+min-height: 30px;
+padding: 0 var(--space-2);
+font-size: var(--font-size-xs);
+background: transparent;
+border: 1px solid var(--color-border-hairline);
+border-radius: var(--radius-sm);
+color: var(--color-text-muted);
+cursor: pointer;
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.message-action-btn:hover:not(:disabled){
+color: var(--color-accent);
+background: var(--color-accent-soft);
+border-color: var(--color-border);
+}
+
+.message-action-btn:active:not(:disabled){
+transform: scale(0.94);
+}
+
+.message-action-btn:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 1px;
+}
+
+/* Streamed tokens must never animate individually (Task 12/16: no
+   animation per token) - only the message's initial appearance animates. */
+.message{
+animation: lh-message-in var(--duration-base) var(--ease-standard);
+}
+
+.scroll-to-bottom-btn{
+position: absolute;
+bottom: var(--space-4);
+left: 50%;
+transform: translateX(-50%);
+padding: var(--space-2) var(--space-4);
+border-radius: var(--radius-full);
+background: var(--color-surface-elevated);
+color: var(--color-text);
+border: 1px solid var(--color-border-strong);
+box-shadow: var(--shadow-md);
+font-size: var(--font-size-xs);
+cursor: pointer;
+z-index: 5;
+transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.scroll-to-bottom-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+border-color: var(--color-accent-vivid);
+color: var(--color-accent);
+box-shadow: var(--glow-accent);
+}
+
+/* ---- Empty state ---- */
+
+.empty-state{
+position: relative;
+z-index: var(--z-content);
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+padding: var(--space-6);
+gap: var(--space-2);
+overflow-y: auto;
+}
+
+.empty-state-icon{
+display: flex;
+align-items: center;
+justify-content: center;
+width: 56px;
+height: 56px;
+margin: 0 auto;
+border-radius: 50%;
+background: linear-gradient(155deg, var(--color-accent-soft), transparent);
+border: 1px solid var(--color-border-hairline);
+color: var(--color-accent);
+font-size: 22px;
+line-height: 1;
+}
+
+.empty-state-title{
+font-size: var(--font-size-xl);
+font-weight: 700;
+letter-spacing: -0.01em;
+}
+
+.empty-state-subtitle{
+color: var(--color-text-secondary);
+max-width: 440px;
+}
+
+.empty-state-cards{
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 240px));
+gap: var(--space-2);
+margin-top: var(--space-6);
+max-width: 560px;
+}
+
+.empty-state-card{
+display: flex;
+align-items: flex-start;
+gap: var(--space-2);
+text-align: left;
+padding: var(--space-3);
+border-radius: var(--radius-lg);
+border: 1px solid var(--color-border-hairline);
+background: var(--color-surface);
+color: var(--color-text);
+cursor: pointer;
+font-size: var(--font-size-sm);
+min-height: var(--touch-target-min);
+transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+}
+
+.empty-state-card:hover:not(:disabled){
+border-color: var(--color-accent-vivid);
+background: var(--color-surface-elevated);
+box-shadow: var(--glow-accent);
+transform: translateY(-1px);
+}
+
+.empty-state-card:active:not(:disabled){
+transform: translateY(0) scale(0.98);
+}
+
+.empty-state-card:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 2px;
+}
+
+.empty-state-card-icon{
+flex-shrink: 0;
+width: 26px;
+height: 26px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: var(--radius-sm);
+background: var(--color-accent-soft);
+color: var(--color-accent);
+font-size: var(--font-size-sm);
+}
+
+.empty-state-card-text{
+display: flex;
+flex-direction: column;
+min-width: 0;
+}
+
+.empty-state-card-label{
+display: block;
+font-weight: 600;
+margin-bottom: 2px;
+}
+
+.empty-state-card-hint{
+display: block;
+color: var(--color-text-muted);
+font-size: var(--font-size-xs);
+}
+
+/* ---- Composer ---- */
+/* Outer wrapper: owns the glass background/border/safe-area padding.
+   .controls (the textarea+Send row) is now purely a flex layout inside
+   it - this split is what lets .composer-hint sit below the input row
+   without inheriting its own padding twice (Phase 13). */
+.composer{
+border-top: 1px solid var(--color-border-hairline);
+background: var(--color-glass);
+backdrop-filter: blur(var(--blur-md));
+-webkit-backdrop-filter: blur(var(--blur-md));
+padding: var(--space-3) var(--space-4);
+/* Safe-area support for mobile devices with a home indicator/gesture
+   bar (Phase 13 - previously absent entirely). max() keeps the existing
+   visual spacing on devices with no inset (env() resolves to 0 there). */
+padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+transition: box-shadow var(--duration-base) var(--ease-standard);
+}
+
+/* The whole composer surface picks up a soft glow when anything inside
+   it has focus (not just the textarea's own ring below) - "one of the
+   most important components" per the approved design direction. */
+.composer:focus-within{
+box-shadow: var(--glow-accent);
+}
+
+html[data-wow-effects] .composer{
+border-top-color: rgba(16,185,129,.24);
+box-shadow: 0 -8px 28px rgba(5,150,105,.08);
+}
+
+html[data-wow-effects] .composer:focus-within{
+box-shadow: 0 -8px 28px rgba(5,150,105,.13), 0 0 0 1px rgba(16,185,129,.20);
+}
+
+.controls{
+display: flex;
+align-items: flex-end;
+gap: var(--space-2);
+max-width: var(--composer-max-width);
+margin: 0 auto;
+}
+
+textarea{
+flex: 1;
+padding: var(--space-3) var(--space-4);
+border: 1px solid var(--color-border-hairline);
+outline: none;
+border-radius: var(--radius-xl);
+resize: none;
+font-size: var(--font-size-md);
+font-family: inherit;
+background: var(--color-surface);
+color: var(--color-text);
+max-height: 200px;
+overflow-y: auto;
+box-shadow: var(--shadow-xs);
+transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+textarea:focus-visible{
+border-color: var(--color-accent-vivid);
+box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+textarea:disabled{
+opacity: 0.7;
+}
+
+.composer-hint{
+max-width: var(--composer-max-width);
+margin: var(--space-1) auto 0;
+padding: 0 var(--space-2);
+font-size: 0.6875rem;
+color: var(--color-text-muted);
+text-align: center;
+}
+
+#send-btn.is-stop{
+background: var(--color-danger);
+color: #fff;
+box-shadow: var(--shadow-sm);
+}
+
+.voice-ptt-btn{
+min-width: var(--touch-target-min);
+padding: var(--space-2);
+border: 1px solid var(--color-border-hairline);
+background: var(--color-surface);
+color: var(--color-accent);
+box-shadow: none;
+}
+.voice-ptt-btn.is-recording{ background: var(--color-accent); color: var(--color-accent-contrast); animation: lh-pulse 1.2s ease-in-out infinite; }
+
+.tutor-dashboard{ width: min(760px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 32px)); overflow: auto; position: relative; background: var(--color-glass); backdrop-filter: blur(var(--blur-lg)); -webkit-backdrop-filter: blur(var(--blur-lg)); }
+.tutor-dashboard-close{ position: absolute; top: var(--space-3); right: var(--space-3); min-width: 36px; min-height: 36px; padding: 0; background: transparent; color: var(--color-text-secondary); box-shadow: none; font-size: 1.4rem; }
+.tutor-dashboard-heading{ display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-5); }.tutor-dashboard-heading h2{ font-size:var(--font-size-xl); }.tutor-dashboard-heading p{ color:var(--color-text-muted); font-size:var(--font-size-sm); }
+.tutor-stats{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--space-2); }.tutor-stats article{ padding:var(--space-3); border:1px solid var(--color-border-hairline); border-radius:var(--radius-lg); background:var(--color-surface); box-shadow:var(--shadow-xs); transition:transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard); }.tutor-stats article:hover{ transform:translateY(-2px); box-shadow:var(--glow-accent); }.tutor-stats strong{ display:block; color:var(--color-accent); font-size:var(--font-size-xl); }.tutor-stats span{ color:var(--color-text-muted); font-size:var(--font-size-xs); }
+.tutor-level{ margin:var(--space-5) 0; padding:var(--space-3); border-radius:var(--radius-lg); background:var(--color-accent-soft); }.tutor-level div:first-child{ display:flex; justify-content:space-between; gap:var(--space-3); font-weight:700; }.tutor-level small{ color:var(--color-text-secondary); font-weight:500; }.tutor-progress{ height:8px; border-radius:var(--radius-full); overflow:hidden; background:rgba(16,185,129,.16); margin-top:var(--space-2); }.tutor-progress i{ display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg, #10B981, #34D399); transition:width var(--duration-slow) var(--ease-standard); }
+.tutor-dashboard h3{ margin:var(--space-4) 0 var(--space-2); font-size:var(--font-size-md); }.tutor-workflows{ display:grid; grid-template-columns:repeat(2, 1fr); gap:var(--space-2); }.tutor-workflows button{ text-align:left; background:var(--color-surface); color:var(--color-text); border:1px solid var(--color-border-hairline); box-shadow:none; }.tutor-workflows button:hover:not(:disabled){ color:var(--color-accent); background:var(--color-accent-soft); transform:translateY(-1px); box-shadow:var(--glow-accent); }.tutor-achievements{ display:flex; flex-wrap:wrap; gap:var(--space-2); }.tutor-achievements span{ padding:var(--space-2) var(--space-3); border-radius:var(--radius-full); background:var(--color-accent-soft); color:var(--color-accent); font-size:var(--font-size-sm); }
+@media (max-width: 600px){ .tutor-stats{ grid-template-columns:repeat(2,1fr); }.tutor-workflows{ grid-template-columns:1fr; }.tutor-level div:first-child{ flex-direction:column; gap:var(--space-1); } }
+
+#send-btn.is-stop:hover:not(:disabled){
+background: var(--color-danger);
+filter: brightness(1.08);
+box-shadow: 0 0 20px rgba(179, 38, 30, 0.18);
+}
+
+/* Phase 2 visual refinement: calm, layered surfaces rather than high-cost
+   full-screen effects. Message motion remains a single compositor-friendly
+   transform/opacity transition. */
+.message{
+transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
+}
+
+.message:hover{
+transform: translateY(-1px);
+}
+
+.message.ai .message-content{
+border-color: rgba(16,185,129,.14);
+box-shadow: var(--shadow-xs), inset 3px 0 0 rgba(16,185,129,.55);
+}
+
+.message.user .message-content{
+box-shadow: var(--shadow-sm);
+}
+
+html[data-wow-effects] .message.ai .message-content{
+background: linear-gradient(135deg, var(--color-glass), var(--color-surface));
+box-shadow: var(--shadow-sm), inset 3px 0 0 var(--color-accent-vivid), 0 0 20px rgba(16,185,129,.07);
+}
+
+html[data-wow-effects] .message.user .message-content{
+box-shadow: 0 8px 24px rgba(5,150,105,.15);
+}
+
+html[data-wow-effects] .sidebar-profile-card,
+html[data-wow-effects] .new-chat-btn,
+html[data-wow-effects] .empty-state-card{
+box-shadow: 0 8px 24px rgba(5,150,105,.08);
+}
+
+html[data-wow-effects] .new-chat-btn:hover:not(:disabled),
+html[data-wow-effects] .empty-state-card:hover:not(:disabled){
+transform: translateY(-2px);
+}
+
+/* ---------------------------------------------------------------------
+   Mobile drawer
+   --------------------------------------------------------------------- */
+
+.lh-drawer-backdrop{
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.45);
+z-index: var(--z-drawer-backdrop);
+}
+
+/* ---------------------------------------------------------------------
+   Dialog system
+   --------------------------------------------------------------------- */
+
+.lh-dialog-backdrop{
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.5);
+display: flex;
+align-items: center;
+justify-content: center;
+padding: var(--space-4);
+z-index: var(--z-dialog-backdrop);
+animation: lh-fade-in var(--duration-fast) var(--ease-standard);
+}
+
+.lh-dialog{
+width: 100%;
+max-width: 420px;
+background: var(--color-surface-elevated);
+border: 1px solid var(--color-border);
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow-lg);
+padding: var(--space-5);
+z-index: var(--z-dialog);
+animation: lh-dialog-in var(--duration-base) var(--ease-standard);
+}
+
+.lh-dialog-title{
+font-size: var(--font-size-lg);
+font-weight: 700;
+margin-bottom: var(--space-2);
+}
+
+.lh-dialog-message{
+color: var(--color-text-secondary);
+font-size: var(--font-size-sm);
+margin-bottom: var(--space-4);
+}
+
+.lh-dialog-field{
+margin-bottom: var(--space-4);
+}
+
+.lh-dialog-input{
+width: 100%;
+padding: var(--space-2) var(--space-3);
+border: 1px solid var(--color-border);
+border-radius: var(--radius-md);
+background: var(--color-bg);
+color: var(--color-text);
+font-size: var(--font-size-md);
+min-height: var(--touch-target-min);
+}
+
+.lh-dialog-input:focus-visible{
+border-color: var(--color-accent);
+outline: none;
+box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.lh-dialog-field-error{
+color: var(--color-danger);
+font-size: var(--font-size-xs);
+min-height: 16px;
+margin-top: var(--space-1);
+}
+
+.lh-dialog-actions{
+display: flex;
+justify-content: flex-end;
+gap: var(--space-2);
+}
+
+.lh-dialog-destructive .lh-dialog-title{
+color: var(--color-danger);
+}
+
+/* ---------------------------------------------------------------------
+   Toasts
+   --------------------------------------------------------------------- */
+
+.lh-toast-region{
+position: fixed;
+bottom: var(--space-5);
+right: var(--space-5);
+left: auto;
+display: flex;
+flex-direction: column;
+gap: var(--space-2);
+z-index: var(--z-toast);
+max-width: min(360px, calc(100vw - var(--space-8)));
+}
+
+.lh-toast{
+display: flex;
+align-items: flex-start;
+gap: var(--space-2);
+padding: var(--space-3) var(--space-3);
+border-radius: var(--radius-md);
+background: var(--color-surface-elevated);
+border: 1px solid var(--color-border);
+box-shadow: var(--shadow-md);
+font-size: var(--font-size-sm);
+animation: lh-toast-in var(--duration-base) var(--ease-standard);
+}
+
+.lh-toast-success{ border-left: 3px solid var(--color-success); }
+.lh-toast-error{ border-left: 3px solid var(--color-danger); }
+.lh-toast-warning{ border-left: 3px solid var(--color-warning); }
+.lh-toast-info{ border-left: 3px solid var(--color-info); }
+
+.lh-toast-message{
+flex: 1;
+color: var(--color-text);
+}
+
+.lh-toast-close{
+background: transparent;
+border: none;
+color: var(--color-text-muted);
+cursor: pointer;
+padding: 0;
+min-width: 24px;
+min-height: 24px;
+font-size: var(--font-size-xs);
+}
+
+/* ---------------------------------------------------------------------
+   Settings panel (rendered inside the dialog system's backdrop, wider)
+   --------------------------------------------------------------------- */
+
+.lh-settings-dialog{
+max-width: 520px;
+text-align: left;
+}
+
+.settings-section{
+margin-bottom: var(--space-5);
+}
+
+.settings-section-title{
+font-size: var(--font-size-xs);
+text-transform: uppercase;
+letter-spacing: 0.04em;
+color: var(--color-text-muted);
+margin-bottom: var(--space-2);
+}
+
+.settings-row{
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: var(--space-3);
+padding: var(--space-2) 0;
+border-bottom: 1px solid var(--color-border);
+}
+
+.settings-row:last-child{
+border-bottom: none;
+}
+
+.settings-row-label{
+font-size: var(--font-size-sm);
+}
+
+.settings-row-label-muted{
+color: var(--color-text-muted);
+font-size: var(--font-size-xs);
+}
+
+.theme-option-group{
+display: flex;
+gap: var(--space-2);
+}
+
+/* Explicit color (not inherited) - the generic <button> reset (top of
+   this file) fills unclassed buttons with white-on-green, which reads
+   as invisible text on this option's light background if left
+   unset (real bug caught by axe-core's color-contrast check,
+   Phase 14 regression pass). Hover/active/disabled are also given their
+   own rules rather than relying on the generic button ones, for the
+   same reason. */
+.theme-option{
+flex: 1;
+padding: var(--space-2);
+text-align: center;
+font-size: var(--font-size-xs);
+border-radius: var(--radius-md);
+border: 1px solid var(--color-border);
+background: var(--color-bg);
+color: var(--color-text);
+cursor: pointer;
+min-height: var(--touch-target-min);
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.theme-option:hover:not(:disabled){
+background: var(--color-accent-soft);
+border-color: var(--color-accent-vivid);
+color: var(--color-accent);
+}
+
+.theme-option:disabled{
+opacity: 0.6;
+cursor: not-allowed;
+}
+
+/* Selected state is never color-only: font-weight (700 vs 400) and the
+   "✓ " prefix (CSS generated content, not part of the button's
+   textContent - e2e/keyboard.js's activeElementInfo() still reads the
+   real "Light"/"Dark"/"System" label) both survive grayscale/colorblind
+   viewing, on top of the border/background tint. */
+.theme-option[aria-pressed="true"]{
+border-color: var(--color-accent);
+background: var(--color-accent-soft);
+color: var(--color-accent);
+font-weight: 700;
+}
+
+.theme-option[aria-pressed="true"]::before{
+content: "✓ ";
+}
+
+.lh-switch{
+position: relative;
+display: inline-block;
+width: 40px;
+height: 24px;
+flex-shrink: 0;
+}
+
+.lh-switch input{
+position: absolute;
+opacity: 0;
+width: 100%;
+height: 100%;
+margin: 0;
+cursor: pointer;
+}
+
+.lh-switch-track{
+position: absolute;
+inset: 0;
+background: var(--color-border-strong);
+border-radius: var(--radius-full);
+transition: background-color var(--duration-fast) var(--ease-standard);
+pointer-events: none;
+}
+
+.lh-switch-track::before{
+content: "";
+position: absolute;
+top: 2px;
+left: 2px;
+width: 20px;
+height: 20px;
+border-radius: 50%;
+background: var(--color-surface-elevated);
+transition: transform var(--duration-fast) var(--ease-standard);
+box-shadow: var(--shadow-sm);
+}
+
+.lh-switch input:checked + .lh-switch-track{
+background: var(--color-accent);
+}
+
+.lh-switch input:checked + .lh-switch-track::before{
+transform: translateX(16px);
+}
+
+.lh-switch input:focus-visible + .lh-switch-track{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   Animations
+   --------------------------------------------------------------------- */
+
+@keyframes lh-fade-in{
+from{ opacity: 0; }
+to{ opacity: 1; }
+}
+
+@keyframes lh-dialog-in{
+from{ opacity: 0; transform: translateY(8px) scale(0.98); }
+to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes lh-toast-in{
+from{ opacity: 0; transform: translateY(8px); }
+to{ opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lh-message-in{
+from{ opacity: 0; transform: translateY(4px); }
+to{ opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lh-pulse{
+0%, 100%{ opacity: 1; }
+50%{ opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce){
+*, *::before, *::after{
+animation-duration: 0.001ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.001ms !important;
+scroll-behavior: auto !important;
+}
+}
+
+/* ---------------------------------------------------------------------
+   RTL (per-message, not global - see www/app.js message rendering)
+   --------------------------------------------------------------------- */
+
+.message-content[dir="rtl"]{
+text-align: right;
+}
+
+.message-content[dir="rtl"] pre,
+.message-content[dir="rtl"] code{
+direction: ltr;
+text-align: left;
+}
+
+textarea[dir="rtl"]{
+text-align: right;
+}
+
+/* ---------------------------------------------------------------------
+   Responsive breakpoints
+   --------------------------------------------------------------------- */
+
+/* 1440px and up: allow the shell to breathe a little more. */
+@media (min-width: 1440px){
+.app-shell{
+max-width: 1500px;
+}
+.chat-box{
+padding-left: var(--space-8);
+padding-right: var(--space-8);
+}
+}
+
+/* 1280px: slightly narrower sidebar to keep the chat column comfortable. */
+@media (max-width: 1280px){
+.sidebar{
+width: 260px;
+}
+}
+
+/* 1024px: tablets landscape - sidebar may collapse, composer stays readable. */
+@media (max-width: 1024px){
+.sidebar{
+width: 240px;
+}
+.empty-state-cards{
+grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+}
+
+/* 768px and below: sidebar becomes an off-canvas drawer. */
+@media (max-width: 768px){
+.app-shell{
+width: 100%;
+height: 100vh;
+gap: 0;
+}
+.sidebar{
+position: fixed;
+top: 0;
+left: 0;
+bottom: 0;
+width: min(320px, 84vw);
+z-index: var(--z-sidebar);
+border-radius: 0;
+transform: translateX(-100%);
+transition: transform var(--duration-slow) var(--ease-standard);
+}
+.app-shell.sidebar-open .sidebar{
+transform: translateX(0);
+}
+.app-shell.sidebar-collapsed .sidebar{
+width: min(320px, 84vw);
+}
+.app-shell.sidebar-collapsed .sidebar-brand-name,
+.app-shell.sidebar-collapsed .sidebar-search,
+.app-shell.sidebar-collapsed .conversation-item-main,
+.app-shell.sidebar-collapsed .history-status{
+display: initial;
+}
+.container{
+border-radius: 0;
+}
+#sidebar-toggle-btn{
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+.header{
+padding: var(--space-3);
+}
+.header-conversation-title{
+font-size: var(--font-size-md);
+}
+.empty-state-cards{
+grid-template-columns: 1fr;
+}
+.lh-toast-region{
+left: var(--space-3);
+right: var(--space-3);
+max-width: none;
+}
+}
+
+/* 430px / 390px / 360px: small phones - composer and header stay compact,
+   no horizontal overflow anywhere. */
+@media (max-width: 430px){
+.app-shell{
+max-width: 100%;
+}
+.header-controls{
+gap: var(--space-1);
+}
+.wow-mode-btn{
+padding: var(--space-1) var(--space-2);
+letter-spacing: .025em;
+}
+#mode-select{
+font-size: var(--font-size-xs);
+padding: var(--space-1) var(--space-2);
+}
+
+@media (max-width: 390px){
+.wow-mode-btn span:last-child{
+display: none;
+}
+}
+.user-info{
+max-width: 90px;
+}
+.message{
+max-width: 92%;
+}
+.composer{
+padding: var(--space-2) var(--space-3);
+padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+}
+.controls{
+gap: var(--space-2);
+}
+/* The shortcut hint is a nice-to-have, not load-bearing information (the
+   same shortcut is also discoverable in Settings) - dropped below 430px
+   to keep the composer area compact on small phones. */
+.composer-hint{
+display: none;
+}
+.lh-dialog{
+padding: var(--space-4);
+}
+}
+
+@media (max-width: 390px){
+.sidebar-brand-name{
+font-size: var(--font-size-md);
+}
+.empty-state-title{
+font-size: var(--font-size-xl);
+}
+}
+
+@media (max-width: 360px){
+.header-conversation-title{
+font-size: var(--font-size-sm);
+}
+/* Phase 13: #clear-chat-btn and the sidebar's Export/Import/Settings
+   actions are all compact icon-only buttons now (see .header-icon-btn /
+   .sidebar-icon-btn) with their visible label already an sr-only span at
+   every width - there is no longer a wide-only text label to hide here,
+   unlike Phase 7's original text-labeled buttons. Nothing to override at
+   this breakpoint any more; kept as a marker comment so a future phase
+   doesn't have to re-derive why this block is now empty. */
+}
+
+/* ---------------------------------------------------------------------
+   Phase 5: Markdown content, code blocks, edit mode, message statuses
+   --------------------------------------------------------------------- */
+
+.message-content > p:first-child{ margin-top: 0; }
+.message-content > *:last-child{ margin-bottom: 0; }
+.message-content p{ margin: 0 0 var(--space-3); }
+.message-content h1, .message-content h2, .message-content h3,
+.message-content h4, .message-content h5, .message-content h6{
+margin: var(--space-4) 0 var(--space-2);
+line-height: var(--line-height-tight);
+}
+.message-content h1{ font-size: var(--font-size-xl); }
+.message-content h2{ font-size: var(--font-size-lg); }
+.message-content h3, .message-content h4, .message-content h5, .message-content h6{ font-size: var(--font-size-md); }
+.message-content ul, .message-content ol{
+margin: 0 0 var(--space-3);
+padding-inline-start: 1.4em;
+}
+.message-content li{ margin: 2px 0; }
+.message-content blockquote{
+margin: 0 0 var(--space-3);
+padding: var(--space-1) var(--space-3);
+border-inline-start: 3px solid var(--color-border-strong);
+color: var(--color-text-secondary);
+}
+.message-content hr{
+border: none;
+border-top: 1px solid var(--color-border);
+margin: var(--space-4) 0;
+}
+.message-content table{
+width: 100%;
+border-collapse: collapse;
+margin: 0 0 var(--space-3);
+font-size: var(--font-size-sm);
+}
+.message-content th, .message-content td{
+border: 1px solid var(--color-border);
+padding: var(--space-1) var(--space-2);
+text-align: left;
+}
+.message-content code:not(.lh-code){
+background: var(--color-bg);
+border: 1px solid var(--color-border);
+border-radius: 4px;
+padding: 1px 5px;
+font-family: var(--font-family-mono);
+font-size: 0.9em;
+}
+
+.code-block{
+margin: var(--space-2) 0 var(--space-3);
+border-radius: var(--radius-md);
+overflow: hidden;
+border: 1px solid var(--color-border);
+background: var(--color-bg);
+max-width: 100%;
+}
+.code-block-header{
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: var(--space-1) var(--space-3);
+background: var(--color-surface-elevated);
+border-bottom: 1px solid var(--color-border);
+font-size: var(--font-size-xs);
+}
+.code-block-lang{
+color: var(--color-text-muted);
+text-transform: uppercase;
+letter-spacing: 0.04em;
+}
+.code-block-copy-btn{
+padding: 2px var(--space-2);
+min-height: 26px;
+font-size: var(--font-size-xs);
+background: transparent;
+border: 1px solid var(--color-border);
+border-radius: var(--radius-sm);
+color: var(--color-text-secondary);
+cursor: pointer;
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+.code-block-copy-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+color: var(--color-accent);
+border-color: var(--color-accent-vivid);
+}
+.code-block-copy-btn:active:not(:disabled){
+transform: scale(0.95);
+}
+.code-block-copy-btn:focus-visible{
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 1px;
+}
+.code-block pre{
+margin: 0;
+padding: var(--space-3);
+overflow-x: auto;
+max-width: 100%;
+}
+.lh-code{
+font-family: var(--font-family-mono);
+font-size: var(--font-size-sm);
+white-space: pre;
+direction: ltr;
+unicode-bidi: isolate;
+}
+.tok-keyword{ color: #c586c0; font-weight: 600; }
+.tok-string{ color: #ce9178; }
+.tok-comment{ color: var(--color-text-muted); font-style: italic; }
+.tok-number{ color: #b5cea8; }
+
+/* Inline edit mode for a user message */
+.message-edit-textarea{
+width: 100%;
+min-height: 60px;
+padding: var(--space-2) var(--space-3);
+border: 1px solid var(--color-accent);
+border-radius: var(--radius-md);
+background: var(--color-bg);
+color: var(--color-text);
+font: inherit;
+resize: vertical;
+}
+.message-edit-actions{
+display: flex;
+justify-content: flex-end;
+gap: var(--space-2);
+margin-top: var(--space-2);
+}
+.message-edit-error{
+color: var(--color-danger);
+font-size: var(--font-size-xs);
+margin-top: var(--space-1);
+min-height: 14px;
+}
+
+/* Status-aware message affordances */
+.message[data-status="stopped"] .message-content{
+opacity: 0.9;
+}
+.message-status-label{
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+margin-top: 2px;
+}
+.message.error .message-status-label{
+color: var(--color-danger);
+}
+
+.message-action-btn[data-action="retry"],
+.message-action-btn[data-action="regenerate"]{
+display: inline-flex;
+align-items: center;
+gap: 4px;
+padding-inline: var(--space-2);
+width: auto;
+}
+
+/* Typing indicator: a small animated dot trio shown only until the first
+   real token arrives - not per-token animation. */
+.typing-indicator{
+display: inline-flex;
+align-items: center;
+gap: 4px;
+padding: var(--space-2) 0;
+}
+.typing-indicator .dot{
+width: 6px;
+height: 6px;
+border-radius: 50%;
+background: var(--color-text-muted);
+animation: lh-typing-bounce 1.2s infinite ease-in-out;
+}
+.typing-indicator .dot:nth-child(2){ animation-delay: 0.15s; }
+.typing-indicator .dot:nth-child(3){ animation-delay: 0.3s; }
+
+@keyframes lh-typing-bounce{
+0%, 80%, 100%{ transform: translateY(0); opacity: 0.5; }
+40%{ transform: translateY(-4px); opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------
+   Embedded mode (Integration Prep phase - see docs/integration-prep/
+   embedded-mode.md and www/app-mode.js). [data-app-mode] is set on <html>
+   before first paint, exactly like [data-theme].
+
+   display:none only - never removed from the DOM. www/app.js has several
+   unconditional top-level `elementRef.addEventListener(...)` calls (e.g.
+   #login-btn, #logout-btn) that would throw if that element didn't exist
+   at all; CSS-hiding preserves "hidden in embedded, not globally deleted"
+   (Task 2) by construction, with no app.js change needed.
+
+   Nothing in this repository sets [data-app-mode="embedded"] today -
+   standalone (no attribute changes visually - these rules are additive
+   deltas, not the default) remains completely unaffected. --------------- */
+
+/* Task 2: Import/Export - hidden by default in embedded mode
+   (www/app-mode.js's showImportExport), never in standalone. The
+   underlying handlers (history-ui.js's exportActiveConversation/
+   triggerImport) are untouched - only visibility changes. */
+[data-app-mode="embedded"]:not([data-show-import-export="true"]) #export-chat-btn,
+[data-app-mode="embedded"]:not([data-show-import-export="true"]) #import-label-btn{
+display: none;
+}
+
+/* Task 5: account/profile UI - LinguaHub's own shell owns the signed-in
+   session in embedded mode, so no duplicate Google sign-in button or
+   profile card. #auth-status is a SEPARATE element from #auth-area (it
+   lives in the main chat column, not the sidebar) that surfaces messages
+   like "Sign-in is unavailable..." - exactly the kind of standalone-only
+   auth feedback that makes no sense once the sign-in control itself is
+   hidden (found via real browser screenshot review, Integration Prep
+   phase). Standalone is unaffected either way. */
+[data-app-mode="embedded"]:not([data-show-account-ui="true"]) #auth-area,
+[data-app-mode="embedded"]:not([data-show-account-ui="true"]) #auth-status{
+display: none;
+}
+
+/* Task 10: mode selector - embedded/student-facing mode defaults to a
+   single automatic/general experience, not an exposed Codex/Cyber/Deep
+   Thinking picker. modeSelect.value still resolves to "general"
+   (www/mode-ui.js's own default) even while hidden - hiding the <select>
+   never changes what mode a message is actually sent with. */
+[data-app-mode="embedded"]:not([data-show-mode-selector="true"]) #mode-select{
+display: none;
+}

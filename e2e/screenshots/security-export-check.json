@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-08-07T10:23:19.086Z",
+  "app": "LinguaHub AI",
+  "conversation": {
+    "title": "export secrecy check",
+    "createdAt": "2026-08-07T10:23:18.792Z",
+    "updatedAt": "2026-08-07T10:23:19.018Z",
+    "metadata": {
+      "mode": "general"
+    },
+    "messages": [
+      {
+        "role": "user",
+        "content": "export secrecy check",
+        "createdAt": "2026-08-07T10:23:18.983Z",
+        "status": "complete"
+      },
+      {
+        "role": "assistant",
+        "content": "reply text",
+        "createdAt": "2026-08-07T10:23:19.018Z",
+        "status": "complete"
+      }
+    ]
+  }
+}

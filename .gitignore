@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.env
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/local.properties
+*.log
+
+# Firebase Admin service-account credentials must never be committed.
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+*.serviceaccount.json
+
+# google-services.json (Phase 10) is project-identifying Android/Firebase
+# configuration, not an Admin secret in the same sense as the above - but
+# it's still project-specific and excluded by default rather than shared
+# unintentionally. See docs/android-network-configuration.md.
+android/app/google-services.json

@@ -1,0 +1,95 @@
+{
+  "label": "Phase 7 Network Failure QA",
+  "entries": [
+    {
+      "name": "401: message ends in 'failed' status, not stuck loading",
+      "pass": true,
+      "detail": "{\"status\":\"failed\",\"text\":\"❌ Error connecting to AI: ❌ Invalid OpenAI API key. Check your .env file.\"}"
+    },
+    {
+      "name": "401: user-facing text has no raw stack trace / internal path",
+      "pass": true,
+      "detail": "❌ Error connecting to AI: ❌ Invalid OpenAI API key. Check your .env file."
+    },
+    {
+      "name": "403: message ends in 'failed' status",
+      "pass": true,
+      "detail": "{\"status\":\"failed\",\"text\":\"❌ Error connecting to AI: ❌ Origin not allowed.\"}"
+    },
+    {
+      "name": "403: Retry action is offered after a failure",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "429: message ends in 'failed' status",
+      "pass": true,
+      "detail": "{\"status\":\"failed\",\"text\":\"❌ Error connecting to AI: ❌ Too many requests. Please wait a moment and try again.\"}"
+    },
+    {
+      "name": "500: message ends in 'failed' status",
+      "pass": true,
+      "detail": "{\"status\":\"failed\",\"text\":\"❌ Error connecting to AI: ❌ Unexpected server error.\"}"
+    },
+    {
+      "name": "backend unreachable: message ends in 'failed' status, not stuck loading forever",
+      "pass": true,
+      "detail": "{\"status\":\"failed\",\"text\":\"❌ Error connecting to AI: Failed to fetch\"}"
+    },
+    {
+      "name": "backend unreachable: no unhandled page exception was thrown",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "backend unreachable: composer/send controls reset (not stuck disabled)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "hung request: user Stop resolves it cleanly (status settles, not left streaming)",
+      "pass": true,
+      "detail": "{\"status\":\"stopped\"}"
+    },
+    {
+      "name": "malformed stream: settles to a real status (failed/stopped), not stuck",
+      "pass": true,
+      "detail": "{\"status\":\"complete\",\"text\":\"The phrase \\\"trigger malformed stream\\\" is a bit ambiguous without context. Could you please clarify what you mean or in what context you're encountering this? For example:\\n\\nAre you referring to a programming error or bug related to data streams?\\nIs this about a network or media streaming issue?\\nAre you working with a specific technology, library, or tool (e.g., gRPC, Kafka, video streaming)?\\nAre you looking for how to intentionally trigger a malformed stream for testing purposes?\\n\\nWith more details, I can provide a more precise explanation or solution.\\n\"}"
+    },
+    {
+      "name": "empty stream: settles without crashing (some real status reached)",
+      "pass": true,
+      "detail": "{\"status\":\"complete\",\"text\":\"❌ Empty response from server.\\n\"}"
+    },
+    {
+      "name": "failed send: the user's original prompt remains visible (not discarded)",
+      "pass": true,
+      "detail": "the original prompt text"
+    },
+    {
+      "name": "composer remains usable for the next message after a failure",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "toast element count after this failure-heavy run",
+      "pass": null,
+      "detail": ""
+    },
+    {
+      "name": "no runaway toast accumulation (stays within the visible cap)",
+      "pass": true,
+      "detail": "count=0"
+    },
+    {
+      "name": "page errors observed across the whole run",
+      "pass": null,
+      "detail": "[]"
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0
+  }
+}

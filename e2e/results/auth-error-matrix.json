@@ -1,0 +1,50 @@
+{
+  "label": "Phase 8 Auth Error Matrix (real browser + real backend)",
+  "entries": [
+    {
+      "name": "missing Firebase config: sign-in button is honestly disabled with a clear message",
+      "pass": true,
+      "detail": "{\"disabled\":true,\"statusText\":\"Sign-in is unavailable: Firebase is not configured for this app.\"}"
+    },
+    {
+      "name": "/api/auth/me with no token returns 401 with a safe message",
+      "pass": true,
+      "detail": "{\"status\":401,\"body\":{\"reply\":\"❌ Authentication required.\"}}"
+    },
+    {
+      "name": "/api/auth/me with an invalid token fails safely (401 admin-not-configured maps to 503, or 401) with no raw Firebase error",
+      "pass": true,
+      "detail": "{\"status\":503,\"body\":{\"reply\":\"❌ Authentication service is not configured.\"}}"
+    },
+    {
+      "name": "/api/auth/me with an expired/invalid-signature-shaped token fails safely, no stack trace",
+      "pass": true,
+      "detail": "{\"status\":503,\"body\":{\"reply\":\"❌ Authentication service is not configured.\"}}"
+    },
+    {
+      "name": "backend Admin unavailable: /api/auth/me fails with 503 (not a crash), matching this environment's real state",
+      "pass": true,
+      "detail": "Admin is not configured in this environment - both prior checks should reflect that consistently"
+    },
+    {
+      "name": "/api/chat fails open to guest even with a garbage Authorization header (never 401)",
+      "pass": true,
+      "detail": "{\"status\":200}"
+    },
+    {
+      "name": "guest chat completes normally end-to-end regardless of backend auth state",
+      "pass": true,
+      "detail": "complete"
+    },
+    {
+      "name": "popup-blocked / popup-closed / unauthorized-domain / real network error during a real popup / revoked token",
+      "pass": null,
+      "detail": "NOT RUN - require a real, configured Firebase project (none exists in this environment); covered at the unit level with mocked Firebase in tests/frontend-auth.test.js instead"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  }
+}

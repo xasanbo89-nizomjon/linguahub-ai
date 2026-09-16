@@ -1,0 +1,210 @@
+{
+  "label": "Phase 7 Smoke Test",
+  "entries": [
+    {
+      "name": "1. app loads (HTTP 200 from static server)",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "name": "2. no blank screen (body has content, #chat-box present)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "3. no fatal console error on load",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "3b. no uncaught page exception on load",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "4. frontend requests target backend port 3000",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000/api/ai/modes"
+    },
+    {
+      "name": "5. GET /health succeeds",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "6. GET /api/ai/modes succeeds",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "7. General mode appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "8. Codex mode appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "9. Cyber mode appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "10. Deep Thinking mode appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "11. disabled modes (image/voice/web-search) cannot be selected",
+      "pass": true,
+      "detail": "[{\"value\":\"image\",\"disabled\":true,\"text\":\"Image AI (unavailable)\"},{\"value\":\"voice\",\"disabled\":true,\"text\":\"Voice AI (unavailable)\"},{\"value\":\"web-search\",\"disabled\":true,\"text\":\"Web Search (unavailable)\"}]"
+    },
+    {
+      "name": "11b. programmatic selection of a disabled mode is rejected by the browser",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "12. New Chat creates new conversations",
+      "pass": true,
+      "detail": "before=1 after=2"
+    },
+    {
+      "name": "13. conversation selection switches the active conversation",
+      "pass": true,
+      "detail": "expected \"first conversation marker hello\" got \"first conversation marker hello\""
+    },
+    {
+      "name": "14. search filters and clearing restores the full list",
+      "pass": true,
+      "detail": "filtered=1 full=2"
+    },
+    {
+      "name": "19. settings opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "15/16. theme switching + light mode renders",
+      "pass": true,
+      "detail": "data-theme=light"
+    },
+    {
+      "name": "17. dark mode renders",
+      "pass": true,
+      "detail": "data-theme=dark"
+    },
+    {
+      "name": "18. system theme source logic works (resolves to a concrete light/dark value)",
+      "pass": true,
+      "detail": "data-theme=light"
+    },
+    {
+      "name": "20. settings dialog closes",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "20b. rename dialog opens and Escape cancels it",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "22. composer accepts input",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "24. Shift+Enter inserts a newline instead of sending",
+      "pass": true,
+      "detail": "\"\\nline two\""
+    },
+    {
+      "name": "23. Enter sends the message",
+      "pass": true,
+      "detail": "verified implicitly by generation starting below"
+    },
+    {
+      "name": "25. Stop button appears during generation (REAL provider)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "26. Stop aborts generation",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "27. partial response remains after Stop, status is 'stopped'",
+      "pass": true,
+      "detail": "status=stopped textLen=32"
+    },
+    {
+      "name": "21/28. Copy action works and a toast renders",
+      "pass": true,
+      "detail": "toast elements found: 4"
+    },
+    {
+      "name": "29. Edit works (message replaced and resent)",
+      "pass": true,
+      "detail": "edited prompt: say OK and nothing else"
+    },
+    {
+      "name": "31. Regenerate replaces the message in place (no duplicate)",
+      "pass": true,
+      "detail": "before=msg_c3e6059d-eb86-46d4-9b5b-1b0b2a1a4d13 after=msg_c3e6059d-eb86-46d4-9b5b-1b0b2a1a4d13 count=2"
+    },
+    {
+      "name": "31b. Retry button appears for a forced failure",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "32/33. [MOCKED render path] Markdown and code blocks render",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "34. [MOCKED render path] Code copy works",
+      "pass": true,
+      "detail": "Copied"
+    },
+    {
+      "name": "35a. Export downloads a real, valid conversation JSON",
+      "pass": true,
+      "detail": "downloaded and parsed successfully"
+    },
+    {
+      "name": "35b. Import adds a new conversation from the exported file",
+      "pass": true,
+      "detail": "before=5 after=6"
+    },
+    {
+      "name": "36. no 405 regression anywhere in the run",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "37. no XHR/fetch request went to port 5500",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "console errors observed",
+      "pass": null,
+      "detail": "[\"Failed to load resource: net::ERR_FAILED\",\"Failed to load resource: the server responded with a status of 500 (Internal Server Error)\"]"
+    },
+    {
+      "name": "failed requests observed",
+      "pass": null,
+      "detail": "[{\"url\":\"http://127.0.0.1:3000/api/chat/stream\",\"failure\":\"net::ERR_ABORTED\"},{\"url\":\"http://127.0.0.1:3000/api/chat/stream\",\"failure\":\"net::ERR_ABORTED\"},{\"url\":\"http://127.0.0.1:3000/api/chat/stream\",\"failure\":\"net::ERR_ABORTED\"},{\"url\":\"http://127.0.0.1:3000/api/chat/stream\",\"failure\":\"net::ERR_ABORTED\"},{\"url\":\"http://127.0.0.1:3000/api/chat/stream\",\"failure\":\"net::ERR_ABORTED\"},{\"url\":\"http://127.0.0.1:3000/api/chat/stream\",\"failure\":\"net::ERR_FAILED\"},{\"url\":\"http://127.0.0.1:3000/api/chat/stream\",\"failure\":\"net::ERR_ABORTED\"}]"
+    }
+  ],
+  "summary": {
+    "total": 38,
+    "passed": 38,
+    "failed": 0
+  }
+}

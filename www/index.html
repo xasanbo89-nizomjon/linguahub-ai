@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguaHub AI</title>
+
+<!-- Blocking, non-module, same-origin script - runs before first paint so
+     the correct theme applies with no flash, and needs no inline-script
+     CSP exception (see docs/phase-04-premium-ui.md, "CSP status"). -->
+<script src="theme.js"></script>
+<script src="wow-effects.js"></script>
+<!-- Same reasoning as theme.js above, for [data-app-mode] instead of
+     [data-theme] (Integration Prep phase - see docs/integration-prep/
+     embedded-mode.md). Standalone (this app's only real deployment today)
+     is the zero-configuration default either way. -->
+<script src="app-mode.js"></script>
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="lh-drawer-backdrop" id="sidebar-backdrop" hidden></div>
+
+<div class="app-shell" id="app-shell">
+
+<aside class="sidebar" id="sidebar" aria-label="Conversation history">
+
+<div class="sidebar-brand">
+<span class="lh-mark lh-mark-sm" aria-hidden="true">LH</span>
+<span class="sidebar-brand-name">LinguaHub<span class="sidebar-brand-accent">AI</span></span>
+<button id="sidebar-collapse-btn" type="button" class="sidebar-collapse-btn" aria-label="Collapse sidebar" aria-expanded="true">⟨</button>
+</div>
+
+<div class="sidebar-search">
+<span class="sidebar-search-icon" aria-hidden="true">⌕</span>
+<label for="chat-search-input" class="sr-only">Search conversations</label>
+<input id="chat-search-input" type="search" placeholder="Search" autocomplete="off">
+<kbd class="sidebar-search-kbd" aria-hidden="true">Ctrl K</kbd>
+</div>
+
+<div id="conversation-list" class="conversation-list" role="list" aria-label="Conversations"></div>
+<div id="conversation-empty-state" class="conversation-empty-state" hidden>No conversations yet. Start a new chat.</div>
+
+<div id="history-status" class="history-status" aria-live="polite"></div>
+
+<!-- Bottom sidebar section (approved order, Phase 14): account/profile
+     card, then New Chat, then utility controls (theme/export/import/
+     settings) - New Chat is deliberately NOT at the top of the sidebar
+     any more. #auth-area's internals (login-btn/user-profile/etc.) are
+     entirely unchanged - only relocated from the header into here; every
+     ID app.js/auth.js already depend on is preserved exactly. -->
+<div class="sidebar-bottom">
+
+<div id="auth-area" class="auth-area sidebar-profile-card">
+<button id="login-btn" type="button" class="sidebar-profile-guest">
+<span class="lh-mark lh-mark-sm" aria-hidden="true">LH</span>
+<span class="sidebar-profile-text">
+<span class="sidebar-profile-name">Guest User</span>
+<span class="sidebar-profile-sub">Sign in for sync</span>
+</span>
+</button>
+<div id="user-profile" class="user-profile" hidden>
+<img id="user-avatar" class="user-avatar" alt="" hidden>
+<div id="user-avatar-fallback" class="user-avatar-fallback" hidden aria-hidden="true"></div>
+<div class="user-info">
+<span id="user-name" class="user-name"></span>
+<span id="user-email" class="user-email"></span>
+</div>
+<button id="logout-btn" type="button" class="auth-btn auth-btn-secondary">Logout</button>
+</div>
+</div>
+
+<button id="new-chat-btn" type="button" class="new-chat-btn">
+<span class="new-chat-btn-icon" aria-hidden="true">+</span><span>New Chat</span>
+</button>
+
+<div class="sidebar-footer">
+<button id="quick-theme-btn" type="button" class="sidebar-icon-btn" title="Toggle theme">
+<span aria-hidden="true">◐</span><span class="sr-only">Toggle theme</span>
+</button>
+<button id="settings-btn" type="button" class="sidebar-icon-btn" title="Settings">
+<span aria-hidden="true">⚙</span><span class="sr-only">Settings</span>
+</button>
+</div>
+
+</div>
+
+</aside>
+
+<div class="container" role="main" aria-label="LinguaHub AI">
+
+<div class="header">
+<button id="sidebar-toggle-btn" type="button" aria-label="Toggle conversation list" aria-expanded="false" aria-controls="sidebar">☰</button>
+<h1 class="sr-only">LinguaHub AI</h1>
+<!-- Decorative assistant identity mark - purely visual brand presence.
+     The real accessible heading is the sr-only <h1> above; conversation
+     navigation context lives in #conversation-title right after this. -->
+<div class="lh-mark lh-mark-md" aria-hidden="true">LH</div>
+<div class="header-title-group">
+<div class="header-conversation-title" id="conversation-title">LinguaHub AI</div>
+<div class="status-bar">
+<span class="status-dot" id="status-dot" aria-hidden="true"></span>
+<div id="status">Online</div>
+<!-- Reusable context chip (Phase 13/14 - future LinguaHub integration
+     readiness, see docs/linguahub-ai-integration-handoff.md). Visible by
+     default with an honest "no context" label - never fake/sample page
+     data. A future phase populates #context-chip-text with real page
+     context (e.g. "Reading · Cambridge 18 · Question 17") when this app
+     is actually embedded; nothing here claims that today. -->
+<div id="context-chip" class="context-chip">
+<span class="context-chip-dot" aria-hidden="true"></span>
+<span id="context-chip-text" class="context-chip-text">No active context</span>
+</div>
+</div>
+</div>
+<div class="header-controls">
+<button id="tutor-dashboard-btn" type="button" class="header-icon-btn" title="Tutor Dashboard"><span aria-hidden="true">◈</span><span class="sr-only">Tutor Dashboard</span></button>
+<button id="wow-mode-btn" type="button" class="wow-mode-btn" aria-pressed="false" title="Toggle WOW Mode">
+<span aria-hidden="true">✨</span><span>WOW MODE</span>
+</button>
+<!-- Options are populated at runtime by mode-ui.js from GET /api/ai/modes -
+     the backend's public mode registry is the single source of truth for
+     which modes exist and are enabled (see lib/aiModes.js, Task 4). -->
+<select id="mode-select" aria-label="Assistant mode">
+<option value="general">Loading modes...</option>
+</select>
+<button id="clear-chat-btn" type="button" class="header-icon-btn" title="Clear chat">
+<span aria-hidden="true">⟲</span><span class="sr-only">Clear chat</span>
+</button>
+</div>
+</div>
+
+<div id="auth-status" aria-live="polite"></div>
+
+<div class="chat-scroll-wrapper">
+<div class="chat-box" id="chat-box"></div>
+<div id="empty-state" class="empty-state" hidden>
+<div class="lh-mark lh-mark-lg empty-state-icon" aria-hidden="true">LH</div>
+<h2 class="empty-state-title">LinguaHub AI</h2>
+<p class="empty-state-subtitle">How can I help you learn today? Start typing below, or try a suggestion.</p>
+<div class="empty-state-cards" id="empty-state-cards"></div>
+</div>
+<button id="scroll-to-bottom-btn" type="button" class="scroll-to-bottom-btn" hidden>↓ New messages</button>
+</div>
+
+<div class="composer">
+<div class="controls">
+
+<label for="user-input" class="sr-only">Message</label>
+<textarea
+id="user-input"
+placeholder="Message LinguaHub AI..."
+rows="1"
+></textarea>
+
+<button id="send-btn" type="button">
+Send
+</button>
+<button id="voice-ptt-btn" type="button" class="voice-ptt-btn" aria-pressed="false" title="Hold to talk">
+<span aria-hidden="true">🎙</span><span class="sr-only">Push to talk</span>
+</button>
+<button id="voice-speak-btn" type="button" class="voice-ptt-btn" title="Read latest reply aloud"><span aria-hidden="true">🔊</span><span class="sr-only">Read latest reply aloud</span></button>
+
+</div>
+<!-- Text populated by www/app.js from the single centralized source
+     (www/strings.js) - never hardcoded here (Task 14: localization
+     readiness). Deliberately NOT aria-hidden - an AI-accuracy disclaimer
+     should reach assistive-technology users, unlike the previous
+     keyboard-shortcut hint this replaced (Enter/Shift+Enter behavior
+     itself is unchanged, only this visible label). -->
+<div class="composer-hint" id="composer-hint"></div>
+</div>
+
+</div>
+
+</div>
+
+<!-- Firebase Web SDK (compat build): plain <script> tags, not ES modules, so
+     login works identically under Live Server, Electron's file://, and the
+     Capacitor webview without any bundler or module-CORS concerns. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<!-- Capacitor core + the native Firebase Authentication plugin (Phase 10),
+     vendored locally (www/vendor/) like marked.js/purify.min.js above -
+     same-origin, no CDN, no bundler, no CSP change needed. Safe to load
+     unconditionally on every platform: @capacitor/core's own browser bundle
+     detects and preserves an already-present native bridge instead of
+     replacing it (verified by reading node_modules/@capacitor/core/dist/capacitor.js
+     before vendoring it - `r = t.Capacitor || {}` merges onto, never
+     overwrites, an existing window.Capacitor), and on a plain web/Electron
+     origin it correctly reports isNativePlatform() === false, so auth.js's
+     platform check below always resolves correctly. See
+     docs/capacitor-native-auth.md for the full compatibility verification.
+     vendor/capacitor-firebase-auth-stub.js is a small first-party helper
+     (not vendored from npm) required only so the plugin bundle doesn't
+     throw while parsing - see that file's own header comment for why it's
+     safe and never functionally exercised on native Android. Kept as an
+     external same-origin file rather than an inline <script>, per this
+     project's own CSP-hardening rule (tests/styles-source.test.js). -->
+<script src="vendor/capacitor-firebase-auth-stub.js"></script>
+<script src="vendor/capacitor-core.js"></script>
+<script src="vendor/capacitor-firebase-authentication.js"></script>
+<script src="auth.js"></script>
+<script src="config.js"></script>
+<script src="strings.js"></script>
+<!-- Frontend-only validation contract, not connected to any real page
+     context yet (Integration Prep phase - see docs/integration-prep/
+     context-adapter-contract.md). Loaded early so it is available to
+     history-ui.js/app.js if a future call site needs it; nothing calls it
+     with real data today. -->
+<script src="context-adapter.js"></script>
+<script src="chatStore.js"></script>
+<script src="dialog.js"></script>
+<script src="toast.js"></script>
+<script src="history-ui.js"></script>
+<script src="settings-ui.js"></script>
+<!-- Markdown rendering deps, vendored locally (www/vendor/) - same-origin,
+     no CDN, no bundler, no CSP change needed. See
+     docs/phase-05-chat-experience.md ("CSP and dependencies"). -->
+<script src="vendor/marked.umd.js"></script>
+<script src="vendor/purify.min.js"></script>
+<script src="markdown.js"></script>
+<script src="mode-ui.js"></script>
+<script src="voice.js"></script>
+<script src="learning-memory.js"></script>
+<script src="tutor-dashboard.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

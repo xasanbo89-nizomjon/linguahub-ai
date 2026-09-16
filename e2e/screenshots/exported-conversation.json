@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-08-07T11:52:52.982Z",
+  "app": "LinguaHub AI",
+  "conversation": {
+    "title": "export flow marker message",
+    "createdAt": "2026-08-07T11:52:52.468Z",
+    "updatedAt": "2026-08-07T11:52:52.742Z",
+    "metadata": {
+      "mode": "general"
+    },
+    "messages": [
+      {
+        "role": "user",
+        "content": "export flow marker message",
+        "createdAt": "2026-08-07T11:52:52.691Z",
+        "status": "complete"
+      },
+      {
+        "role": "assistant",
+        "content": "(Stopped - no response received)",
+        "createdAt": "2026-08-07T11:52:52.742Z",
+        "status": "stopped"
+      }
+    ]
+  }
+}

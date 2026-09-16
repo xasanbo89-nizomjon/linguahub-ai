@@ -1,0 +1,190 @@
+{
+  "label": "Phase 7 Keyboard QA",
+  "entries": [
+    {
+      "name": "composer is reachable and focusable",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Shift+Enter inserts a newline, does not send",
+      "pass": true,
+      "detail": "\"keyboard test message\\nsecond line\""
+    },
+    {
+      "name": "Enter sends the message",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Stop button is keyboard-focusable and Enter-activatable",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "message action buttons become visible on keyboard focus (:focus-within), not just mouse hover",
+      "pass": true,
+      "detail": "opacity=1"
+    },
+    {
+      "name": "Copy action is Enter-activatable via keyboard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Edit opens an editable textarea reachable by keyboard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Escape cancels edit mode without changing the message",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "mode selector responds to ArrowDown (native <select> behavior)",
+      "pass": null,
+      "detail": "codex"
+    },
+    {
+      "name": "mode selector is keyboard-reachable and operable",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "first focused element on dialog open",
+      "pass": null,
+      "detail": "{\"tag\":\"BUTTON\",\"id\":\"\",\"cls\":\"lh-btn lh-btn-primary\",\"text\":\"Done\"}"
+    },
+    {
+      "name": "theme option button is Enter-activatable",
+      "pass": true,
+      "detail": "data-theme=dark"
+    },
+    {
+      "name": "theme option button is Space-activatable",
+      "pass": true,
+      "detail": "data-theme=light"
+    },
+    {
+      "name": "focusable elements inside settings dialog",
+      "pass": null,
+      "detail": 9
+    },
+    {
+      "name": "rename dialog auto-focuses its text input",
+      "pass": true,
+      "detail": "{\"tag\":\"INPUT\",\"id\":\"\",\"cls\":\"lh-dialog-input\",\"text\":\"\"}"
+    },
+    {
+      "name": "dialog focus trap: Shift+Tab from the first control wraps to the last",
+      "pass": true,
+      "detail": "after={\"tag\":\"BUTTON\",\"id\":\"\",\"cls\":\"lh-btn lh-btn-primary\",\"text\":\"Rename\"} expectedLast={\"tag\":\"BUTTON\",\"cls\":\"lh-btn lh-btn-primary\",\"text\":\"Rename\"}"
+    },
+    {
+      "name": "dialog focus trap: Tab from the last control wraps to the first",
+      "pass": true,
+      "detail": "{\"tag\":\"INPUT\",\"id\":\"\",\"cls\":\"lh-dialog-input\",\"text\":\"\"}"
+    },
+    {
+      "name": "Escape cancels the rename dialog (no dialog left open)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "focus is restored to the rename button that opened the dialog, after Escape",
+      "pass": true,
+      "detail": "{\"tag\":\"BUTTON\",\"id\":\"\",\"cls\":\"\",\"text\":\"✏️\"}"
+    },
+    {
+      "name": "Escape cancels the delete confirmation (nothing deleted)",
+      "pass": true,
+      "detail": "before=1 after=1"
+    },
+    {
+      "name": "Enter on the danger button confirms delete",
+      "pass": true,
+      "detail": "before=1 after=0"
+    },
+    {
+      "name": "Escape cancels Clear chat confirmation",
+      "pass": true,
+      "detail": "remaining=1"
+    },
+    {
+      "name": "Enter confirms Clear chat",
+      "pass": true,
+      "detail": "remaining=0"
+    },
+    {
+      "name": "opening the drawer via keyboard moves focus inside it (New Chat)",
+      "pass": true,
+      "detail": "{\"tag\":\"BUTTON\",\"id\":\"new-chat-btn\",\"cls\":\"new-chat-btn\",\"text\":\"+New Chat\"}"
+    },
+    {
+      "name": "New Chat is among the drawer's real focusable controls (keyboard-reachable)",
+      "pass": true,
+      "detail": "[\"sidebar-collapse-btn\",\"chat-search-input\",\"new-chat-btn\",\"quick-theme-btn\",\"export-chat-btn\",\"import-label-btn\",\"settings-btn\"]"
+    },
+    {
+      "name": "a disabled control (sign-in, when Firebase isn't configured) is excluded from the focus trap - not just visually inert",
+      "pass": true,
+      "detail": "loginDisabled=true inTrapSet=false"
+    },
+    {
+      "name": "a hidden control (#logout-btn, inside #user-profile[hidden] in guest mode) is excluded from the focus trap, not just from the visual layout",
+      "pass": true,
+      "detail": "existsButHidden=true inTrapSet=false"
+    },
+    {
+      "name": "Import (a <label>, not a <button>) is keyboard-focusable",
+      "pass": true,
+      "detail": "{\"tag\":\"LABEL\",\"id\":\"import-label-btn\",\"cls\":\"sidebar-icon-btn sidebar-import-label\",\"text\":\"⇩Import\"}"
+    },
+    {
+      "name": "Import is Enter-activatable via keyboard (opens the real file picker, not a mouse-only no-op)",
+      "pass": true,
+      "detail": "filechooser event fired"
+    },
+    {
+      "name": "keyboard order matches the approved layout: New Chat comes after search/history and before the utility controls",
+      "pass": true,
+      "detail": "[\"sidebar-collapse-btn\",\"chat-search-input\",\"new-chat-btn\",\"quick-theme-btn\",\"export-chat-btn\",\"import-label-btn\",\"settings-btn\"]"
+    },
+    {
+      "name": "drawer focus trap: Shift+Tab from the true first control wraps to the true last",
+      "pass": true,
+      "detail": "after={\"tag\":\"BUTTON\",\"id\":\"settings-btn\",\"cls\":\"sidebar-icon-btn\",\"text\":\"⚙Settings\"} expected={\"tag\":\"BUTTON\",\"id\":\"settings-btn\",\"text\":\"⚙Settings\"}"
+    },
+    {
+      "name": "drawer focus trap: Tab from the true last control wraps to the true first",
+      "pass": true,
+      "detail": "after={\"tag\":\"BUTTON\",\"id\":\"sidebar-collapse-btn\",\"cls\":\"sidebar-collapse-btn\",\"text\":\"⟨\"} expected={\"tag\":\"BUTTON\",\"id\":\"sidebar-collapse-btn\",\"text\":\"⟨\"}"
+    },
+    {
+      "name": "Escape closes the drawer",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "focus returns to the drawer toggle button after Escape",
+      "pass": true,
+      "detail": "{\"tag\":\"BUTTON\",\"id\":\"sidebar-toggle-btn\",\"cls\":\"\",\"text\":\"☰\"}"
+    },
+    {
+      "name": "sign-in control is honestly disabled (not fake-enabled) when Firebase isn't configured",
+      "pass": true,
+      "detail": "{\"disabled\":true,\"statusText\":\"Sign-in is unavailable: Firebase is not configured for this app.\"}"
+    },
+    {
+      "name": "no 'profile menu' widget exists in this app (Sign in / Logout are plain buttons, not a dropdown menu)",
+      "pass": null,
+      "detail": "documented, not a defect"
+    }
+  ],
+  "summary": {
+    "total": 32,
+    "passed": 32,
+    "failed": 0
+  }
+}

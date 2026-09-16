@@ -1,0 +1,85 @@
+{
+  "label": "Phase 7 Performance QA",
+  "entries": [
+    {
+      "name": "initial render + mode-bootstrap time",
+      "pass": null,
+      "detail": "1510ms"
+    },
+    {
+      "name": "initial render completes in well under 5s (real browser, cold start)",
+      "pass": true,
+      "detail": "1510ms"
+    },
+    {
+      "name": "theme switch time",
+      "pass": null,
+      "detail": "274ms"
+    },
+    {
+      "name": "theme switch is fast (<500ms)",
+      "pass": true,
+      "detail": "274ms"
+    },
+    {
+      "name": "drawer open time (includes 320ms CSS transition)",
+      "pass": null,
+      "detail": "167ms"
+    },
+    {
+      "name": "drawer open completes promptly (<1000ms)",
+      "pass": true,
+      "detail": "167ms"
+    },
+    {
+      "name": "dialog open is fast (<500ms)",
+      "pass": true,
+      "detail": "400ms"
+    },
+    {
+      "name": "toast appears promptly after a trigger action (<500ms)",
+      "pass": true,
+      "detail": "389ms"
+    },
+    {
+      "name": "seeding 150 messages directly via chatStore API",
+      "pass": null,
+      "detail": "47ms"
+    },
+    {
+      "name": "re-rendering a 150-message conversation",
+      "pass": null,
+      "detail": "586ms"
+    },
+    {
+      "name": "rendering a 150-message conversation stays reasonably fast (<3000ms)",
+      "pass": true,
+      "detail": "586ms"
+    },
+    {
+      "name": "search across the conversation list",
+      "pass": null,
+      "detail": "285ms"
+    },
+    {
+      "name": "JS heap growth after 15x New Chat + 10x dialog open/close + 5x generation cycles",
+      "pass": null,
+      "detail": "0.00MB"
+    },
+    {
+      "name": "no gross memory blowup after repeated interaction cycles (<50MB growth)",
+      "pass": true,
+      "detail": "0.00MB"
+    },
+    {
+      "name": "DOM message-node count after the stress sequence (sanity check, not unbounded)",
+      "pass": null,
+      "detail": 10
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  }
+}

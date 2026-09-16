@@ -1,0 +1,46 @@
+# LinguaHub AI - Docker build context exclusions (Phase 11).
+# Keeps secrets, dev tooling, and unrelated distribution artifacts out of
+# the build context entirely - not just out of the final image (excluding
+# them here means they're never even sent to the Docker daemon / never
+# available to any build stage to accidentally COPY).
+
+# Secrets - never enter the build context under any circumstance.
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+*.serviceaccount.json
+android/app/google-services.json
+
+# Version control and editor state.
+.git
+.gitignore
+.vscode
+.idea
+
+# Node dependencies - reinstalled fresh in the build stage (npm ci), never
+# copied from the host (avoids leaking host-specific native bindings and
+# dev-only devDependencies into the build context).
+node_modules
+
+# Test/dev-only artifacts - never needed by the running backend image.
+tests
+e2e
+docs
+*.md
+
+# Desktop/mobile distribution paths - unrelated to this backend image.
+android
+capacitor.config.json
+main.js
+dist
+build
+
+# Local build/output noise.
+*.log
+npm-debug.log*

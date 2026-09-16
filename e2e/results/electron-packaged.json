@@ -1,0 +1,75 @@
+{
+  "label": "Phase 9 Packaged Electron Launch Verification",
+  "entries": [
+    {
+      "name": "packaged exe found",
+      "pass": null,
+      "detail": "C:\\Users\\axiy3\\Downloads\\Telegram Desktop\\AI-chat-app\\AI-chat-app\\dist\\win-unpacked\\LinguaHub AI.exe"
+    },
+    {
+      "name": "backend starts and becomes healthy",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "the PACKAGED app (dist/win-unpacked, running from app.asar) launches for real",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "a real BrowserWindow opens from the packaged app",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no blank screen: packaged app loads real content (not blank/error page)",
+      "pass": true,
+      "detail": "file:///C:/Users/axiy3/Downloads/Telegram%20Desktop/AI-chat-app/AI-chat-app/dist/win-unpacked/resources/app.asar/www/index.html"
+    },
+    {
+      "name": "real assets load from inside the packaged asar (mode selector populated)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "packaged app's config.js still resolves file:// to the local backend",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000"
+    },
+    {
+      "name": "a real chat round-trip completes from the packaged app",
+      "pass": false,
+      "detail": "status=streaming"
+    },
+    {
+      "name": "theme switching works in the packaged app",
+      "pass": true,
+      "detail": "dark"
+    },
+    {
+      "name": "LocalStorage works in the packaged app",
+      "pass": true,
+      "detail": "[\"linguahub-ai:chat-history:v1:guest\",\"linguahub-ai:chat-history:legacy-migration-complete\"]"
+    },
+    {
+      "name": "no fatal console errors in the packaged app",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "packaged app screenshot saved",
+      "pass": null,
+      "detail": "electron-packaged-window.png"
+    },
+    {
+      "name": "backend stderr",
+      "pass": null,
+      "detail": "⚠️  Firebase Admin is not configured (set GOOGLE_APPLICATION_CREDENTIALS, or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY). Authenticated-only routes will respond 503 until configured; guest chat is unaffected.\n"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "passed": 9,
+    "failed": 1
+  }
+}

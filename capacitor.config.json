@@ -1,0 +1,11 @@
+{
+  "appId": "com.xasan.ai",
+  "appName": "LinguaHub AI",
+  "webDir": "www",
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
+    }
+  }
+}

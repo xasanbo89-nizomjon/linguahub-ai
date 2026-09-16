@@ -1,0 +1,268 @@
+/* LinguaHub AI - design tokens.
+   Centralized CSS custom properties consumed by styles.css. Nothing in
+   styles.css should hardcode a repeated color, radius, spacing, shadow, or
+   z-index value - every reusable value lives here exactly once.
+
+   Breakpoints (referenced by comments in styles.css, since CSS custom
+   properties cannot be used inside @media conditions):
+     1440px, 1280px, 1024px, 768px, 430px, 390px, 360px */
+
+:root{
+/* ---- typography ---- */
+--font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+--font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+--font-size-xs: 0.75rem;
+--font-size-sm: 0.8125rem;
+--font-size-md: 0.9375rem;
+--font-size-lg: 1.0625rem;
+--font-size-xl: 1.25rem;
+--font-size-2xl: 1.5rem;
+--line-height-tight: 1.25;
+--line-height-normal: 1.5;
+--line-height-relaxed: 1.7;
+
+/* ---- spacing scale (4px base) ---- */
+--space-1: 4px;
+--space-2: 8px;
+--space-3: 12px;
+--space-4: 16px;
+--space-5: 20px;
+--space-6: 24px;
+--space-8: 32px;
+--space-10: 40px;
+
+/* ---- radius ---- */
+--radius-sm: 8px;
+--radius-md: 12px;
+--radius-lg: 18px;
+--radius-xl: 24px;
+--radius-full: 999px;
+
+/* ---- motion ---- */
+--duration-fast: 120ms;
+--duration-base: 200ms;
+--duration-slow: 320ms;
+--ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+/* ---- layout ---- */
+--sidebar-width: 272px;
+--sidebar-width-collapsed: 72px;
+--content-max-width: 900px;
+--composer-max-width: 900px;
+--touch-target-min: 44px;
+
+/* ---- elevation / glass ---- */
+--blur-sm: 8px;
+--blur-md: 18px;
+--blur-lg: 28px;
+
+/* ---- radius (premium, softer than --radius-xl for large glass panels) ---- */
+--radius-2xl: 28px;
+
+/* ---- z-index layers ---- */
+/* Lets real chat content (.chat-box, .empty-state) paint above the
+   decorative background pattern (.chat-scroll-wrapper::before, Phase 14)
+   without a magic number - the pattern itself needs no explicit z-index
+   at all (it's first in DOM/generated-content order, which already
+   paints it behind any later sibling at the same implicit level). */
+--z-content: 1;
+--z-background: -1;
+--z-header: 10;
+--z-drawer-backdrop: 25;
+/* Must stay above --z-drawer-backdrop: on the off-canvas mobile drawer
+   (styles.css, max-width: 768px), the backdrop and the open sidebar both
+   cover the viewport - if the sidebar stacked below its own backdrop, the
+   backdrop would intercept every click meant for the drawer's own buttons
+   (Settings, New Chat, rename/delete, search), making an open drawer
+   effectively unusable on mobile. Found via real click-based browser
+   testing, not just visual inspection (docs/phase-07-browser-and-release-qa.md). */
+--z-sidebar: 30;
+--z-dialog-backdrop: 40;
+--z-dialog: 41;
+--z-toast: 50;
+
+/* Fallback (no-JS) palette - overridden by [data-theme] below once
+   theme.js runs, which happens before first paint in the normal case.
+   Phase 14: LinguaHub brand colors (emerald green + white/off-white),
+   replacing the previous gold/amber accent everywhere - see the light
+   theme block below for the full rationale on the accent/accent-vivid
+   split. */
+--color-accent: #047857;
+--color-accent-hover: #036650;
+--color-accent-contrast: #ffffff;
+--color-accent-vivid: #059669;
+--color-accent-soft: #ecfdf5;
+--color-bg: #f8fbf9;
+--color-surface: #ffffff;
+--color-surface-elevated: #ffffff;
+--color-glass: rgba(255, 255, 255, 0.72);
+--color-border: #e5e7eb;
+--color-border-strong: #d1d5db;
+/* An even lighter "hairline" border for surfaces that should read as
+   barely-there separation rather than a boxed outline (sidebar/container
+   shells, the composer) - --color-border itself is left untouched since
+   it's still the right weight for genuinely functional dividers (input
+   fields, table cells) that need to stay clearly visible. */
+--color-border-hairline: rgba(17, 24, 39, 0.06);
+--color-text: #111827;
+--color-text-secondary: #64748b;
+/* Slightly darker than --color-text-secondary, for smaller/lower-emphasis
+   text (relative timestamps, hints) - kept as its own token, verified
+   separately by axe-core, exactly like Phase 7's original discovery that
+   a muted-text shade good enough for --color-text-secondary's larger use
+   can still fail WCAG AA at a smaller size against a tinted background. */
+--color-text-muted: #5b6472;
+--color-success: #1a7f4b;
+--color-success-soft: rgba(26, 127, 75, 0.12);
+--color-warning: #92620a;
+--color-warning-soft: rgba(146, 98, 10, 0.12);
+--color-danger: #b3261e;
+--color-danger-soft: rgba(179, 38, 30, 0.12);
+--color-info: #2761b3;
+--color-info-soft: rgba(39, 97, 179, 0.12);
+--focus-ring-color: #059669;
+--shadow-xs: 0 1px 3px rgba(17, 24, 39, 0.05);
+--shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+--shadow-md: 0 8px 24px rgba(17, 24, 39, 0.10);
+--shadow-lg: 0 16px 48px rgba(17, 24, 39, 0.16);
+/* Subtle premium glow (Phase 14) - applied only to a short, deliberate
+   list of interactive/important elements (send button, focused composer,
+   active conversation, LH avatar, New Chat hover) - never as a static
+   ambient effect on ordinary surfaces. */
+--glow-accent: 0 0 20px rgba(16, 185, 129, 0.12);
+--glow-accent-strong: 0 0 28px rgba(16, 185, 129, 0.20);
+}
+
+/* ---------------------------------------------------------------------
+   Light theme - THE PRIMARY LinguaHub AI appearance (Phase 14). White/
+   off-white surfaces, dark charcoal text, an emerald green brand accent.
+   The previous gold/amber/yellow brand accent is fully removed.
+
+   Two green tokens, not one, and this is deliberate:
+     --color-accent (#047857, "emerald-700") is used everywhere a SOLID
+     fill sits directly under real text (buttons, the user chat bubble,
+     the avatar-initial fallback) - verified by direct luminance
+     calculation at ~5.5:1 against white, comfortably clearing WCAG AA's
+     4.5:1 text threshold.
+     --color-accent-vivid (#059669, "emerald-600" - the exact shade the
+     approved design direction specifies as "primary green") is used for
+     borders, icons-on-white, focus rings, glows, and soft-tint sources -
+     contexts governed by the 3:1 non-text/UI-component contrast
+     threshold, not the stricter 4.5:1 text threshold, where the
+     brief's exact requested hue reads correctly at full vividness.
+   This split exists to hit the brief's exact requested hue AND real
+   verified AA text contrast at the same time, rather than trading one
+   for the other - re-verified live via axe-core, not just calculated
+   (see e2e/accessibility.js's real results this phase).
+   --------------------------------------------------------------------- */
+:root[data-theme="light"]{
+--color-accent: #047857;
+--color-accent-hover: #036650;
+--color-accent-contrast: #ffffff;
+--color-accent-vivid: #059669;
+--color-accent-soft: #ecfdf5;
+
+--color-bg: #f8fbf9;
+--color-surface: #ffffff;
+--color-surface-elevated: #ffffff;
+--color-glass: rgba(255, 255, 255, 0.72);
+--color-border: #e5e7eb;
+--color-border-strong: #d1d5db;
+--color-border-hairline: rgba(17, 24, 39, 0.06);
+
+--color-text: #111827;
+--color-text-secondary: #64748b;
+--color-text-muted: #5b6472;
+
+--color-success: #1a7f4b;
+--color-success-soft: rgba(26, 127, 75, 0.12);
+--color-warning: #92620a;
+--color-warning-soft: rgba(146, 98, 10, 0.12);
+--color-danger: #b3261e;
+--color-danger-soft: rgba(179, 38, 30, 0.12);
+--color-info: #2761b3;
+--color-info-soft: rgba(39, 97, 179, 0.12);
+--focus-ring-color: #059669;
+
+--shadow-xs: 0 1px 3px rgba(17, 24, 39, 0.05);
+--shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+--shadow-md: 0 8px 24px rgba(17, 24, 39, 0.10);
+--shadow-lg: 0 16px 48px rgba(17, 24, 39, 0.16);
+
+--glow-accent: 0 0 20px rgba(16, 185, 129, 0.12);
+--glow-accent-strong: 0 0 28px rgba(16, 185, 129, 0.20);
+}
+
+/* ---------------------------------------------------------------------
+   Dark theme (Phase 14) - deep graphite/charcoal background (unchanged
+   from prior phases - already exactly what the brief asks for), soft
+   elevated panels, an emerald accent (brighter than light theme's, since
+   a dark background needs a lighter/more saturated accent to read
+   clearly), near-black-green contrast text on solid accent fills -
+   mirrors the exact bright-accent/dark-contrast-text structure the
+   previous gold dark theme already used and had verified, just re-hued.
+   Restrained, not neon - see --glow-accent below, unchanged strength
+   from light theme's.
+   --------------------------------------------------------------------- */
+:root[data-theme="dark"]{
+--color-accent: #34d399;
+--color-accent-hover: #6ee7b7;
+--color-accent-contrast: #062419;
+--color-accent-vivid: #10b981;
+--color-accent-soft: rgba(16, 185, 129, 0.16);
+
+--color-bg: #14151a;
+--color-surface: #1b1c22;
+--color-surface-elevated: #22232b;
+--color-glass: rgba(34, 35, 43, 0.55);
+--color-border: rgba(255, 255, 255, 0.08);
+--color-border-strong: rgba(255, 255, 255, 0.14);
+--color-border-hairline: rgba(255, 255, 255, 0.06);
+
+--color-text: #f1efe9;
+--color-text-secondary: #c7c4ba;
+--color-text-muted: #8f8c83;
+
+--color-success: #4ade80;
+--color-success-soft: rgba(74, 222, 128, 0.14);
+--color-warning: #fbbf24;
+--color-warning-soft: rgba(251, 191, 36, 0.14);
+--color-danger: #f87171;
+--color-danger-soft: rgba(248, 113, 113, 0.14);
+--color-info: #60a5fa;
+--color-info-soft: rgba(96, 165, 250, 0.14);
+--focus-ring-color: #34d399;
+
+--shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.25);
+--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+--shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+--shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.55);
+
+--glow-accent: 0 0 20px rgba(52, 211, 153, 0.18);
+--glow-accent-strong: 0 0 28px rgba(52, 211, 153, 0.28);
+}
+
+/* If JS never ran (theme.js failed to load) and the OS prefers dark, still
+   avoid a bright flash - degrade to the dark palette via the media query
+   the same way theme.js itself resolves "system" mode. */
+@media (prefers-color-scheme: dark){
+:root:not([data-theme]){
+--color-accent: #34d399;
+--color-accent-hover: #6ee7b7;
+--color-accent-contrast: #062419;
+--color-accent-vivid: #10b981;
+--color-accent-soft: rgba(16, 185, 129, 0.16);
+--color-bg: #14151a;
+--color-surface: #1b1c22;
+--color-surface-elevated: #22232b;
+--color-glass: rgba(34, 35, 43, 0.55);
+--color-border: rgba(255, 255, 255, 0.08);
+--color-border-strong: rgba(255, 255, 255, 0.14);
+--color-border-hairline: rgba(255, 255, 255, 0.06);
+--color-text: #f1efe9;
+--color-text-secondary: #c7c4ba;
+--color-text-muted: #8f8c83;
+--glow-accent: 0 0 20px rgba(52, 211, 153, 0.18);
+--glow-accent-strong: 0 0 28px rgba(52, 211, 153, 0.28);
+}
+}

@@ -1,0 +1,125 @@
+{
+  "label": "Phase 7 Security QA",
+  "entries": [
+    {
+      "name": "no OpenAI key or private key literal exists anywhere in www/*.js",
+      "pass": true,
+      "detail": "clean"
+    },
+    {
+      "name": "server.js never sends process.env.OPENAI_API_KEY in a response body",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "toPublicMetadata()'s allowlist excludes systemPrompt/model/temperature/tools by construction",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "rendered page HTML contains no OpenAI-shaped key",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "GET /api/ai/modes response body has no system prompt, model name, or key",
+      "pass": true,
+      "detail": "{\"modes\":[{\"id\":\"general\",\"label\":\"General AI\",\"description\":\"A broad, helpful assistant for everyday questions, writing, and multilingual conversation.\",\"enabled\":true,\"capability\":\"chat\"},{\"id\":\"cod"
+    },
+    {
+      "name": "a disabled mode (image) cannot be forced into the selector via the UI",
+      "pass": true,
+      "detail": "rejected-by-browser"
+    },
+    {
+      "name": "backend rejects a hand-crafted request for a disabled mode (defense in depth)",
+      "pass": true,
+      "detail": "{\"status\":400,\"body\":{\"reply\":\"❌ \\\"Image AI\\\" is not available yet.\",\"requestId\":\"2759c3c4-4b72-4ed1-b04a-d62ac983f6c0\"}}"
+    },
+    {
+      "name": "a client-supplied model override is rejected with 400, not silently used",
+      "pass": true,
+      "detail": "{\"status\":400,\"body\":{\"reply\":\"❌ This request may not set: model.\",\"requestId\":\"46b0efd5-164f-43c2-84f5-0bc7ae251f89\"}}"
+    },
+    {
+      "name": "CORS rejection of unrecognized origins",
+      "pass": null,
+      "detail": "verified in tests/server.test.js (Node-level fetch, not browser-restricted) - not re-testable from in-page JS"
+    },
+    {
+      "name": "Content-Security-Policy header is present",
+      "pass": true,
+      "detail": "default-src 'self';script-src 'self' https://www.gstatic.com;script-src-attr 'none';style-src 'self';img-src 'self' data: https://*.googleusercontent.com;connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;frame-src https://*.firebaseapp.com https://accounts.google.com;font-src 'self';object-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self'"
+    },
+    {
+      "name": "CSP has no 'unsafe-inline' or 'unsafe-eval'",
+      "pass": true,
+      "detail": "default-src 'self';script-src 'self' https://www.gstatic.com;script-src-attr 'none';style-src 'self';img-src 'self' data: https://*.googleusercontent.com;connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;frame-src https://*.firebaseapp.com https://accounts.google.com;font-src 'self';object-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self'"
+    },
+    {
+      "name": "X-Content-Type-Options: nosniff is present",
+      "pass": true,
+      "detail": "{\"xContentTypeOptions\":\"nosniff\",\"xFrameOrCsp\":\"SAMEORIGIN\"}"
+    },
+    {
+      "name": "clickjacking protection present (X-Frame-Options or CSP frame-ancestors)",
+      "pass": true,
+      "detail": "{\"xContentTypeOptions\":\"nosniff\",\"xFrameOrCsp\":\"SAMEORIGIN\"}"
+    },
+    {
+      "name": "no <script> tag executes from Markdown-rendered content",
+      "pass": true,
+      "detail": "{\"windowFlagSet\":false,\"hasScriptTag\":0,\"hasOnerrorAttr\":false,\"hasJsLinks\":false}"
+    },
+    {
+      "name": "no onerror/event-handler attribute survives sanitization",
+      "pass": true,
+      "detail": "{\"windowFlagSet\":false,\"hasScriptTag\":0,\"hasOnerrorAttr\":false,\"hasJsLinks\":false}"
+    },
+    {
+      "name": "no javascript: link survives sanitization",
+      "pass": true,
+      "detail": "{\"windowFlagSet\":false,\"hasScriptTag\":0,\"hasOnerrorAttr\":false,\"hasJsLinks\":false}"
+    },
+    {
+      "name": "imported HTML-like content never executes as script",
+      "pass": true,
+      "detail": "{\"flagSet\":false,\"scriptTagCount\":0,\"titleHasRawImg\":0}"
+    },
+    {
+      "name": "imported HTML-like content renders as inert text, not markup, in the sidebar title",
+      "pass": true,
+      "detail": "{\"flagSet\":false,\"scriptTagCount\":0,\"titleHasRawImg\":0}"
+    },
+    {
+      "name": "exported conversation JSON contains no backend system-prompt fragments or secrets",
+      "pass": true,
+      "detail": "checked"
+    },
+    {
+      "name": "no Authorization/Bearer/JWT-shaped value exists anywhere in chat-history LocalStorage data",
+      "pass": true,
+      "detail": "checked chat-history:* keys only"
+    },
+    {
+      "name": "oversized input is rejected by the backend (input limit still enforced)",
+      "pass": true,
+      "detail": "{\"status\":400,\"body\":{\"reply\":\"❌ Message is too long (limit 8000 characters).\",\"requestId\":\"6daa1a7e-a5cd-4c7f-a2c3-2debf3529a9f\"}}"
+    },
+    {
+      "name": "an oversized context (200 messages) is handled safely, not a crash/hang",
+      "pass": true,
+      "detail": "{\"status\":400}"
+    },
+    {
+      "name": "rate limiting is still active (a burst of requests eventually gets 429)",
+      "pass": true,
+      "detail": "statuses seen: [400,429]"
+    }
+  ],
+  "summary": {
+    "total": 22,
+    "passed": 22,
+    "failed": 0
+  }
+}

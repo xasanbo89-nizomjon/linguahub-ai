@@ -1,0 +1,95 @@
+{
+  "label": "Phase 7 Storage QA",
+  "entries": [
+    {
+      "name": "refresh restores the active conversation's title",
+      "pass": true,
+      "detail": "before=\"message before refresh\" after=\"message before refresh\""
+    },
+    {
+      "name": "refresh restores the conversation's messages",
+      "pass": true,
+      "detail": "count=2"
+    },
+    {
+      "name": "New Chat adds a conversation without erasing the old one",
+      "pass": true,
+      "detail": "before=1 after=2"
+    },
+    {
+      "name": "rename persists across a reload",
+      "pass": true,
+      "detail": "Persisted Custom Title"
+    },
+    {
+      "name": "delete removes exactly one conversation",
+      "pass": true,
+      "detail": "before=2 after=1"
+    },
+    {
+      "name": "delete only removes the targeted conversation, others remain",
+      "pass": true,
+      "detail": "[\"message before refresh\"]"
+    },
+    {
+      "name": "Clear chat empties the current conversation",
+      "pass": true,
+      "detail": "count=0"
+    },
+    {
+      "name": "Clear chat does not delete other conversations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "search finds a conversation by title/content",
+      "pass": true,
+      "detail": "hits=1"
+    },
+    {
+      "name": "guest data is namespaced under a 'guest' LocalStorage key (not a bare/shared key)",
+      "pass": true,
+      "detail": "[\"linguahub-ai:chat-history:v1:guest\",\"linguahub-ai:chat-history:legacy-migration-complete\"]"
+    },
+    {
+      "name": "corrupted LocalStorage JSON does not crash the app on load",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "app remains fully usable after corrupted-storage recovery",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "mode on a brand-new conversation",
+      "pass": null,
+      "detail": "general"
+    },
+    {
+      "name": "switching back to a conversation restores its saved mode",
+      "pass": true,
+      "detail": "codex"
+    },
+    {
+      "name": "a 'stopped' message restores as 'stopped' (never silently stuck as 'streaming')",
+      "pass": true,
+      "detail": "status=stopped"
+    },
+    {
+      "name": "chatStore storage limits enforced (from source, re-confirmed live)",
+      "pass": null,
+      "detail": "{\"maxConversations\":100,\"maxMessagesPerConversation\":500,\"maxMessageContentChars\":20000,\"maxTitleChars\":80,\"autoTitleChars\":60,\"maxImportBytes\":2097152,\"maxNamespaceBytes\":4718592,\"minConversationsKeptOnPrune\":5}"
+    },
+    {
+      "name": "maxNamespaceBytes limit exists and is a sane positive number",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "xasan-ai",
+  "version": "1.0.0-rc.1",
+  "description": "LinguaHub AI Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "concurrently \"node server.js\" \"electron .\"",
+    "build": "electron-builder",
+    "test": "node --test",
+    "test:e2e": "node e2e/run-all.js",
+    "test:e2e:electron": "node e2e/electron.js",
+    "test:e2e:electron:packaged": "node e2e/electron-packaged.js",
+    "package:dry": "electron-builder --dir --publish never"
+  },
+  "build": {
+    "appId": "com.xasan.ai",
+    "productName": "LinguaHub AI",
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "main.js",
+      "server.js",
+      "www/**/*",
+      "lib/**/*",
+      "middleware/**/*",
+      "package.json",
+      "node_modules/**/*",
+      "!node_modules/@capacitor/**",
+      "!node_modules/@capacitor-firebase/**",
+      "!node_modules/@google/generative-ai/**",
+      "!node_modules/electron/**",
+      "!node_modules/electron-builder/**",
+      "!node_modules/playwright/**",
+      "!node_modules/playwright-core/**",
+      "!node_modules/axe-core/**",
+      "!node_modules/jsdom/**"
+    ]
+  },
+  "dependencies": {
+    "@capacitor-firebase/authentication": "8.3.0",
+    "@capacitor/android": "^8.3.3",
+    "@capacitor/cli": "^8.3.3",
+    "@capacitor/core": "^8.3.3",
+    "@google/generative-ai": "^0.24.1",
+    "body-parser": "^2.2.0",
+    "concurrently": "^9.0.1",
+    "cors": "^2.8.5",
+    "dompurify": "^3.4.13",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "firebase-admin": "^14.2.0",
+    "helmet": "^8.3.0",
+    "marked": "^18.0.9",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "axe-core": "^4.13.0",
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
+    "jsdom": "^30.0.1",
+    "playwright": "^1.62.1"
+  }
+}

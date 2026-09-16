@@ -1,0 +1,235 @@
+{
+  "label": "Phase 7 Responsive + Visual QA",
+  "entries": [
+    {
+      "name": "1440x900: no horizontal page overflow",
+      "pass": true,
+      "detail": "scrollWidth=1440 clientWidth=1440"
+    },
+    {
+      "name": "1440x900: composer is visible, not hidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "1440x900: code blocks scroll internally (overflow-x set, doesn't force page width)",
+      "pass": true,
+      "detail": "{\"scrollWidth\":603,\"clientWidth\":603,\"overflowX\":\"auto\"}"
+    },
+    {
+      "name": "1440x900: settings button touch target has a reasonable size (>=32px) and is on-screen when reachable",
+      "pass": true,
+      "detail": "{\"x\":229.296875,\"y\":807,\"width\":58.5,\"height\":44}"
+    },
+    {
+      "name": "1440x900: screenshot saved",
+      "pass": null,
+      "detail": "1440x900-full.png"
+    },
+    {
+      "name": "1280x800: no horizontal page overflow",
+      "pass": true,
+      "detail": "scrollWidth=1280 clientWidth=1280"
+    },
+    {
+      "name": "1280x800: composer is visible, not hidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800: code blocks scroll internally (overflow-x set, doesn't force page width)",
+      "pass": true,
+      "detail": "{\"scrollWidth\":603,\"clientWidth\":603,\"overflowX\":\"auto\"}"
+    },
+    {
+      "name": "1280x800: settings button touch target has a reasonable size (>=32px) and is on-screen when reachable",
+      "pass": true,
+      "detail": "{\"x\":217.109375,\"y\":711,\"width\":55.5,\"height\":44}"
+    },
+    {
+      "name": "1280x800: screenshot saved",
+      "pass": null,
+      "detail": "1280x800-full.png"
+    },
+    {
+      "name": "1024x768: no horizontal page overflow",
+      "pass": true,
+      "detail": "scrollWidth=1024 clientWidth=1024"
+    },
+    {
+      "name": "1024x768: composer is visible, not hidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768: code blocks scroll internally (overflow-x set, doesn't force page width)",
+      "pass": true,
+      "detail": "{\"scrollWidth\":603,\"clientWidth\":603,\"overflowX\":\"auto\"}"
+    },
+    {
+      "name": "1024x768: settings button touch target has a reasonable size (>=32px) and is on-screen when reachable",
+      "pass": true,
+      "detail": "{\"x\":197,\"y\":680.265625,\"width\":50.515625,\"height\":44}"
+    },
+    {
+      "name": "1024x768: screenshot saved",
+      "pass": null,
+      "detail": "1024x768-full.png"
+    },
+    {
+      "name": "768x1024: no horizontal page overflow",
+      "pass": true,
+      "detail": "scrollWidth=768 clientWidth=768"
+    },
+    {
+      "name": "768x1024: composer is visible, not hidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "768x1024: code blocks scroll internally (overflow-x set, doesn't force page width)",
+      "pass": true,
+      "detail": "{\"scrollWidth\":603,\"clientWidth\":603,\"overflowX\":\"auto\"}"
+    },
+    {
+      "name": "768x1024: mobile drawer opens with a visible backdrop",
+      "pass": true,
+      "detail": "app-shell sidebar-open"
+    },
+    {
+      "name": "768x1024: settings button touch target has a reasonable size (>=32px) and is on-screen when reachable",
+      "pass": true,
+      "detail": "{\"x\":236.5,\"y\":967,\"width\":70.5,\"height\":44}"
+    },
+    {
+      "name": "768x1024: mobile drawer closes via backdrop click",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "768x1024: screenshot saved",
+      "pass": null,
+      "detail": "768x1024-full.png"
+    },
+    {
+      "name": "430x932: no horizontal page overflow",
+      "pass": true,
+      "detail": "scrollWidth=430 clientWidth=430"
+    },
+    {
+      "name": "430x932: composer is visible, not hidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "430x932: code blocks scroll internally (overflow-x set, doesn't force page width)",
+      "pass": true,
+      "detail": "{\"scrollWidth\":603,\"clientWidth\":603,\"overflowX\":\"auto\"}"
+    },
+    {
+      "name": "430x932: mobile drawer opens with a visible backdrop",
+      "pass": true,
+      "detail": "app-shell sidebar-open"
+    },
+    {
+      "name": "430x932: settings button touch target has a reasonable size (>=32px) and is on-screen when reachable",
+      "pass": true,
+      "detail": "{\"x\":236.5,\"y\":875,\"width\":70.5,\"height\":44}"
+    },
+    {
+      "name": "430x932: mobile drawer closes via backdrop click",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "430x932: screenshot saved",
+      "pass": null,
+      "detail": "430x932-full.png"
+    },
+    {
+      "name": "390x844: no horizontal page overflow",
+      "pass": true,
+      "detail": "scrollWidth=390 clientWidth=390"
+    },
+    {
+      "name": "390x844: composer is visible, not hidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844: code blocks scroll internally (overflow-x set, doesn't force page width)",
+      "pass": true,
+      "detail": "{\"scrollWidth\":603,\"clientWidth\":603,\"overflowX\":\"auto\"}"
+    },
+    {
+      "name": "390x844: mobile drawer opens with a visible backdrop",
+      "pass": true,
+      "detail": "app-shell sidebar-open"
+    },
+    {
+      "name": "390x844: settings button touch target has a reasonable size (>=32px) and is on-screen when reachable",
+      "pass": true,
+      "detail": "{\"x\":236.5,\"y\":787,\"width\":70.5,\"height\":44}"
+    },
+    {
+      "name": "390x844: mobile drawer closes via backdrop click",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844: screenshot saved",
+      "pass": null,
+      "detail": "390x844-full.png"
+    },
+    {
+      "name": "360x800: no horizontal page overflow",
+      "pass": true,
+      "detail": "scrollWidth=360 clientWidth=360"
+    },
+    {
+      "name": "360x800: composer is visible, not hidden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "360x800: code blocks scroll internally (overflow-x set, doesn't force page width)",
+      "pass": true,
+      "detail": "{\"scrollWidth\":603,\"clientWidth\":603,\"overflowX\":\"auto\"}"
+    },
+    {
+      "name": "360x800: mobile drawer opens with a visible backdrop",
+      "pass": true,
+      "detail": "app-shell sidebar-open"
+    },
+    {
+      "name": "360x800: settings button touch target has a reasonable size (>=32px) and is on-screen when reachable",
+      "pass": true,
+      "detail": "{\"x\":223.296875,\"y\":743,\"width\":66.09375,\"height\":44}"
+    },
+    {
+      "name": "360x800: mobile drawer closes via backdrop click",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "360x800: screenshot saved",
+      "pass": null,
+      "detail": "360x800-full.png"
+    },
+    {
+      "name": "360x800: settings dialog does not cause page overflow",
+      "pass": true,
+      "detail": "{\"scrollWidth\":360,\"clientWidth\":360,\"overflowing\":false}"
+    },
+    {
+      "name": "360x800: settings dialog close button is reachable/visible",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "summary": {
+    "total": 38,
+    "passed": 38,
+    "failed": 0
+  }
+}

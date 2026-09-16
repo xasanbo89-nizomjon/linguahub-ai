@@ -1,0 +1,50 @@
+{
+  "label": "Phase 7 Regression: empty-state [hidden] visibility bug",
+  "entries": [
+    {
+      "name": "a genuinely empty conversation shows the empty state",
+      "pass": true,
+      "detail": "{\"hiddenAttr\":false,\"display\":\"flex\",\"actuallyVisible\":true}"
+    },
+    {
+      "name": "empty state disappears after the first user message",
+      "pass": true,
+      "detail": "{\"hiddenAttr\":true,\"display\":\"none\",\"actuallyVisible\":false}"
+    },
+    {
+      "name": "empty state stays hidden after further assistant rendering",
+      "pass": true,
+      "detail": "{\"hiddenAttr\":true,\"display\":\"none\",\"actuallyVisible\":false}"
+    },
+    {
+      "name": "switching to another empty conversation (New Chat) shows the empty state",
+      "pass": true,
+      "detail": "{\"hiddenAttr\":false,\"display\":\"flex\",\"actuallyVisible\":true}"
+    },
+    {
+      "name": "switching back to a populated conversation hides it",
+      "pass": true,
+      "detail": "{\"hiddenAttr\":true,\"display\":\"none\",\"actuallyVisible\":false}"
+    },
+    {
+      "name": "switching back to the empty conversation shows it again",
+      "pass": true,
+      "detail": "{\"hiddenAttr\":false,\"display\":\"flex\",\"actuallyVisible\":true}"
+    },
+    {
+      "name": "refresh restores the correct visibility (active conversation was empty)",
+      "pass": true,
+      "detail": "{\"hiddenAttr\":false,\"display\":\"flex\",\"actuallyVisible\":true}"
+    },
+    {
+      "name": "no layout gap remains when hidden (chat-box fills the wrapper's full height)",
+      "pass": true,
+      "detail": "{\"wrapperHeight\":643,\"chatBoxHeight\":643}"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "label": "Phase 7 Accessibility Automation (axe-core)",
+  "entries": [
+    {
+      "name": "Empty state (initial load): no critical accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Empty state (initial load): no serious accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Empty state (initial load): moderate violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "none"
+    },
+    {
+      "name": "Empty state (initial load): minor violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "aria-allowed-role: ARIA role should be appropriate for the element (1 nodes)"
+    },
+    {
+      "name": "Populated conversation with markdown/code/table/RTL: no critical accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Populated conversation with markdown/code/table/RTL: no serious accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Populated conversation with markdown/code/table/RTL: moderate violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "none"
+    },
+    {
+      "name": "Populated conversation with markdown/code/table/RTL: minor violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "aria-allowed-role: ARIA role should be appropriate for the element (1 nodes)"
+    },
+    {
+      "name": "Settings dialog open: no critical accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Settings dialog open: no serious accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Settings dialog open: moderate violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "none"
+    },
+    {
+      "name": "Settings dialog open: minor violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "aria-allowed-role: ARIA role should be appropriate for the element (1 nodes)"
+    },
+    {
+      "name": "Settings dialog: has dialog semantics (role + focus target)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Mobile drawer open (390x844): no critical accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Mobile drawer open (390x844): no serious accessibility violations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Mobile drawer open (390x844): moderate violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "none"
+    },
+    {
+      "name": "Mobile drawer open (390x844): minor violations (documented, not auto-failed)",
+      "pass": null,
+      "detail": "aria-allowed-role: ARIA role should be appropriate for the element (1 nodes)"
+    },
+    {
+      "name": "exactly one h1 (page has a single top-level heading)",
+      "pass": true,
+      "detail": "h1Count=1"
+    },
+    {
+      "name": "no duplicate element ids",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "no icon-only button lacks an aria-label",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "mode selector has an accessible name (aria-label)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "disabled modes are exposed via native <option disabled> (real AT semantics, not just visual styling)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "landmark counts",
+      "pass": null,
+      "detail": "{\"header\":0,\"nav\":0,\"main\":1}"
+    },
+    {
+      "name": "prefers-reduced-motion emulated - sampled animation-duration",
+      "pass": null,
+      "detail": "1e-06s"
+    },
+    {
+      "name": "a toast/live region announces via aria-live",
+      "pass": true,
+      "detail": "aria-live=polite"
+    },
+    {
+      "name": "a failed message's status label has role=\"status\" (announced to assistive tech)",
+      "pass": true,
+      "detail": "role=status"
+    },
+    {
+      "name": "at 200% zoom, no horizontal page overflow and the composer/send button stay visible",
+      "pass": true,
+      "detail": "{\"scrollWidth\":1440,\"clientWidth\":1440,\"composerVisible\":true,\"sendVisible\":true}"
+    },
+    {
+      "name": "forced-colors (Windows High Contrast) emulation - send button state",
+      "pass": null,
+      "detail": "{\"display\":\"block\",\"visibility\":\"visible\",\"bodyVisible\":true}"
+    },
+    {
+      "name": "page remains rendered and functional under forced-colors emulation (no blank page)",
+      "pass": true,
+      "detail": "{\"display\":\"block\",\"visibility\":\"visible\",\"bodyVisible\":true}"
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "passed": 18,
+    "failed": 0
+  }
+}

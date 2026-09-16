@@ -1,0 +1,145 @@
+{
+  "label": "Phase 9 Electron Runtime Verification (real launch)",
+  "entries": [
+    {
+      "name": "backend starts and becomes healthy (prerequisite for Electron to load real content)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Electron app process launches for real (scoped ELECTRON_RUN_AS_NODE override)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "1. a real BrowserWindow opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "2. no blank screen: window loads the real app via file:// (not blank/about:blank)",
+      "pass": true,
+      "detail": "file:///C:/Users/axiy3/Downloads/Telegram%20Desktop/AI-chat-app/AI-chat-app/www/index.html"
+    },
+    {
+      "name": "3. real assets load (mode selector populated from the live backend)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "4. backend connection resolves correctly (file:// -> http://127.0.0.1:3000)",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000"
+    },
+    {
+      "name": "5. no API request targets file://",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "6. no request targets port 5500",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "7. modes load (GET /api/ai/modes reached the real backend)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "8. real streaming starts (Stop control appears)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "9. Stop works (status settles to 'stopped')",
+      "pass": true,
+      "detail": "stopped"
+    },
+    {
+      "name": "a full real chat round-trip completes (real backend, real OpenAI)",
+      "pass": true,
+      "detail": "status=complete"
+    },
+    {
+      "name": "10/11. Copy / clipboard works (toast confirms, no error thrown)",
+      "pass": true,
+      "detail": "click completed without throwing; clipboard content itself not independently re-read here"
+    },
+    {
+      "name": "12. Export completes on the app side without error (\"Exported.\" status, real download pipeline engaged after the Phase 9 data-URL fix)",
+      "pass": true,
+      "detail": "before=\"\" after=\"Exported.\""
+    },
+    {
+      "name": "full file-on-disk verification",
+      "pass": null,
+      "detail": "NOT RUN - Electron's default download handling may present a native OS Save dialog, which Playwright cannot drive; verified manually during this phase that the download pipeline now actually engages (a real temp file is created), see docs/electron-runtime-report.md"
+    },
+    {
+      "name": "12b. Import adds a real conversation from within Electron",
+      "pass": true,
+      "detail": "before=6 after=7"
+    },
+    {
+      "name": "13. theme switching works inside Electron",
+      "pass": true,
+      "detail": "dark"
+    },
+    {
+      "name": "15a. the settings dialog opens with real dialog semantics",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "15b. the rename (LinguaHubDialog) dialog opens for real inside Electron",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "14. LocalStorage persistence works inside Electron (real chat-history keys present)",
+      "pass": true,
+      "detail": "[\"linguahub-ai:chat-history:v1:guest\",\"linguahub-ai:chat-history:legacy-migration-complete\"]"
+    },
+    {
+      "name": "16. external window.open() to an untrusted origin is denied (no second window opened)",
+      "pass": true,
+      "detail": "windows=1 evalResult={\"threw\":false,\"openedHandle\":false}"
+    },
+    {
+      "name": "nodeIntegration is truly off: no Node.js require()/process in the renderer's page context",
+      "pass": true,
+      "detail": "leaked=false"
+    },
+    {
+      "name": "no ipcRenderer/require exposed on window (contextIsolation genuinely isolates)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "17. no fatal console errors observed during the whole real run",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Electron window screenshot saved (real launch)",
+      "pass": null,
+      "detail": "electron-window.png"
+    },
+    {
+      "name": "external Google OAuth popup behavior for real accounts.google.com/firebaseapp.com URLs",
+      "pass": null,
+      "detail": "source-verified + generic-untrusted-origin-denial verified live above; the ALLOW branch specifically was not exercised live (no real Firebase project configured in this environment)"
+    },
+    {
+      "name": "backend stderr during Electron run",
+      "pass": null,
+      "detail": "⚠️  Firebase Admin is not configured (set GOOGLE_APPLICATION_CREDENTIALS, or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY). Authenticated-only routes will respond 503 until configured; guest chat is unaffected.\n"
+    }
+  ],
+  "summary": {
+    "total": 23,
+    "passed": 23,
+    "failed": 0
+  }
+}
