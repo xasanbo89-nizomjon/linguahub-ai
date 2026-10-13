@@ -10,6 +10,8 @@ const chatBox = document.getElementById("chat-box");
 const sendBtn = document.getElementById("send-btn");
 const statusEl = document.getElementById("status");
 const statusDotEl = document.getElementById("status-dot");
+const statusBarEl = statusEl.parentElement;
+let isBusy = false;
 const modeSelect = document.getElementById("mode-select");
 const conversationTitleEl = document.getElementById("conversation-title");
 const emptyStateEl = document.getElementById("empty-state");
@@ -27,9 +29,6 @@ const userAvatarFallback = document.getElementById("user-avatar-fallback");
 const userNameEl = document.getElementById("user-name");
 const userEmailEl = document.getElementById("user-email");
 const authStatusEl = document.getElementById("auth-status");
-const headerAccountBtn = document.getElementById("header-account-btn");
-const headerAccountAvatar = document.getElementById("header-account-avatar");
-const headerAccountLabel = document.getElementById("header-account-label");
 
 // Composer disclaimer text (Integration Prep phase, Task 14) - the single
 // centralized source of truth lives in www/strings.js, never hardcoded
@@ -260,14 +259,29 @@ if (shouldStick) scrollChatToBottom();
 return wrapper;
 }
 
+// The status line is visible only when it carries news: offline, or the
+// assistant is generating. The idle "Online" state is hidden by CSS
+// (.status-bar[data-state="online"]).
+function renderStatus() {
+const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+statusEl.textContent = offline ? "Offline" : (isBusy ? "LinguaHub AI is thinking..." : "Online");
+if (statusBarEl && typeof statusBarEl.setAttribute === "function") {
+statusBarEl.setAttribute("data-state", offline ? "offline" : (isBusy ? "busy" : "online"));
+}
+if (statusDotEl) statusDotEl.classList.toggle("active", isBusy && !offline);
+}
+
+if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+window.addEventListener("online", renderStatus);
+window.addEventListener("offline", renderStatus);
+}
+renderStatus();
+
 function setBusy(busy) {
 input.disabled = busy;
 modeSelect.disabled = busy;
-// "Online" (Phase 14) is the idle default, not an empty string - the app
-// really is ready to chat whenever it isn't actively streaming, so this
-// is an honest status, not a fabricated connectivity claim.
-statusEl.textContent = busy ? "LinguaHub AI is thinking..." : "Online";
-if (statusDotEl) statusDotEl.classList.toggle("active", busy);
+isBusy = busy;
+renderStatus();
 sendBtn.classList.toggle("is-stop", busy);
 sendBtn.textContent = busy ? "Stop" : "Send";
 sendBtn.setAttribute("aria-label", busy ? "Stop generating" : "Send message");
@@ -922,9 +936,6 @@ loginBtn.hidden = false;
 loginBtn.disabled = false;
 loginBtn.removeAttribute("aria-busy");
 userProfile.hidden = true;
-if (headerAccountAvatar) headerAccountAvatar.textContent = "G";
-if (headerAccountLabel) headerAccountLabel.textContent = "Guest";
-if (headerAccountBtn) headerAccountBtn.title = "Sign in";
 }
 
 function showAvatarFallback(name) {
@@ -940,10 +951,6 @@ userProfile.hidden = false;
 
 const name = user.displayName || user.email || "Signed in";
 const email = user.email || "";
-
-if (headerAccountAvatar) headerAccountAvatar.textContent = (name || "?").trim().charAt(0).toUpperCase() || "?";
-if (headerAccountLabel) headerAccountLabel.textContent = name;
-if (headerAccountBtn) headerAccountBtn.title = "Account settings";
 
 // textContent only - never innerHTML - so a malicious displayName/email
 // can never inject markup.
@@ -1038,12 +1045,6 @@ logoutBtn.removeAttribute("aria-busy");
 
 loginBtn.addEventListener("click", handleLogin);
 logoutBtn.addEventListener("click", handleLogout);
-if (headerAccountBtn) {
-headerAccountBtn.addEventListener("click", () => {
-if (loginBtn.hidden) settingsBtn.click();
-else loginBtn.click();
-});
-}
 
 if (window.LinguaHubAuth && LinguaHubAuth.isAvailable()) {
 loginBtn.disabled = true;

@@ -198,6 +198,8 @@ async function run() {
     await page.waitForTimeout(600);
     if (await page.locator("#send-btn.is-stop").count()) { await page.click("#send-btn"); await page.waitForTimeout(200); }
 
+    await page.click("#chat-menu-btn");
+
     await page.focus("#clear-chat-btn");
     await page.keyboard.press("Enter");
     await page.waitForSelector(".lh-dialog-actions .lh-btn-danger", { timeout: 5000 }).catch(() => {});
@@ -206,6 +208,8 @@ async function run() {
       await page.waitForTimeout(150);
       const msgCountAfterCancel = await page.locator('.message[data-role="user"]').count();
       results.check("Escape cancels Clear chat confirmation", msgCountAfterCancel > 0, `remaining=${msgCountAfterCancel}`);
+
+      await page.click("#chat-menu-btn");
 
       await page.focus("#clear-chat-btn");
       await page.keyboard.press("Enter");

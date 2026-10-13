@@ -872,13 +872,8 @@ border-bottom: 1px solid var(--color-border-hairline);
 display: flex;
 align-items: center;
 gap: var(--space-3);
-flex-wrap: wrap;
 position: relative;
 z-index: var(--z-header);
-}
-
-.header > .lh-mark{
-display: none;
 }
 
 #sidebar-toggle-btn{
@@ -910,8 +905,8 @@ gap: 2px;
 }
 
 .header-conversation-title{
-font-size: var(--font-size-sm);
-font-weight: 500;
+font-size: var(--font-size-md);
+font-weight: 600;
 letter-spacing: 0;
 white-space: nowrap;
 overflow: hidden;
@@ -925,50 +920,20 @@ gap: var(--space-2);
 min-height: 16px;
 }
 
-/* Reusable context chip (Phase 13 / future LinguaHub integration -
-   see docs/linguahub-ai-integration-handoff.md). Hidden and unpopulated
-   by default - [hidden] already forces display:none (see the global
-   rule near the top of this file), so this rule only governs its
-   appearance for whenever a future phase actually shows it. */
-.context-chip{
-display: flex;
-align-items: center;
-gap: var(--space-1);
-padding: 2px var(--space-2) 2px var(--space-1);
-border-radius: var(--radius-full);
-background: var(--color-bg);
-border: 1px solid var(--color-border-hairline);
-font-size: var(--font-size-xs);
+/* Connection status: shown only when it carries news. The idle "online"
+   state is hidden entirely; offline is a small, subtle warning; "busy"
+   (assistant generating) keeps the quiet pulsing dot. */
+.status-bar[data-state="online"]{
+display: none;
+}
+
+.status-bar[data-state="offline"] .status-dot{
+background: var(--warning);
+}
+
+.status-bar[data-state="offline"] #status{
+color: var(--warning);
 font-weight: 600;
-color: var(--color-text-muted);
-transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
-}
-
-/* Future-ready hook (Phase 14): once a future LinguaHub-embedded phase
-   actually has real page context to show, toggling this class is the
-   intended way to visually promote the chip from "quiet default" to
-   "carries real information" - a subtle glow, per the approved design
-   direction's "active context chip" glow example. Inert today (nothing
-   in this codebase adds this class yet - no fake context, no fake glow). */
-.context-chip.has-context{
-background: var(--color-accent-soft);
-color: var(--color-text-secondary);
-box-shadow: none;
-}
-
-.context-chip-dot{
-width: 5px;
-height: 5px;
-border-radius: 50%;
-background: var(--color-accent-vivid);
-flex-shrink: 0;
-}
-
-.context-chip-text{
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-max-width: 260px;
 }
 
 /* Static green "online" indicator by default (Phase 14 - "● Online"),
@@ -1001,76 +966,19 @@ gap: var(--space-2);
 flex-wrap: wrap;
 }
 
-.header-account-btn{
+/* "Mode" caption + the mode <select> (options come from the backend). */
+.mode-picker{
 display: inline-flex;
 align-items: center;
 gap: var(--space-2);
-min-height: 36px;
-padding: 4px 8px 4px 4px;
-background: transparent;
-border: 1px solid transparent;
-border-radius: var(--radius-md);
-box-shadow: none;
-color: var(--color-text-secondary);
-font-size: var(--font-size-sm);
+}
+
+.mode-picker-label{
+font-size: var(--font-size-xs);
 font-weight: 600;
-max-width: 168px;
-}
-
-.header-account-btn:hover:not(:disabled){
-background: var(--color-accent-soft);
-border-color: var(--color-border-hairline);
-box-shadow: none;
-transform: scale(1.015);
-}
-
-.header-account-avatar{
-display: grid;
-place-items: center;
-width: 28px;
-height: 28px;
-flex-shrink: 0;
-border-radius: 50%;
-background: var(--color-surface-elevated);
-border: 1px solid var(--color-border-strong);
-color: var(--accent-text);
-font-size: var(--font-size-xs);
-font-weight: 700;
-}
-
-.header-account-label{
-overflow: hidden;
-text-overflow: ellipsis;
-white-space: nowrap;
-}
-
-.wow-mode-btn{
-display: inline-flex;
-align-items: center;
-gap: 6px;
-min-height: 32px;
-padding: 6px 10px;
-border: 1px solid transparent;
-background: transparent;
-color: var(--color-text-secondary);
-font-size: var(--font-size-xs);
-letter-spacing: .055em;
-box-shadow: none;
-border-radius: var(--radius-full);
-}
-
-.wow-mode-btn:hover:not(:disabled){
-background: var(--color-accent-soft);
-color: var(--accent-text);
-box-shadow: none;
-transform: translateY(-1px);
-}
-
-.wow-mode-btn[aria-pressed="true"]{
-border-color: var(--color-border);
-background: var(--color-surface-elevated);
-color: var(--color-text-secondary);
-box-shadow: none;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+color: var(--text-muted);
 }
 
 #mode-select{
@@ -1081,7 +989,7 @@ border-radius: var(--radius-sm);
 padding: var(--space-2) var(--space-3);
 font-size: var(--font-size-sm);
 font-weight: 600;
-min-height: var(--touch-target-min);
+min-height: var(--space-10);
 transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
@@ -1095,8 +1003,56 @@ border-color: var(--color-accent-vivid);
 box-shadow: none;
 }
 
-/* #clear-chat-btn is styled entirely by the shared .header-icon-btn class
-   now (Phase 13) - no ID-specific rule needed. */
+/* Chat actions "..." menu (www/chat-menu.js). The items are the old
+   #clear-chat-btn / #tutor-dashboard-btn, restyled as menu rows. */
+.chat-menu{
+position: relative;
+}
+
+.chat-menu-list{
+position: absolute;
+top: calc(100% + var(--space-1));
+right: 0;
+z-index: var(--z-content);
+min-width: 200px;
+padding: var(--space-1);
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: var(--radius-md);
+box-shadow: var(--shadow-2);
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
+
+.chat-menu-item{
+width: 100%;
+min-height: var(--space-10);
+padding: var(--space-2) var(--space-3);
+background: transparent;
+color: var(--text);
+border-radius: var(--radius-sm);
+font-size: var(--font-size-sm);
+font-weight: 500;
+text-align: left;
+}
+
+.chat-menu-item:hover:not(:disabled),
+.chat-menu-item:focus-visible{
+background: var(--surface-2);
+color: var(--text);
+transform: none;
+}
+
+.chat-menu-item-danger{
+color: var(--danger);
+}
+
+.chat-menu-item-danger:hover:not(:disabled),
+.chat-menu-item-danger:focus-visible{
+background: var(--danger-soft);
+color: var(--danger);
+}
 
 .auth-area{
 display: flex;
@@ -2349,12 +2305,6 @@ justify-content: center;
 .header{
 padding: var(--space-3);
 }
-.header-account-label{
-display: none;
-}
-.header-account-btn{
-padding: 4px;
-}
 .header-conversation-title{
 font-size: var(--font-size-md);
 }
@@ -2377,20 +2327,14 @@ max-width: 100%;
 .header-controls{
 gap: var(--space-1);
 }
-.wow-mode-btn{
-padding: var(--space-1) var(--space-2);
-letter-spacing: .025em;
+.mode-picker-label{
+display: none;
 }
 #mode-select{
 font-size: var(--font-size-xs);
 padding: var(--space-1) var(--space-2);
 }
 
-@media (max-width: 390px){
-.wow-mode-btn span:last-child{
-display: none;
-}
-}
 .user-info{
 max-width: 90px;
 }
@@ -2663,6 +2607,7 @@ display: none;
    Thinking picker. modeSelect.value still resolves to "general"
    (www/mode-ui.js's own default) even while hidden - hiding the <select>
    never changes what mode a message is actually sent with. */
-[data-app-mode="embedded"]:not([data-show-mode-selector="true"]) #mode-select{
+[data-app-mode="embedded"]:not([data-show-mode-selector="true"]) #mode-select,
+[data-app-mode="embedded"]:not([data-show-mode-selector="true"]) .mode-picker{
 display: none;
 }

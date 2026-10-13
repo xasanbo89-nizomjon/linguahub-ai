@@ -80,6 +80,7 @@ async function run() {
     await page.fill("#user-input", "will be cleared");
     await page.locator("#user-input").press("Enter");
     await page.waitForSelector('.message[data-role="assistant"][data-status="complete"]', { timeout: 10000 });
+    await page.click("#chat-menu-btn");
     await page.focus("#clear-chat-btn");
     await page.click("#clear-chat-btn");
     await page.waitForSelector(".lh-dialog-actions .lh-btn-danger");

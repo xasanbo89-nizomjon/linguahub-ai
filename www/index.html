@@ -122,45 +122,41 @@
 <div class="header">
 <button id="sidebar-toggle-btn" type="button" aria-label="Toggle conversation list" aria-expanded="false" aria-controls="sidebar">☰</button>
 <h1 class="sr-only">LinguaHub AI</h1>
-<!-- Decorative assistant identity mark - purely visual brand presence.
-     The real accessible heading is the sr-only <h1> above; conversation
-     navigation context lives in #conversation-title right after this. -->
-<div class="lh-mark lh-mark-md" aria-hidden="true">LH</div>
 <div class="header-title-group">
 <div class="header-conversation-title" id="conversation-title">LinguaHub AI</div>
-<div class="status-bar">
+<!-- Connection/progress status. Shown ONLY when offline (or while the
+     assistant is generating) - data-state="online" is display:none, so the
+     idle "Online" label no longer clutters the header. #status and
+     #status-dot keep their IDs: app.js drives them. -->
+<div class="status-bar" data-state="online">
 <span class="status-dot" id="status-dot" aria-hidden="true"></span>
-<div id="status">Online</div>
-<!-- Reusable context chip (Phase 13/14 - future LinguaHub integration
-     readiness, see docs/linguahub-ai-integration-handoff.md). Visible by
-     default with an honest "no context" label - never fake/sample page
-     data. A future phase populates #context-chip-text with real page
-     context (e.g. "Reading · Cambridge 18 · Question 17") when this app
-     is actually embedded; nothing here claims that today. -->
-<div id="context-chip" class="context-chip">
-<span class="context-chip-dot" aria-hidden="true"></span>
-<span id="context-chip-text" class="context-chip-text">No active context</span>
-</div>
+<div id="status" role="status">Online</div>
 </div>
 </div>
 <div class="header-controls">
-<button id="tutor-dashboard-btn" type="button" class="header-icon-btn" title="Tutor Dashboard"><span aria-hidden="true">◈</span><span class="sr-only">Tutor Dashboard</span></button>
-<button id="wow-mode-btn" type="button" class="wow-mode-btn" aria-pressed="false" title="Toggle WOW Mode">
-<span aria-hidden="true">✨</span><span>WOW MODE</span>
-</button>
 <!-- Options are populated at runtime by mode-ui.js from GET /api/ai/modes -
      the backend's public mode registry is the single source of truth for
      which modes exist and are enabled (see lib/aiModes.js, Task 4). -->
+<div class="mode-picker">
+<span class="mode-picker-label" aria-hidden="true">Mode</span>
 <select id="mode-select" aria-label="Assistant mode">
 <option value="general">Loading modes...</option>
 </select>
-<button id="clear-chat-btn" type="button" class="header-icon-btn" title="Clear chat">
-<span aria-hidden="true">⟲</span><span class="sr-only">Clear chat</span>
+</div>
+<!-- Chat actions menu (www/chat-menu.js). Its two items keep the IDs of the
+     header buttons they replace (#clear-chat-btn, #tutor-dashboard-btn), so
+     the existing click handlers in history-ui.js / tutor-dashboard.js keep
+     working untouched. -->
+<div class="chat-menu" id="chat-menu">
+<button id="chat-menu-btn" type="button" class="header-icon-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="chat-menu-list" title="Chat actions">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="19" cy="12" r="1.75"/></svg>
+<span class="sr-only">Chat actions</span>
 </button>
-<button id="header-account-btn" type="button" class="header-account-btn" title="Account">
-<span id="header-account-avatar" class="header-account-avatar" aria-hidden="true">G</span>
-<span id="header-account-label" class="header-account-label">Guest</span>
-</button>
+<div id="chat-menu-list" class="chat-menu-list" role="menu" aria-label="Chat actions" hidden>
+<button id="tutor-dashboard-btn" type="button" class="chat-menu-item" role="menuitem">Tutor dashboard</button>
+<button id="clear-chat-btn" type="button" class="chat-menu-item chat-menu-item-danger" role="menuitem">Clear chat</button>
+</div>
+</div>
 </div>
 </div>
 
@@ -265,6 +261,7 @@ Send
 <script src="vendor/purify.min.js"></script>
 <script src="markdown.js"></script>
 <script src="mode-ui.js"></script>
+<script src="chat-menu.js"></script>
 <script src="voice.js"></script>
 <script src="learning-memory.js"></script>
 <script src="tutor-dashboard.js"></script>
