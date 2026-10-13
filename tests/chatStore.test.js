@@ -496,7 +496,7 @@ test("import rejects an oversized payload", () => {
   const store = makeStore();
   const huge = JSON.stringify({
     schemaVersion: 1,
-    conversation: { title: "big", messages: [{ role: "user", content: "x".repeat(3 * 1024 * 1024) }] }
+    conversation: { title: "big", messages: [{ role: "user", content: "x".repeat(5 * 1024 * 1024) }] }
   });
   const result = store.importConversationJson(huge);
   assert.equal(result.ok, false);
@@ -550,4 +550,66 @@ test("markdown export produces readable text without throwing", () => {
   const result = store.exportConversationMarkdown(conv.id);
   assert.equal(result.ok, true);
   assert.match(result.text, /hello back/);
+});
+
+// ---- Phase 3: export / import of many chats ------------------------------------------------------
+
+test("exportAllJson lists every non-empty chat; importAnyJson restores them all with fresh ids, keeping the file order", () => {
+  const a = makeStore();
+  const one = a.createConversation().conversation;
+  a.saveMessage(one.id, ChatStoreModule.createMessage("user", "first chat message"));
+  a.renameConversation(one.id, "First");
+  const two = a.createConversation().conversation;
+  a.saveMessage(two.id, ChatStoreModule.createMessage("user", "second chat message"));
+  a.renameConversation(two.id, "Second");
+  a.createConversation(); // empty: not exported
+  const exported = a.exportAllJson();
+  assert.equal(exported.ok, true);
+  assert.equal(exported.count, 2);
+  const parsed = JSON.parse(exported.json);
+  assert.equal(parsed.conversations.length, 2);
+  assert.equal(parsed.conversations.every((c) => !("id" in c)), true, "ids are never exported");
+
+  const b = makeStore();
+  const result = b.importAnyJson(exported.json);
+  assert.equal(result.ok, true);
+  assert.equal(result.added, 2);
+  assert.deepEqual(b.listConversations().map((c) => c.title), parsed.conversations.map((c) => c.title));
+  assert.equal(b.getActiveConversationId(), result.conversation.id);
+  assert.notEqual(b.listConversations()[0].id, one.id);
+});
+
+test("importAnyJson also accepts the single-chat format and rejects junk safely", () => {
+  const a = makeStore();
+  const c = a.createConversation().conversation;
+  a.saveMessage(c.id, ChatStoreModule.createMessage("user", "single"));
+  const single = a.exportConversationJson(c.id).json;
+  const b = makeStore();
+  assert.equal(b.importAnyJson(single).ok, true);
+  assert.equal(b.importAnyJson("not json").reason, "invalid-json");
+  assert.equal(b.importAnyJson("").reason, "empty-input");
+  assert.equal(b.importAnyJson(JSON.stringify({ conversations: [] })).ok, false);
+  assert.equal(b.importAnyJson(JSON.stringify({ conversations: [{ title: "no messages", messages: [] }, 5, null] })).ok, false);
+  assert.equal(b.importAnyJson(JSON.stringify({ hello: "world" })).ok, false);
+});
+
+test("importAnyJson skips chats beyond the conversation limit and reports how many", () => {
+  const store = makeStore();
+  const many = [];
+  for (let i = 0; i < ChatStoreModule.LIMITS.maxConversations + 7; i += 1) {
+    many.push({ title: "Chat " + i, messages: [{ role: "user", content: "m" + i }] });
+  }
+  const result = store.importAnyJson(JSON.stringify({ conversations: many }));
+  assert.equal(result.ok, true);
+  assert.equal(result.added, ChatStoreModule.LIMITS.maxConversations);
+  assert.equal(result.skipped, 7);
+});
+
+test("importAnyJson treats imported text as data: titles/contents are kept verbatim, never executed or trusted as ids", () => {
+  const store = makeStore();
+  const evil = { conversations: [{ id: "steal-this-id", title: "<img src=x onerror=alert(1)>", messages: [{ role: "user", content: "<script>1</script>", id: "m-evil" }] }] };
+  const result = store.importAnyJson(JSON.stringify(evil));
+  assert.equal(result.ok, true);
+  assert.notEqual(result.conversation.id, "steal-this-id");
+  assert.equal(result.conversation.title, "<img src=x onerror=alert(1)>");
 });

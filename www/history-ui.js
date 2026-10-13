@@ -509,7 +509,9 @@ notify("success", "Conversation cleared.");
 async function handleClearAllConversations() {
 var confirmed = await confirmDialog({
 title: "Clear all local history",
-message: "Delete every conversation in this " + (store.getNamespace() === "guest" ? "guest" : "account") + " history on this device? This cannot be undone.",
+message: store.getNamespace() === "guest"
+? "Delete every conversation in this guest history on this device? This cannot be undone."
+: "Delete every conversation in your account history? They are also removed from your other devices once they sync. This cannot be undone.",
 confirmLabel: "Clear everything",
 destructive: true
 });
@@ -546,6 +548,18 @@ setHistoryStatus("Exported.");
 notify("success", "Exported “" + conversation.title + "”.");
 }
 
+function handleExportAll() {
+var result = store.exportAllJson();
+if (!result.ok || !result.count) {
+setHistoryStatus("Nothing to export yet.");
+notify("info", "Nothing to export yet.");
+return;
+}
+downloadTextFile("linguahub-ai-all-chats-" + new Date().toISOString().slice(0, 10) + ".json", result.json, "application/json");
+setHistoryStatus("Exported.");
+notify("success", "Exported " + result.count + (result.count === 1 ? " chat." : " chats."));
+}
+
 function handleImportFile(file) {
 if (!file) return;
 if (file.size > store.LIMITS.maxImportBytes) {
@@ -555,7 +569,7 @@ return;
 }
 var reader = new FileReader();
 reader.onload = function () {
-var result = store.importConversationJson(String(reader.result || ""));
+var result = store.importAnyJson(String(reader.result || ""));
 if (!result.ok) {
 var msg = "Import failed: " + (result.reason || "invalid file") + ".";
 setHistoryStatus(msg);
@@ -564,8 +578,11 @@ return;
 }
 renderList();
 notifyActiveConversationChanged(result.conversation);
-setHistoryStatus("Imported “" + result.conversation.title + "”.");
-notify("success", "Imported “" + result.conversation.title + "”.");
+var message = result.added > 1
+? "Imported " + result.added + " chats" + (result.skipped ? " (" + result.skipped + " skipped)" : "") + "."
+: "Imported “" + result.conversation.title + "”.";
+setHistoryStatus(message);
+notify("success", message);
 };
 reader.onerror = function () {
 setHistoryStatus("Import failed: could not read the file.");
@@ -767,6 +784,7 @@ setHistoryStatus: setHistoryStatus,
 clearActiveConversation: handleClearActiveConversation,
 clearAllConversations: handleClearAllConversations,
 exportActiveConversation: handleExport,
+exportAllConversations: handleExportAll,
 triggerImport: function () { if (importInput) importInput.click(); },
 // Same validated pipeline the (currently UI-less) file input uses; lets e2e
 // and any future entry point import a File without a DOM input.

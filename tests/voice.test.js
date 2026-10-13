@@ -26,14 +26,14 @@ test("default speech language follows the browser language when supported, else 
 });
 
 test("settings normalize corrupt/unknown values to safe defaults", () => {
-  assert.deepEqual(voice.normalizeSettings(null, "en-US"), { enabled: true, autoRead: false, lang: "en-US", rate: 1 });
+  assert.deepEqual(voice.normalizeSettings(null, "en-US"), { enabled: true, autoRead: false, lang: "en-US", langManual: false, rate: 1 });
   assert.deepEqual(
     voice.normalizeSettings({ enabled: "yes", autoRead: 1, lang: "xx-XX", rate: 99, extra: true }, "ar"),
-    { enabled: true, autoRead: false, lang: "ar-SA", rate: 1 }
+    { enabled: true, autoRead: false, lang: "ar-SA", langManual: false, rate: 1 }
   );
   assert.deepEqual(
     voice.normalizeSettings({ enabled: false, autoRead: true, lang: "tr-TR", rate: 1.25 }, "en"),
-    { enabled: false, autoRead: true, lang: "tr-TR", rate: 1.25 }
+    { enabled: false, autoRead: true, lang: "tr-TR", langManual: true, rate: 1.25 }
   );
 });
 
@@ -78,4 +78,34 @@ test("composer markup has accessible mic and voice-mode buttons, loaded before a
   assert.match(INDEX_HTML, /id="voice-mode-btn"[^>]*aria-label="Start voice conversation"/);
   assert.ok(INDEX_HTML.indexOf('<script src="voice.js">') < INDEX_HTML.indexOf('<script src="app.js">'));
   assert.ok(INDEX_HTML.indexOf('<script src="strings.js">') < INDEX_HTML.indexOf('<script src="voice.js">'));
+});
+
+// ---- Phase 3: speech language follows the practice mode until chosen manually --------------------
+
+test("practice modes map to their language; modes without one map to nothing", () => {
+  ["ielts-reading", "ielts-listening", "ielts-writing", "ielts-speaking", "vocabulary-coach", "grammar-coach", "linguahub-tutor"].forEach((id) => {
+    assert.equal(voice.languageForMode(id), "en-US", id);
+  });
+  ["general", "codex", "cyber", "deep-thinking", "platform-help", "nope", undefined, null].forEach((id) => {
+    assert.equal(voice.languageForMode(id), null, String(id));
+  });
+  assert.equal(Object.prototype.hasOwnProperty.call(voice.MODE_LANGUAGES, "constructor"), false);
+  assert.equal(voice.languageForMode("constructor"), null, "prototype keys are never modes");
+});
+
+test("effective language: the mode's language until the user chooses one; then the user's choice always wins", () => {
+  const auto = { lang: "ar-SA", langManual: false };
+  assert.equal(voice.effectiveLanguage(auto, "ielts-speaking"), "en-US", "follows the practice mode");
+  assert.equal(voice.effectiveLanguage(auto, "general"), "ar-SA", "no mode language -> the default");
+  assert.equal(voice.effectiveLanguage(auto, null), "ar-SA");
+  const manual = { lang: "ar-SA", langManual: true };
+  assert.equal(voice.effectiveLanguage(manual, "ielts-speaking"), "ar-SA", "a manual choice is never overridden");
+});
+
+test("settings saved before the manual flag existed: a non-default language counts as chosen, a default one does not", () => {
+  assert.equal(voice.normalizeSettings({ lang: "ar-SA" }, "en-US").langManual, true);
+  assert.equal(voice.normalizeSettings({ lang: "en-US" }, "en-US").langManual, false);
+  assert.equal(voice.normalizeSettings({ lang: "uz-UZ" }, "uz").langManual, false);
+  assert.equal(voice.normalizeSettings({ lang: "ar-SA", langManual: false }, "en-US").langManual, false, "an explicit flag wins");
+  assert.equal(voice.normalizeSettings({ lang: "xx-XX", langManual: true }, "en-US").langManual, false, "an invalid language can never be 'chosen'");
 });

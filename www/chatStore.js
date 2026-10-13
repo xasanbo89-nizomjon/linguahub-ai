@@ -65,7 +65,8 @@ maxMessagesPerConversation: 500,
 maxMessageContentChars: 20000,
 maxTitleChars: 80,
 autoTitleChars: 60,
-maxImportBytes: 2 * 1024 * 1024,
+// Large enough for an "export all chats" file of a full history.
+maxImportBytes: 8 * 1024 * 1024,
 maxNamespaceBytes: 4.5 * 1024 * 1024,
 minConversationsKeptOnPrune: 5
 };
@@ -842,6 +843,29 @@ return { role: m.role, content: m.content, createdAt: m.createdAt, status: m.sta
 return { ok: true, json: JSON.stringify(payload, null, 2) };
 }
 
+// Every chat that has at least one message, in one file (Settings > Data).
+function exportAllJson() {
+var conversations = listConversations().filter(function (c) { return c.messages.length > 0; });
+var payload = {
+schemaVersion: SCHEMA_VERSION,
+exportedAt: nowIso(),
+app: "LinguaHub AI",
+conversations: conversations.map(function (conversation) {
+return {
+title: conversation.title,
+createdAt: conversation.createdAt,
+updatedAt: conversation.updatedAt,
+pinned: conversation.pinned,
+metadata: conversation.metadata,
+messages: conversation.messages.map(function (m) {
+return { role: m.role, content: m.content, createdAt: m.createdAt, status: m.status };
+})
+};
+})
+};
+return { ok: true, count: conversations.length, json: JSON.stringify(payload, null, 2) };
+}
+
 function exportConversationMarkdown(id) {
 var conversation = getConversation(id);
 if (!conversation) return { ok: false, reason: "not-found" };
@@ -893,6 +917,44 @@ data.activeConversationId = sanitized.id;
 var result = writeNamespace(namespace, data);
 if (!result.ok) return { ok: false, reason: result.reason };
 return { ok: true, conversation: sanitized };
+}
+
+// Accepts both export formats: one chat ({ conversation }) or many
+// ({ conversations: [...] }). Every imported chat gets a fresh id; chats
+// beyond the conversation limit are skipped and counted.
+function importAnyJson(jsonText) {
+if (typeof jsonText !== "string" || !jsonText) return { ok: false, reason: "empty-input" };
+if (jsonText.length * 2 > LIMITS.maxImportBytes) return { ok: false, reason: "file-too-large" };
+var parsed;
+try {
+parsed = JSON.parse(jsonText);
+} catch (err) {
+return { ok: false, reason: "invalid-json" };
+}
+if (!isPlainObject(parsed) || !Array.isArray(parsed.conversations)) {
+return importConversationJson(jsonText);
+}
+
+var data = currentData();
+var imported = [];
+var skipped = 0;
+parsed.conversations.forEach(function (raw) {
+var conversation = sanitizeConversation(Object.assign({}, raw, { id: undefined }));
+if (!conversation || !conversation.messages.length || data.conversations.length + imported.length >= LIMITS.maxConversations) {
+skipped += 1;
+return;
+}
+conversation.autoTitle = false;
+imported.push(conversation);
+});
+if (!imported.length) return { ok: false, reason: skipped ? "nothing-imported" : "invalid-schema" };
+
+// keep the file's order: its first chat ends up first in the list
+imported.slice().reverse().forEach(function (c) { data.conversations.unshift(c); });
+data.activeConversationId = imported[0].id;
+var result = writeNamespace(namespace, data);
+if (!result.ok) return { ok: false, reason: result.reason };
+return { ok: true, conversation: imported[0], added: imported.length, skipped: skipped };
 }
 
 // -- legacy migration ----------------------------------------------
@@ -1010,6 +1072,8 @@ searchConversations: searchConversations,
 exportConversationJson: exportConversationJson,
 exportConversationMarkdown: exportConversationMarkdown,
 importConversationJson: importConversationJson,
+importAnyJson: importAnyJson,
+exportAllJson: exportAllJson,
 migrateLegacyData: migrateLegacyData
 };
 }

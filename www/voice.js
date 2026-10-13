@@ -46,14 +46,44 @@ if (LANGUAGES[i][0].slice(0, 2) === prefix) return LANGUAGES[i][0];
 return "en-US";
 }
 
+// The language each practice mode is about. A mode that is not listed (free
+// chat, code, ...) has no language of its own.
+var MODE_LANGUAGES = {
+"linguahub-tutor": "en-US",
+"ielts-reading": "en-US",
+"ielts-listening": "en-US",
+"ielts-writing": "en-US",
+"ielts-speaking": "en-US",
+"vocabulary-coach": "en-US",
+"grammar-coach": "en-US"
+};
+
+function languageForMode(modeId) {
+return Object.prototype.hasOwnProperty.call(MODE_LANGUAGES, modeId) ? MODE_LANGUAGES[modeId] : null;
+}
+
+// Until the user picks a speech language themselves (langManual), it follows
+// the selected practice mode, falling back to the browser-derived default.
+function effectiveLanguage(settings, modeId) {
+if (settings.langManual) return settings.lang;
+return languageForMode(modeId) || settings.lang;
+}
+
 function normalizeSettings(raw, navigatorLanguage) {
 var value = raw && typeof raw === "object" ? raw : {};
 var langOk = LANGUAGES.some(function (l) { return l[0] === value.lang; });
 var rate = Number(value.rate);
+var lang = langOk ? value.lang : defaultLanguage(navigatorLanguage);
+var manual;
+if (typeof value.langManual === "boolean") manual = langOk && value.langManual;
+// settings saved before this flag existed: a language that differs from the
+// browser default can only have been picked by the user
+else manual = langOk && value.lang !== defaultLanguage(navigatorLanguage);
 return {
 enabled: typeof value.enabled === "boolean" ? value.enabled : true,
 autoRead: typeof value.autoRead === "boolean" ? value.autoRead : false,
-lang: langOk ? value.lang : defaultLanguage(navigatorLanguage),
+lang: lang,
+langManual: manual,
 rate: rate >= 0.5 && rate <= 2 ? rate : 1
 };
 }
@@ -140,6 +170,9 @@ return s.generic;
 var helpers = {
 LANGUAGES: LANGUAGES,
 defaultLanguage: defaultLanguage,
+languageForMode: languageForMode,
+effectiveLanguage: effectiveLanguage,
+MODE_LANGUAGES: MODE_LANGUAGES,
 normalizeSettings: normalizeSettings,
 toSpeakableText: toSpeakableText,
 splitIntoChunks: splitIntoChunks,
@@ -173,6 +206,12 @@ return normalizeSettings(null, navigator.language);
 }
 
 var settings = loadSettings();
+
+// The language actually used for speaking and listening right now.
+function activeLang() {
+var modeSelect = document.getElementById("mode-select");
+return effectiveLanguage(settings, modeSelect ? modeSelect.value : null);
+}
 
 function saveSettings() {
 try { window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (err) { /* optional */ }
@@ -238,7 +277,7 @@ var text = toSpeakableText(markdown);
 if (!synth || !text) return Promise.resolve(false);
 
 var token = speakingToken;
-var lang = detectSpeechLang(text, settings.lang);
+var lang = detectSpeechLang(text, activeLang());
 var voice = pickVoice(lang);
 var chunks = splitIntoChunks(text);
 speakingWrapper = opts.wrapper || null;
@@ -306,7 +345,7 @@ if (recognition) abortListening();
 stopSpeaking();
 
 var rec = new Recognition();
-rec.lang = settings.lang;
+rec.lang = activeLang();
 rec.continuous = false;
 rec.interimResults = true;
 rec.maxAlternatives = 1;
@@ -493,7 +532,7 @@ voiceModeOpen = true;
 primeSynthesis();
 els.composer.classList.add("is-voice-mode");
 els.panel.hidden = false;
-els.panelLang.value = settings.lang;
+els.panelLang.value = activeLang();
 setVoiceState("idle");
 els.orb.focus();
 // The composer may be mid-stream from a typed message; wait for it.
@@ -624,7 +663,8 @@ autoRow.appendChild(autoSwitch.wrapper);
 el.appendChild(autoRow);
 
 var langRow = ui.row("Speech language");
-var langSelect = buildSelect("settings-voice-lang", LANGUAGES, settings.lang);
+// "Automatic" follows the selected practice mode until a language is chosen.
+var langSelect = buildSelect("settings-voice-lang", [["auto", "Automatic (follows the practice mode)"]].concat(LANGUAGES), settings.langManual ? settings.lang : "auto");
 langSelect.setAttribute("aria-label", "Speech language");
 langRow.appendChild(langSelect);
 el.appendChild(langRow);
@@ -670,9 +710,14 @@ settings.autoRead = autoSwitch.input.checked;
 saveSettings();
 });
 langSelect.addEventListener("change", function () {
+if (langSelect.value === "auto") {
+settings.langManual = false;
+} else {
 settings.lang = langSelect.value;
+settings.langManual = true;
+}
 saveSettings();
-if (els.panelLang) els.panelLang.value = settings.lang;
+if (els.panelLang) els.panelLang.value = activeLang();
 });
 rateSelect.addEventListener("change", function () {
 settings.rate = Number(rateSelect.value);
@@ -681,7 +726,7 @@ saveSettings();
 previewBtn.addEventListener("click", function () {
 if (!synth) { notify(copy().ttsUnsupported); return; }
 var samples = copy().samples || {};
-speak(samples[settings.lang.slice(0, 2)] || "Hello! I'm LinguaHub AI.");
+speak(samples[activeLang().slice(0, 2)] || "Hello! I'm LinguaHub AI.");
 });
 
 return el;
@@ -720,7 +765,7 @@ body.appendChild(transcript);
 
 var actions = document.createElement("div");
 actions.className = "voice-panel-actions";
-var langSelect = buildSelect("voice-panel-lang", LANGUAGES.map(function (l) { return [l[0], l[0].slice(0, 2).toUpperCase()]; }), settings.lang);
+var langSelect = buildSelect("voice-panel-lang", LANGUAGES.map(function (l) { return [l[0], l[0].slice(0, 2).toUpperCase()]; }), activeLang());
 langSelect.className = "voice-panel-lang";
 langSelect.setAttribute("aria-label", "Speech language");
 langSelect.title = "Speech language";
@@ -740,8 +785,17 @@ orb.addEventListener("click", onOrbClick);
 endBtn.addEventListener("click", closeVoiceMode);
 langSelect.addEventListener("change", function () {
 settings.lang = langSelect.value;
+settings.langManual = true; // an explicit choice stops following the practice mode
 saveSettings();
+var settingsSelect = document.getElementById("settings-voice-lang");
+if (settingsSelect) settingsSelect.value = settings.lang;
 if (panel.dataset.state === "listening") listen("voice");
+});
+
+// Changing the practice mode changes the language the quick switch shows
+// (unless the user has chosen one).
+document.addEventListener("change", function (event) {
+if (event.target && event.target.id === "mode-select" && els.panelLang) els.panelLang.value = activeLang();
 });
 panel.addEventListener("keydown", function (event) {
 if (event.key === "Escape") { event.preventDefault(); closeVoiceMode(); }

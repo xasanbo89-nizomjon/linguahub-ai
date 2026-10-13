@@ -2506,8 +2506,80 @@ font-size: var(--font-size-xs);
    --------------------------------------------------------------------- */
 
 .lh-settings-dialog{
-max-width: 520px;
+max-width: 760px;
+height: min(560px, 100%);
+display: flex;
+flex-direction: column;
+overflow: hidden;
 text-align: left;
+}
+
+/* Two columns: tab list on the left, the selected tab's settings on the
+   right (only the right side scrolls). */
+.settings-layout{
+flex: 1;
+min-height: 0;
+display: grid;
+grid-template-columns: 172px minmax(0, 1fr);
+gap: var(--space-5);
+}
+
+.settings-tabs{
+display: flex;
+flex-direction: column;
+gap: 2px;
+padding-right: var(--space-3);
+border-right: 1px solid var(--border);
+}
+
+.settings-tab{
+width: 100%;
+min-height: var(--space-10);
+padding: var(--space-2) var(--space-3);
+background: transparent;
+color: var(--text);
+border-radius: var(--radius-md);
+font-size: var(--font-size-sm);
+font-weight: 500;
+text-align: left;
+}
+
+.settings-tab:hover:not(:disabled){
+background: var(--surface-2);
+color: var(--text);
+transform: none;
+}
+
+.settings-tab[aria-selected="true"]{
+background: var(--accent-soft);
+color: var(--accent-text);
+font-weight: 700;
+}
+
+.settings-panels{
+min-height: 0;
+overflow-y: auto;
+padding-right: var(--space-1);
+}
+
+@media (max-width: 600px){
+.settings-layout{
+grid-template-columns: minmax(0, 1fr);
+grid-template-rows: auto minmax(0, 1fr);
+gap: var(--space-3);
+}
+.settings-tabs{
+flex-direction: row;
+overflow-x: auto;
+padding: 0 0 var(--space-2);
+border-right: 0;
+border-bottom: 1px solid var(--border);
+}
+.settings-tab{
+width: auto;
+flex-shrink: 0;
+white-space: nowrap;
+}
 }
 
 .settings-section{
