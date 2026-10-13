@@ -177,6 +177,8 @@ markedInstance = window.marked;
 return markedInstance;
 }
 
+var BIDI_BLOCK_TAGS = ["P", "UL", "OL", "LI", "BLOCKQUOTE", "H1", "H2", "H3", "H4", "H5", "H6", "TABLE", "TH", "TD"];
+
 function getDomPurify() {
 if (domPurifyInstance) return domPurifyInstance;
 if (typeof window === "undefined" || !window.DOMPurify) return null;
@@ -186,6 +188,13 @@ dp.addHook("afterSanitizeAttributes", function (node) {
 if (node.tagName === "A") {
 node.setAttribute("target", "_blank");
 node.setAttribute("rel", "noopener noreferrer");
+}
+// Per-block text direction: each paragraph/list/heading/quote/table is laid
+// out by its own first strong character, so Arabic and English paragraphs
+// in the same reply each read correctly (never a whole-message flip).
+// Code stays dir="ltr" (set by the code renderer below).
+if (BIDI_BLOCK_TAGS.indexOf(node.tagName) !== -1 && !node.hasAttribute("dir")) {
+node.setAttribute("dir", "auto");
 }
 });
 

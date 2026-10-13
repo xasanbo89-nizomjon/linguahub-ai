@@ -43,30 +43,30 @@ assert.equal(typeof MD, "object");
 // ---------------------------------------------------------------------
 
 test("renders a heading", () => {
-assert.match(MD.renderToSafeHtml("# Hello"), /<h1>Hello<\/h1>/);
+assert.match(MD.renderToSafeHtml("# Hello"), /<h1 dir="auto">Hello<\/h1>/);
 });
 
 test("renders an unordered list", () => {
 const html = MD.renderToSafeHtml("- one\n- two");
-assert.match(html, /<ul>/);
-assert.match(html, /<li>one<\/li>/);
+assert.match(html, /<ul dir="auto">/);
+assert.match(html, /<li dir="auto">one<\/li>/);
 });
 
 test("renders an ordered list", () => {
 const html = MD.renderToSafeHtml("1. first\n2. second");
-assert.match(html, /<ol>/);
-assert.match(html, /<li>first<\/li>/);
+assert.match(html, /<ol dir="auto">/);
+assert.match(html, /<li dir="auto">first<\/li>/);
 });
 
 test("renders a table", () => {
 const html = MD.renderToSafeHtml("| a | b |\n|---|---|\n| 1 | 2 |");
-assert.match(html, /<table>/);
-assert.match(html, /<th>a<\/th>/);
-assert.match(html, /<td>1<\/td>/);
+assert.match(html, /<table dir="auto">/);
+assert.match(html, /<th dir="auto">a<\/th>/);
+assert.match(html, /<td dir="auto">1<\/td>/);
 });
 
 test("renders a blockquote", () => {
-assert.match(MD.renderToSafeHtml("> quoted text"), /<blockquote>[\s\S]*quoted text[\s\S]*<\/blockquote>/);
+assert.match(MD.renderToSafeHtml("> quoted text"), /<blockquote dir="auto">[\s\S]*quoted text[\s\S]*<\/blockquote>/);
 });
 
 test("renders inline code", () => {
@@ -220,4 +220,38 @@ test("markdown.js exposes rendering only - it is app.js's responsibility to neve
 // user messages stay plain text lives in www/app.js's addMessage() -
 // covered by tests/app-actions.test.js.
 assert.equal(typeof MD.renderToSafeHtml, "function");
+});
+
+// ---- Phase 2: per-block text direction (Arabic / mixed content) ----------
+
+test("every paragraph gets dir=auto, so Arabic and English paragraphs each lay out by their own first strong character", () => {
+  const html = MD.renderToSafeHtml("Hello there.\n\nمرحبا بك في الدرس\n\nAnother English line.");
+  const paragraphs = html.match(/<p dir="auto">/g) || [];
+  assert.equal(paragraphs.length, 3);
+  assert.doesNotMatch(html, /dir="rtl"/, "never force a whole-message or whole-block rtl");
+});
+
+test("mixed Arabic/English inside one line stays in a single dir=auto paragraph with the text intact", () => {
+  const html = MD.renderToSafeHtml("The word **كتاب** means book, and `print(1)` is code.");
+  assert.match(html, /<p dir="auto">The word <strong>كتاب<\/strong> means book, and <code>print\(1\)<\/code> is code\.<\/p>/);
+});
+
+test("Arabic list items and table cells get their own direction; code blocks stay ltr", () => {
+  const html = MD.renderToSafeHtml("- أولاً\n- ثانياً\n\n| الكلمة | المعنى |\n|---|---|\n| قلم | pen |\n\n```js\nconst a = 1;\n```");
+  assert.match(html, /<li dir="auto">أولاً<\/li>/);
+  assert.match(html, /<td dir="auto">قلم<\/td>/);
+  assert.match(html, /<code[^>]*dir="ltr"/);
+});
+
+test("model output cannot inject script, handlers or javascript: links (sanitized)", () => {
+  const hostile = [
+    "<script>window.__x=1</script>hi",
+    "<img src=x onerror=alert(1)>",
+    "[click](javascript:alert(1))",
+    "<a href=\"javascript:alert(1)\" onclick=\"alert(1)\">x</a>",
+    "<iframe src=\"https://evil.example\"></iframe>",
+    "<svg onload=alert(1)></svg>"
+  ].join("\n\n");
+  const html = MD.renderToSafeHtml(hostile);
+  assert.doesNotMatch(html, /<script|onerror|onclick|onload|<iframe|<svg|javascript:/i);
 });

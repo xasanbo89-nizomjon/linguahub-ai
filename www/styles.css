@@ -345,7 +345,7 @@ html[data-desktop] .sidebar-brand .sidebar-brand-name{
 display: none;
 }
 html[data-desktop] .sidebar-brand{
-padding: var(--space-2) var(--space-3) 0;
+padding: var(--space-2) var(--space-3);
 }
 
 .sidebar-brand-name{
@@ -1291,6 +1291,13 @@ background: var(--code-bg);
 color: var(--code-text);
 font-family: var(--font-family-mono);
 font-size: var(--font-size-sm);
+}
+
+/* Plain text (user messages, errors) keeps its newlines via pre-wrap above.
+   Rendered Markdown is real block HTML: there the newlines between tags
+   must collapse, or every block gets a blank line around it. */
+.message-content:has(> p, > ul, > ol, > h1, > h2, > h3, > h4, > h5, > h6, > blockquote, > table, > hr, > .code-block){
+white-space: normal;
 }
 
 .message-content code{
@@ -2289,6 +2296,17 @@ scroll-behavior: auto !important;
 text-align: right;
 }
 
+/* Mixed Arabic/English: inline code and code blocks keep left-to-right
+   internally and are isolated so they never scramble the surrounding
+   bidirectional text. */
+.message-content code{
+unicode-bidi: isolate;
+}
+.message-content pre{
+direction: ltr;
+text-align: left;
+}
+
 .message-content[dir="rtl"] pre,
 .message-content[dir="rtl"] code{
 direction: ltr;
@@ -2297,6 +2315,21 @@ text-align: left;
 
 textarea[dir="rtl"]{
 text-align: right;
+}
+
+/* Streaming cursor: a thin accent caret at the end of the live text. */
+.stream-cursor{
+display: inline-block;
+width: 2px;
+height: 1.1em;
+margin-inline-start: 2px;
+vertical-align: text-bottom;
+background: var(--accent);
+animation: lh-cursor-blink 1s steps(1) infinite;
+}
+
+@keyframes lh-cursor-blink{
+50%{ opacity: 0; }
 }
 
 /* ---------------------------------------------------------------------

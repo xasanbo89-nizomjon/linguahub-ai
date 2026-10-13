@@ -51,14 +51,19 @@ setBusy(false);
 }
 }
 
-// Arabic/Hebrew-range detection for per-message RTL - never applied to the
-// whole app, only to the individual message (or the composer) that
-// actually contains RTL text (Task 14).
+// Arabic/Hebrew-range detection - never applied to the whole app, only to
+// the individual message (or the composer) that actually contains RTL text.
+// The element gets dir="auto" (the browser picks the direction from the
+// first strong character) instead of a forced "rtl", so an English message
+// that merely quotes one Arabic word is not flipped. Rendered Markdown goes
+// further: every block (paragraph, list, heading, table cell...) gets its
+// own dir="auto" (see markdown.js), so mixed Arabic/English messages lay
+// out correctly paragraph by paragraph.
 const RTL_PATTERN = new RegExp("[" + "\u0591-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF" + "]");
 
 function applyRtlIfNeeded(el, text) {
 if (RTL_PATTERN.test(text)) {
-el.setAttribute("dir", "rtl");
+el.setAttribute("dir", "auto");
 } else {
 el.removeAttribute("dir");
 }
@@ -70,8 +75,13 @@ return chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 80;
 
 const MAX_EDIT_LENGTH = 8000; // mirrors the backend's default MAX_MESSAGE_LENGTH
 
+// Instant, never smooth: .chat-box has scroll-behavior: smooth for the user's
+// own scrolling, but while streaming a smooth animation is still in flight
+// when the next chunk arrives, so isNearBottom() would read "scrolled up"
+// mid-animation and the view would stop following the reply.
 function scrollChatToBottom() {
-chatBox.scrollTop = chatBox.scrollHeight;
+if (typeof chatBox.scrollTo === "function") chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: "instant" });
+else chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 async function copyText(text) {
@@ -97,10 +107,41 @@ return;
 }
 if (window.LinguaHubMarkdown) {
 contentEl.innerHTML = window.LinguaHubMarkdown.renderToSafeHtml(sourceText);
+contentEl.removeAttribute("dir"); // direction is per block, set by markdown.js
 } else {
 contentEl.textContent = sourceText;
-}
 applyRtlIfNeeded(contentEl, sourceText);
+}
+}
+
+// Live rendering while tokens stream in: the same sanitized Markdown the
+// final render uses (so there is no reflow/jump when the reply settles),
+// re-parsed at most every ~80ms, plus a blinking cursor at the very end of
+// the text. Without the Markdown/sanitizer scripts it degrades to plain
+// text exactly as before.
+function appendStreamCursor(contentEl) {
+if (typeof contentEl.querySelector !== "function") return;
+let target = contentEl;
+while (target.lastElementChild && /^(P|LI|UL|OL|BLOCKQUOTE|H[1-6])$/.test(target.lastElementChild.tagName)) {
+target = target.lastElementChild;
+}
+const cursor = document.createElement("span");
+cursor.className = "stream-cursor";
+cursor.setAttribute("aria-hidden", "true");
+target.appendChild(cursor);
+}
+
+function renderStreamingContent(bubble, text) {
+const shouldStick = isNearBottom();
+if (window.LinguaHubMarkdown) {
+bubble.contentEl.innerHTML = window.LinguaHubMarkdown.renderToSafeHtml(text);
+bubble.contentEl.removeAttribute("dir");
+appendStreamCursor(bubble.contentEl);
+} else {
+bubble.contentEl.textContent = text;
+applyRtlIfNeeded(bubble.contentEl, text);
+}
+if (shouldStick) scrollChatToBottom();
 }
 
 function showTypingIndicator(contentEl) {
@@ -494,6 +535,9 @@ id: assistantMessageId, role: "assistant", content: text, status: "streaming"
 });
 }, 400);
 
+let streamText = "";
+const throttledRender = window.LinguaHubChatStore.throttle((text) => renderStreamingContent(aiBubble, text), 80);
+
 const response = await fetch(apiUrl("/api/chat/stream"), {
 method: "POST",
 headers: Object.assign({ "Content-Type": "application/json" }, authHeaders),
@@ -531,21 +575,23 @@ if (parsed.error) {
 throw new Error(parsed.error);
 }
 if (parsed.delta) {
-const shouldStick = isNearBottom();
 if (!receivedAny) {
 // First real token: clear the typing indicator (Task 7 - shown
 // only until meaningful streamed text begins).
 aiBubble.contentEl.textContent = "";
 }
 receivedAny = true;
-aiBubble.contentEl.textContent += parsed.delta;
-applyRtlIfNeeded(aiBubble.contentEl, aiBubble.contentEl.textContent);
-if (shouldStick) scrollChatToBottom();
-throttledSave(aiBubble.contentEl.textContent);
+// streamText is the Markdown SOURCE; the bubble shows its rendering, so
+// the DOM text can no longer be used as the source of truth.
+streamText += parsed.delta;
+aiBubble.rawText = streamText;
+throttledRender(streamText);
+throttledSave(streamText);
 }
 }
 }
 } finally {
+throttledRender.flush();
 throttledSave.flush();
 }
 
@@ -570,6 +616,7 @@ throw new Error(data.reply || `Server responded ${response.status}`);
 }
 const replyText = data.reply || "❌ Empty response from server.";
 aiBubble.contentEl.textContent = replyText;
+aiBubble.rawText = replyText;
 applyRtlIfNeeded(aiBubble.contentEl, replyText);
 }
 
@@ -606,6 +653,8 @@ return [{ role: "user", content: fallbackText }];
 // the streaming/fallback/abort/status logic.
 async function generateAssistantReply(conversationId, requestMessages, mode, assistantMessageId, aiBubble) {
 setBusy(true);
+// Regenerate/retry reuse a bubble that still holds the previous reply's source.
+aiBubble.rawText = "";
 
 let finalStatus = "complete";
 try {
@@ -629,9 +678,10 @@ finalStatus = "failed";
 }
 }
 } finally {
-// Captured before any Markdown re-render below, so it is always the
-// plain source text regardless of which path was taken.
-const rawText = aiBubble.contentEl.textContent;
+// The Markdown SOURCE (tracked while streaming; the bubble itself now
+// shows rendered HTML, whose textContent is not the source). Non-streamed
+// paths (fallback, errors, stop-before-first-token) set the DOM text only.
+const rawText = aiBubble.rawText || aiBubble.contentEl.textContent;
 const isHardError = aiBubble.classList.contains("error");
 aiBubble.rawText = rawText;
 
