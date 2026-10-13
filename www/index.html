@@ -9,6 +9,10 @@
      the correct theme applies with no flash, and needs no inline-script
      CSP exception (see docs/phase-04-premium-ui.md, "CSP status"). -->
 <script src="theme.js"></script>
+<!-- Desktop (Electron) only: sets data-desktop on <html> before first paint
+     so the custom title bar's height is reserved with no layout jump. A
+     no-op in a browser or the Android webview. -->
+<script src="titlebar.js"></script>
 <script src="wow-effects.js"></script>
 <!-- Same reasoning as theme.js above, for [data-app-mode] instead of
      [data-theme] (Integration Prep phase - see docs/integration-prep/
@@ -22,6 +26,28 @@
 </head>
 
 <body>
+
+<!-- Custom desktop title bar. display:none unless www/titlebar.js detects
+     Electron (window.linguahubDesktop). The empty area is the drag region;
+     the three buttons are no-drag and call the main process over IPC. -->
+<div class="titlebar" id="titlebar">
+<div class="titlebar-brand">
+<span class="lh-mark lh-mark-sm" aria-hidden="true">LH</span>
+<span class="titlebar-title">LinguaHub</span>
+</div>
+<div class="titlebar-controls">
+<button type="button" class="titlebar-btn" data-titlebar-action="minimize" aria-label="Minimize" title="Minimize">
+<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5.5h10"/></svg>
+</button>
+<button type="button" class="titlebar-btn" id="titlebar-maximize-btn" data-titlebar-action="toggle-maximize" aria-label="Maximize" title="Maximize">
+<svg class="titlebar-icon-maximize" viewBox="0 0 10 10" aria-hidden="true"><rect x="0.5" y="0.5" width="9" height="9"/></svg>
+<svg class="titlebar-icon-restore" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 2.5v-2h7v7h-2"/><rect x="0.5" y="2.5" width="7" height="7"/></svg>
+</button>
+<button type="button" class="titlebar-btn titlebar-btn-close" data-titlebar-action="close" aria-label="Close" title="Close">
+<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0l10 10M10 0L0 10"/></svg>
+</button>
+</div>
+</div>
 
 <div class="lh-drawer-backdrop" id="sidebar-backdrop" hidden></div>
 

@@ -87,6 +87,17 @@
 --z-dialog-backdrop: 40;
 --z-dialog: 41;
 --z-toast: 50;
+/* Above dialogs and the drawer on purpose: the window controls must stay
+   clickable while a modal is open. */
+--z-titlebar: 60;
+
+/* ---- desktop title bar ---- */
+/* 0 everywhere except inside Electron, where :root[data-desktop] (set by
+   www/titlebar.js before first paint) reserves the bar's height. */
+--titlebar-height: 0px;
+/* Native-Windows close-button red; the same in both themes. */
+--titlebar-close-hover: #E81123;
+--on-titlebar-close: #FFFFFF;
 
 /* ---- legacy aliases ----
    The pre-Phase-1 --color-* names, kept as aliases so styles.css keeps
@@ -124,6 +135,10 @@
 /* No static glows - kept as tokens because components reference them. */
 --glow-accent: none;
 --glow-accent-strong: none;
+}
+
+:root[data-desktop]{
+--titlebar-height: 40px;
 }
 
 /* ---------------------------------------------------------------------

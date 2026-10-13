@@ -132,14 +132,131 @@ body{
 display: flex;
 justify-content: center;
 align-items: center;
+/* Room for the fixed desktop title bar (0 in a browser / on Android). */
+padding-top: var(--titlebar-height);
 }
 
 .app-shell{
 width: min(100%, 1540px);
 max-width: 1540px;
-height: 100vh;
+height: calc(100vh - var(--titlebar-height));
 display: flex;
 gap: 0;
+}
+
+/* ---------------------------------------------------------------------
+   Desktop title bar (Electron only - www/titlebar.js sets data-desktop on
+   <html> when preload.js's window.linguahubDesktop exists). Hidden in a
+   browser and in the Android webview. The bar is fixed, ~40px, follows the
+   light/dark tokens, and stays above dialogs/drawers (--z-titlebar) so the
+   window controls always work. Everything except the three buttons is a
+   drag region; the buttons opt out with no-drag.
+   --------------------------------------------------------------------- */
+.titlebar{
+display: none;
+}
+
+html[data-desktop] .titlebar{
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+height: var(--titlebar-height);
+z-index: var(--z-titlebar);
+display: flex;
+align-items: stretch;
+justify-content: space-between;
+background: var(--surface-2);
+border-bottom: 1px solid var(--border);
+color: var(--text);
+-webkit-app-region: drag;
+user-select: none;
+transition: background-color var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
+}
+
+.titlebar-brand{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+padding: 0 var(--space-3);
+min-width: 0;
+}
+
+.titlebar-title{
+font-size: var(--font-size-sm);
+font-weight: 600;
+letter-spacing: -0.01em;
+white-space: nowrap;
+}
+
+.titlebar-controls{
+display: flex;
+-webkit-app-region: no-drag;
+}
+
+.titlebar-btn{
+width: 46px;
+height: 100%;
+min-height: 0;
+padding: 0;
+border-radius: 0;
+background: transparent;
+color: var(--text-muted);
+display: inline-flex;
+align-items: center;
+justify-content: center;
+-webkit-app-region: no-drag;
+}
+
+.titlebar-btn svg{
+width: 10px;
+height: 10px;
+fill: none;
+stroke: currentColor;
+stroke-width: 1;
+}
+
+.titlebar-btn:hover:not(:disabled){
+background: var(--border);
+color: var(--text);
+transform: none;
+}
+
+.titlebar-btn:active:not(:disabled){
+background: var(--border-strong);
+transform: none;
+}
+
+.titlebar-btn:focus-visible{
+outline-offset: -2px;
+}
+
+/* Close hovers red like a native Windows window. */
+.titlebar-btn-close:hover:not(:disabled),
+.titlebar-btn-close:active:not(:disabled){
+background: var(--titlebar-close-hover);
+color: var(--on-titlebar-close);
+}
+
+/* Maximize <-> restore icon swap (data-maximized is toggled by titlebar.js). */
+.titlebar-icon-restore{
+display: none;
+}
+html[data-maximized] .titlebar-icon-maximize{
+display: none;
+}
+html[data-maximized] .titlebar-icon-restore{
+display: block;
+}
+
+/* macOS keeps its native traffic lights (titleBarStyle: hiddenInset), which
+   sit over the left edge - so the custom buttons are hidden and the brand
+   moves right of them. */
+html[data-desktop="darwin"] .titlebar-controls{
+display: none;
+}
+html[data-desktop="darwin"] .titlebar-brand{
+padding-left: 80px;
 }
 
 /* ---- Sidebar ---- */
@@ -1802,7 +1919,7 @@ box-shadow: none;
 
 .lh-drawer-backdrop{
 position: fixed;
-inset: 0;
+inset: var(--titlebar-height) 0 0 0;
 background: var(--overlay);
 z-index: var(--z-drawer-backdrop);
 }
@@ -2176,12 +2293,12 @@ grid-template-columns: repeat(2, minmax(0, 1fr));
 @media (max-width: 768px){
 .app-shell{
 width: 100%;
-height: 100vh;
+height: calc(100vh - var(--titlebar-height));
 gap: 0;
 }
 .sidebar{
 position: fixed;
-top: 0;
+top: var(--titlebar-height);
 left: 0;
 bottom: 0;
 width: min(320px, 84vw);
