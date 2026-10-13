@@ -231,5 +231,6 @@ test("tall dialogs (Settings) scroll inside the window and stay below the title 
 
 test("collapsed sidebar: the icon-only New chat and sign-in buttons keep an accessible name", () => {
   assert.match(INDEX_HTML, /id="new-chat-btn"[^>]*aria-label="New chat"/);
-  assert.match(INDEX_HTML, /id="login-btn"[^>]*aria-label="Guest User, sign in for sync"/);
+  // Phase 3: the guest card has a real, visible "Sign in" button (its text is its name).
+  assert.match(INDEX_HTML, /<button id="login-btn"[^>]*>Sign in<\/button>/);
 });

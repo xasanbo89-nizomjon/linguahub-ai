@@ -649,26 +649,6 @@ border-top: 1px solid var(--color-border-hairline);
 display: flex;
 }
 
-.sidebar-profile-guest{
-width: 100%;
-display: flex;
-align-items: center;
-gap: var(--space-2);
-padding: var(--space-2);
-background: transparent;
-border: 1px solid transparent;
-border-radius: var(--radius-md);
-text-align: left;
-cursor: pointer;
-transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
-}
-
-.sidebar-profile-guest:hover:not(:disabled){
-background: var(--color-accent-soft);
-border-color: var(--color-border-hairline);
-color: var(--color-text-secondary);
-}
-
 .sidebar-profile-text{
 display: flex;
 flex-direction: column;
@@ -693,29 +673,167 @@ overflow: hidden;
 text-overflow: ellipsis;
 }
 
-/* Signed-in profile row reuses .user-profile/.user-avatar/.user-info
-   (unchanged structure/IDs, just relocated from the header - see
-   index.html) - only the outer padding/width needs to match the guest
-   row's footprint now that it lives in the sidebar. */
+/* ---------------------------------------------------------------------
+   Account area (sidebar footer): Guest card with Sign in, or the signed-in
+   trigger with its menu (account / sign out / sync status).
+   --------------------------------------------------------------------- */
 .sidebar-profile-card .user-profile{
 width: 100%;
+}
+
+.sidebar-guest{
+width: 100%;
+display: flex;
+align-items: center;
+gap: var(--space-2);
 padding: var(--space-2);
+}
+
+/* Signed in: the guest card goes away together with its Sign in button. */
+.sidebar-guest:has(#login-btn[hidden]){
+display: none;
+}
+
+.sidebar-guest-avatar{
+width: 32px;
+height: 32px;
+flex-shrink: 0;
+display: grid;
+place-items: center;
+border-radius: 50%;
+background: var(--surface);
+border: 1px solid var(--border-strong);
+color: var(--text-muted);
+font-size: var(--font-size-sm);
+font-weight: 700;
+}
+
+.sidebar-signin-btn{
+flex-shrink: 0;
+min-height: 32px;
+padding: var(--space-1) var(--space-3);
+background: transparent;
+color: var(--accent-text);
+border: 1px solid var(--accent);
+border-radius: var(--radius-md);
+font-size: var(--font-size-sm);
+font-weight: 600;
+}
+
+.sidebar-signin-btn:hover:not(:disabled){
+background: var(--accent-soft);
+color: var(--accent-text);
+transform: none;
+}
+
+.sidebar-signin-btn:disabled{
+background: transparent;
+color: var(--text-muted-strong);
+border-color: var(--border-strong);
+opacity: 0.7;
+}
+
+.account-trigger{
+width: 100%;
+display: flex;
+align-items: center;
+gap: var(--space-2);
+padding: var(--space-2);
+background: transparent;
+color: var(--text);
+border: 1px solid transparent;
+border-radius: var(--radius-md);
+text-align: left;
+font-weight: 400;
+}
+
+.account-trigger:hover:not(:disabled),
+.account-trigger[aria-expanded="true"]{
+background: var(--border);
+color: var(--text);
+transform: none;
 }
 
 .sidebar-profile-card .user-info{
 flex: 1;
 min-width: 0;
+max-width: none;
 }
 
-/* Logout keeps its real label/function - just sized to match this row's
-   density (avatar + name/email + action) instead of the full-size button
-   used standalone elsewhere. Untested against real Firebase sign-in in
-   this phase (no Firebase project configured in this environment, same
-   as every prior phase) - verified by layout/contrast math only. */
-.sidebar-profile-card #logout-btn{
+.account-trigger-chevron{
 flex-shrink: 0;
-padding: var(--space-1) var(--space-3);
-min-height: 32px;
+color: var(--text-muted);
+}
+
+.account-menu{
+z-index: var(--z-dialog);
+width: max-content;
+padding: var(--space-1);
+display: flex;
+flex-direction: column;
+gap: 2px;
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: var(--radius-md);
+box-shadow: var(--shadow-2);
+}
+
+.account-menu-sync{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+padding: var(--space-2) var(--space-3);
+font-size: var(--font-size-xs);
+color: var(--text-muted-strong);
+}
+
+.sync-dot{
+width: 8px;
+height: 8px;
+flex-shrink: 0;
+border-radius: 50%;
+background: var(--text-muted-strong);
+}
+
+.account-menu-sync[data-state="synced"] .sync-dot{ background: var(--success); }
+.account-menu-sync[data-state="syncing"] .sync-dot{ background: var(--info); animation: lh-pulse 1.4s ease-in-out infinite; }
+.account-menu-sync[data-state="offline"] .sync-dot,
+.account-menu-sync[data-state="unavailable"] .sync-dot{ background: var(--warning); }
+.account-menu-sync[data-state="error"] .sync-dot{ background: var(--danger); }
+
+.account-menu-item{
+width: 100%;
+min-height: var(--space-10);
+padding: var(--space-2) var(--space-3);
+background: transparent;
+color: var(--text);
+border-radius: var(--radius-sm);
+font-size: var(--font-size-sm);
+font-weight: 500;
+text-align: left;
+}
+
+.account-menu-item:hover:not(:disabled),
+.account-menu-item:focus-visible{
+background: var(--surface-2);
+color: var(--text);
+transform: none;
+}
+
+/* A narrow icon-only rail keeps just the avatar / the Sign in button. */
+.app-shell.sidebar-collapsed .sidebar-guest-avatar,
+.app-shell.sidebar-collapsed .account-trigger-chevron{
+display: none;
+}
+.app-shell.sidebar-collapsed .sidebar-guest,
+.app-shell.sidebar-collapsed .account-trigger{
+justify-content: center;
+padding-left: 0;
+padding-right: 0;
+}
+.app-shell.sidebar-collapsed .sidebar-signin-btn{
+padding-left: var(--space-1);
+padding-right: var(--space-1);
 font-size: var(--font-size-xs);
 }
 
@@ -928,24 +1046,6 @@ color: var(--on-danger);
 
 .lh-btn-danger:hover:not(:disabled){
 filter: brightness(1.08);
-}
-
-/* Guest account state, disabled/enabled (Phase 14 - moved into the
-   sidebar profile card, see .sidebar-profile-guest above for the resting/
-   hover styles). This is deliberately understated in every state - a
-   real, working sign-in call-to-action when Firebase is configured, and
-   an unobtrusive, honestly-disabled item when it isn't - never a large
-   dominant element either way. Real login logic (www/auth.js,
-   www/app.js) is unchanged. */
-.sidebar-profile-guest:disabled{
-color: var(--color-text-muted);
-cursor: not-allowed;
-opacity: 0.7;
-}
-
-.sidebar-profile-guest:disabled .lh-mark{
-filter: grayscale(0.4);
-box-shadow: none;
 }
 
 /* Compact icon-only header action (Clear chat). A single quiet icon

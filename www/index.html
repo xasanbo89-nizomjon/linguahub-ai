@@ -87,21 +87,41 @@
 <div class="sidebar-bottom">
 
 <div id="auth-area" class="auth-area sidebar-profile-card">
-<button id="login-btn" type="button" class="sidebar-profile-guest" aria-label="Guest User, sign in for sync">
-<span class="lh-mark lh-mark-sm" aria-hidden="true">LH</span>
+
+<!-- Signed out: a plain Guest card with a clear Sign in button. #login-btn
+     keeps its ID (app.js drives it); the card hides itself when the button
+     is hidden at sign-in (styles.css: .sidebar-guest:has(#login-btn[hidden])). -->
+<div class="sidebar-guest">
+<span class="sidebar-guest-avatar" aria-hidden="true">G</span>
 <span class="sidebar-profile-text">
-<span class="sidebar-profile-name">Guest User</span>
-<span class="sidebar-profile-sub">Sign in for sync</span>
+<span class="sidebar-profile-name">Guest</span>
+<span class="sidebar-profile-sub">Chats stay on this device</span>
 </span>
-</button>
+<button id="login-btn" type="button" class="sidebar-signin-btn">Sign in</button>
+</div>
+
+<!-- Signed in: avatar (or initial) + name; the menu holds the sync status,
+     Account (opens Settings > Account) and Sign out. #user-avatar,
+     #user-avatar-fallback, #user-name, #user-email and #logout-btn keep
+     their IDs. -->
 <div id="user-profile" class="user-profile" hidden>
+<button id="account-menu-btn" type="button" class="account-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu-list" aria-label="Account menu">
 <img id="user-avatar" class="user-avatar" alt="" hidden>
 <div id="user-avatar-fallback" class="user-avatar-fallback" hidden aria-hidden="true"></div>
 <div class="user-info">
 <span id="user-name" class="user-name"></span>
 <span id="user-email" class="user-email"></span>
 </div>
-<button id="logout-btn" type="button" class="auth-btn auth-btn-secondary">Logout</button>
+<svg class="account-trigger-chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+</button>
+<div id="account-menu-list" class="account-menu" role="menu" aria-label="Account" hidden>
+<div class="account-menu-sync" id="sync-status" data-state="signed-out" role="status">
+<span class="sync-dot" aria-hidden="true"></span>
+<span id="sync-status-text">Synced</span>
+</div>
+<button id="account-settings-btn" type="button" class="account-menu-item" role="menuitem">Account</button>
+<button id="logout-btn" type="button" class="account-menu-item" role="menuitem">Sign out</button>
+</div>
 </div>
 </div>
 
@@ -257,6 +277,7 @@ Send
 <script src="toast.js"></script>
 <script src="chat-groups.js"></script>
 <script src="history-ui.js"></script>
+<script src="chat-sync.js"></script>
 <script src="settings-ui.js"></script>
 <!-- Markdown rendering deps, vendored locally (www/vendor/) - same-origin,
      no CDN, no bundler, no CSP change needed. See

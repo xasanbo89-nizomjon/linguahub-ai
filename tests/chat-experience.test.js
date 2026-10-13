@@ -23,7 +23,7 @@ test("streaming renders Markdown live (throttled), tracks the SOURCE text, and f
 });
 
 test("regenerate/retry start from an empty source so a stale previous reply is never persisted", () => {
-  assert.match(APP_JS, /setBusy\(true\);\s*\/\/[^\n]*\n\s*aiBubble\.rawText = "";/);
+  assert.match(APP_JS, /setBusy\(true\);[\s\S]{0,260}?aiBubble\.rawText = "";/);
 });
 
 test("a blinking accent cursor is appended inside the last text block while streaming and is aria-hidden", () => {

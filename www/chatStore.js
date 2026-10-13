@@ -585,6 +585,57 @@ if (!result.ok) return { ok: false, reason: result.reason };
 return { ok: true, conversation: conversation };
 }
 
+// Inserts or replaces ONE conversation from outside (chat sync). Keeps the
+// timestamps it arrives with, never changes which chat is active, and keeps
+// this device's own thumbs up/down ratings on messages that survive.
+function upsertConversation(raw) {
+var incoming = sanitizeConversation(raw);
+if (!incoming) return { ok: false, reason: "invalid-conversation" };
+var data = currentData();
+var index = findIndex(data, incoming.id);
+var created = index === -1;
+if (!created) {
+var ratings = {};
+data.conversations[index].messages.forEach(function (m) { if (m.feedback) ratings[m.id] = m.feedback; });
+incoming.messages.forEach(function (m) { if (m.role === "assistant" && ratings[m.id]) m.feedback = ratings[m.id]; });
+data.conversations[index] = incoming;
+} else {
+if (data.conversations.length >= LIMITS.maxConversations) return { ok: false, reason: "conversation-limit-reached" };
+data.conversations.push(incoming);
+}
+var result = writeNamespace(namespace, data);
+if (!result.ok) return { ok: false, reason: result.reason };
+return { ok: true, conversation: incoming, created: created };
+}
+
+// The conversations saved while signed out (the guest history). Read-only:
+// signing in switches to the account's own history and leaves these alone.
+function listGuestConversations() {
+var guest = readNamespace(guestNamespace());
+return guest.conversations.filter(function (c) { return c.messages.length > 0; });
+}
+
+// Adds conversations (e.g. the guest ones) to the CURRENT history, skipping
+// any whose id is already there and stopping at the conversation limit.
+function mergeConversations(list) {
+var data = currentData();
+var added = 0;
+var skipped = 0;
+(Array.isArray(list) ? list : []).forEach(function (raw) {
+var conversation = sanitizeConversation(raw);
+if (!conversation || findIndex(data, conversation.id) !== -1 || data.conversations.length >= LIMITS.maxConversations) {
+skipped += 1;
+return;
+}
+data.conversations.push(conversation);
+added += 1;
+});
+if (!added) return { ok: true, added: 0, skipped: skipped };
+var result = writeNamespace(namespace, data);
+if (!result.ok) return { ok: false, reason: result.reason };
+return { ok: true, added: added, skipped: skipped };
+}
+
 // Puts a previously deleted conversation back exactly as it was (id,
 // timestamps, pin, messages) - the "Undo" after a delete. Refuses if a
 // conversation with that id already exists.
@@ -950,6 +1001,9 @@ clearAllConversations: clearAllConversations,
 saveMessage: saveMessage,
 replaceMessages: replaceMessages,
 restoreConversation: restoreConversation,
+upsertConversation: upsertConversation,
+listGuestConversations: listGuestConversations,
+mergeConversations: mergeConversations,
 subscribe: subscribe,
 setMessageFeedback: setMessageFeedback,
 searchConversations: searchConversations,

@@ -750,6 +750,8 @@ store: store,
 onActiveConversationChanged: function (handler) { activeConversationChangedHandler = handler; },
 registerAbortActiveGeneration: function (fn) { abortActiveGenerationFn = fn; },
 refreshList: renderList,
+// Re-reads the active chat from storage and re-renders it (after sync changed it).
+refreshActive: restoreOrCreateActiveConversation,
 selectConversation: selectConversation,
 startRename: function (id) { var c = store.getConversation(id); if (c) startRename(c); },
 togglePin: function (id) { var c = store.getConversation(id); if (c) togglePin(c); },

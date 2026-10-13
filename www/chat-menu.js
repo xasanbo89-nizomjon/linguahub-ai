@@ -1,18 +1,22 @@
-// LinguaHub AI - header "..." chat actions menu.
+// LinguaHub AI - small popover menus: the header "..." chat actions menu and
+// the sidebar account menu.
 //
-// Pure presentation: opens/closes the menu in #chat-menu. The items inside
-// (#clear-chat-btn, #tutor-dashboard-btn) keep their own click handlers from
-// history-ui.js / tutor-dashboard.js; this file only shows and hides them.
+// Pure presentation: opens/closes a menu and handles keyboard/focus. The items
+// inside keep their own click handlers (history-ui.js, tutor-dashboard.js,
+// app.js...); this file only shows and hides them.
 // Keyboard: Enter/Space/ArrowDown on the button opens it, ArrowUp/ArrowDown/
 // Home/End move between items, Escape closes and returns focus to the
 // button, Tab or an outside click closes it.
 (function () {
   "use strict";
 
-  function init() {
-    var root = document.getElementById("chat-menu");
-    var button = document.getElementById("chat-menu-btn");
-    var list = document.getElementById("chat-menu-list");
+  // fixedAbove: the menu is positioned in the viewport just above its button
+  // (used by the account menu, which lives at the very bottom of a sidebar
+  // that clips overflow - and may be only a narrow icon rail when collapsed).
+  function setupMenu(config) {
+    var root = document.getElementById(config.root);
+    var button = document.getElementById(config.button);
+    var list = document.getElementById(config.list);
     if (!root || !button || !list) return;
 
     function items() {
@@ -30,8 +34,21 @@
       if (returnFocus) button.focus();
     }
 
+    function place() {
+      if (!config.fixedAbove || typeof button.getBoundingClientRect !== "function") return;
+      var rect = button.getBoundingClientRect();
+      var width = Math.max(rect.width, 220);
+      list.style.position = "fixed";
+      list.style.minWidth = width + "px";
+      list.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + "px";
+      list.style.bottom = (window.innerHeight - rect.top + 4) + "px";
+      list.style.top = "auto";
+      list.style.right = "auto";
+    }
+
     function open(focusIndex) {
       list.hidden = false;
+      place();
       button.setAttribute("aria-expanded", "true");
       var all = items();
       if (all.length && focusIndex !== null) all[focusIndex === -1 ? all.length - 1 : focusIndex].focus();
@@ -76,6 +93,11 @@
     document.addEventListener("click", function (event) {
       if (isOpen() && !root.contains(event.target)) close(false);
     });
+  }
+
+  function init() {
+    setupMenu({ root: "chat-menu", button: "chat-menu-btn", list: "chat-menu-list" });
+    setupMenu({ root: "user-profile", button: "account-menu-btn", list: "account-menu-list", fixedAbove: true });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

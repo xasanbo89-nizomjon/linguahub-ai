@@ -590,6 +590,89 @@ const historyUI = window.LinguaHubHistoryUI.init();
 // Handle for e2e/debugging (the controller is otherwise a private const).
 window.linguahubHistory = historyUI;
 
+// ---------------------------------------------------------------------
+// Chat sync (signed-in users): www/chat-sync.js mirrors local chats to
+// Firestore and applies changes from other devices. Local history stays the
+// source of truth and works offline.
+// ---------------------------------------------------------------------
+function firestoreOrNull() {
+try {
+return window.firebase && window.firebase.apps && window.firebase.apps.length && window.firebase.firestore ? window.firebase.firestore() : null;
+} catch (err) {
+return null;
+}
+}
+
+// A chat changed (or arrived, or was deleted) on another device.
+function handleRemoteChats(ids) {
+historyUI.refreshList();
+if (isBusy) return; // never disturb a reply that is being written
+const activeId = historyUI.store.getActiveConversationId();
+if (!activeId || ids.indexOf(activeId) !== -1 || !historyUI.store.getConversation(activeId)) {
+historyUI.refreshActive();
+}
+}
+
+const chatSync = window.LinguaHubChatSync
+? window.LinguaHubChatSync.create({
+store: historyUI.store,
+storage: window.localStorage,
+remote: window.LinguaHubChatSync.createFirestoreRemote(firestoreOrNull),
+isOnline: () => !isOffline(),
+onRemoteChange: handleRemoteChats
+})
+: null;
+window.linguahubSync = chatSync;
+
+const syncStatusEl = document.getElementById("sync-status");
+const syncStatusTextEl = document.getElementById("sync-status-text");
+function renderSyncStatus(status) {
+if (syncStatusEl) syncStatusEl.setAttribute("data-state", status);
+if (syncStatusTextEl) syncStatusTextEl.textContent = window.LinguaHubChatSync.statusText(status);
+}
+if (chatSync) {
+chatSync.onStatusChange(renderSyncStatus);
+if (typeof window.addEventListener === "function") {
+window.addEventListener("online", () => chatSync.connectivityChanged());
+window.addEventListener("offline", () => chatSync.connectivityChanged());
+}
+}
+
+// On the first sign-in of an account, offer (once) to upload the chats that
+// were saved on this device while signed out. Yes copies them into the
+// account's history (they then sync); No leaves them where they are.
+async function offerGuestUpload(user) {
+if (!chatSync.shouldOfferUpload(user.uid)) return;
+const guestChats = historyUI.store.listGuestConversations();
+if (!guestChats.length) return;
+const count = guestChats.length;
+const upload = window.LinguaHubDialog
+? await window.LinguaHubDialog.confirm({
+title: "Upload your chats?",
+message: "You have " + count + (count === 1 ? " chat" : " chats") + " on this device from before you signed in. Upload " + (count === 1 ? "it" : "them") + " to your account so " + (count === 1 ? "it appears" : "they appear") + " on your other devices too?",
+confirmLabel: "Yes, upload",
+cancelLabel: "No"
+})
+: false;
+chatSync.recordUploadDecision(user.uid, upload);
+if (!upload) return;
+const result = historyUI.store.mergeConversations(guestChats);
+if (result.ok) {
+historyUI.refreshList();
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "success", message: "Uploaded " + result.added + (result.added === 1 ? " chat" : " chats") + " to your account." });
+}
+}
+
+async function handleSyncUser(user) {
+if (!chatSync) return;
+if (!user) {
+chatSync.stop();
+return;
+}
+try { await offerGuestUpload(user); } catch (err) { /* the offer is optional */ }
+chatSync.start(user);
+}
+
 // Populated once mode-ui.js resolves GET /api/ai/modes (see
 // bootstrapModesAndHistory below) - the backend's public mode registry is
 // the only source of truth for which mode ids exist and are currently
@@ -867,6 +950,8 @@ return [{ role: "user", content: fallbackText }];
 // the streaming/fallback/abort/status logic.
 async function generateAssistantReply(conversationId, requestMessages, mode, assistantMessageId, aiBubble) {
 setBusy(true);
+// Tells chat sync not to upload or overwrite this chat until the reply settles.
+if (chatSync) chatSync.setGenerating(conversationId);
 // Regenerate/retry reuse a bubble that still holds the previous reply's source.
 aiBubble.rawText = "";
 aiBubble.dataset.feedback = "";
@@ -938,6 +1023,7 @@ historyUI.refreshList();
 refreshMessageActions(aiBubble, finalStatus);
 activeChatAbortController = null;
 setBusy(false);
+if (chatSync) chatSync.setGenerating(null);
 // Voice chat hook (Phase 14, www/voice.js): auto-read and Voice Mode's
 // listen -> reply -> speak loop both key off this one settled event.
 if (typeof CustomEvent === "function") {
@@ -1351,6 +1437,13 @@ logoutBtn.removeAttribute("aria-busy");
 
 loginBtn.addEventListener("click", handleLogin);
 logoutBtn.addEventListener("click", handleLogout);
+const accountSettingsBtn = document.getElementById("account-settings-btn");
+if (accountSettingsBtn) {
+accountSettingsBtn.addEventListener("click", () => {
+if (window.LinguaHubSettingsUI && typeof window.LinguaHubSettingsUI.open === "function") window.LinguaHubSettingsUI.open({ tab: "account" });
+else settingsBtn.click();
+});
+}
 
 if (window.LinguaHubAuth && LinguaHubAuth.isAvailable()) {
 loginBtn.disabled = true;
@@ -1369,6 +1462,7 @@ setAuthStatus("");
 // Single subscription drives both the profile UI above and switching the
 // chat-history namespace (guest <-> user:<uid>) - see www/history-ui.js.
 historyUI.setUser(user);
+handleSyncUser(user);
 });
 } else {
 loginBtn.disabled = true;
