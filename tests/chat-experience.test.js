@@ -136,3 +136,35 @@ test("actions: a new generation clears the old rating; restore re-applies the st
   assert.match(APP_JS, /aiBubble\.dataset\.feedback = "";/);
   assert.match(APP_JS, /feedback: message\.feedback/);
 });
+
+// ---- Step 4: composer ----------------------------------------------------------
+
+test("composer: auto-grows to 8 lines (CSS max-height) and the JS no longer caps at 200px", () => {
+  assert.match(STYLES_CSS, /max-height:\s*calc\(8 \* 1em \* var\(--line-height-normal\) \+ 2 \* var\(--space-3\)\)/);
+  assert.match(APP_JS, /input\.style\.height = input\.scrollHeight \+ "px"/);
+  assert.doesNotMatch(APP_JS, /Math\.min\(input\.scrollHeight, 200\)/);
+});
+
+test("composer: stays enabled while generating (keeps focus); Send is disabled when empty or offline and is Stop while busy", () => {
+  assert.doesNotMatch(APP_JS, /input\.disabled = busy/);
+  assert.match(APP_JS, /sendBtn\.disabled = isBusy \? false : \(!input\.value\.trim\(\) \|\| isOffline\(\)\)/);
+  assert.match(APP_JS, /input\.removeAttribute\("dir"\);\s*updateComposerState\(\);\s*input\.focus\(\);/);
+});
+
+test("composer: Enter sends (per the setting), never mid-IME-composition and never while a reply is generating", () => {
+  assert.match(APP_JS, /if \(e\.isComposing \|\| e\.keyCode === 229\) return;/);
+  assert.match(APP_JS, /if \(!isBusy\) sendMessage\(\);/);
+  assert.match(APP_JS, /const message = input\.value\.trim\(\);\s*if \(!message \|\| isBusy\) return;/);
+  assert.match(APP_JS, /isEnterToSendEnabled\(\)/);
+});
+
+test("composer: Esc stops generation unless a dialog, the chat menu or another handler already owns it", () => {
+  assert.match(APP_JS, /e\.key !== "Escape" \|\| e\.defaultPrevented \|\| !isBusy/);
+  assert.match(APP_JS, /\.lh-dialog-backdrop/);
+  assert.match(APP_JS, /abortActiveGeneration\(\);\s*\}\);/);
+});
+
+test("composer: programmatic prompt fills (tutor dashboard, suggestion chips) refresh the Send state", () => {
+  assert.match(read("tutor-dashboard.js"), /input\.value = prompt; input\.dispatchEvent\(new Event\("input"/);
+  assert.match(APP_JS, /input\.value = item\.prompt;\s*autoResizeComposer\(\);\s*updateComposerState\(\);/);
+});

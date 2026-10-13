@@ -1605,7 +1605,9 @@ font-size: var(--font-size-md);
 font-family: inherit;
 background: transparent;
 color: var(--color-text);
-max-height: 200px;
+/* ~8 lines (8 x line-height + vertical padding), then it scrolls. */
+line-height: var(--line-height-normal);
+max-height: calc(8 * 1em * var(--line-height-normal) + 2 * var(--space-3));
 overflow-y: auto;
 box-shadow: none;
 transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);

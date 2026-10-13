@@ -337,12 +337,13 @@ return wrapper;
 // assistant is generating. The idle "Online" state is hidden by CSS
 // (.status-bar[data-state="online"]).
 function renderStatus() {
-const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+const offline = isOffline();
 statusEl.textContent = offline ? "Offline" : (isBusy ? "LinguaHub AI is thinking..." : "Online");
 if (statusBarEl && typeof statusBarEl.setAttribute === "function") {
 statusBarEl.setAttribute("data-state", offline ? "offline" : (isBusy ? "busy" : "online"));
 }
 if (statusDotEl) statusDotEl.classList.toggle("active", isBusy && !offline);
+if (typeof sendBtn !== "undefined") updateComposerState();
 }
 
 if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
@@ -352,13 +353,27 @@ window.addEventListener("offline", renderStatus);
 renderStatus();
 
 function setBusy(busy) {
-input.disabled = busy;
+// The composer stays enabled while a reply generates: it keeps focus after
+// sending and the next message can already be typed. Sending is blocked in
+// sendMessage()/the Enter handler instead, and Send becomes Stop.
 modeSelect.disabled = busy;
 isBusy = busy;
 renderStatus();
 sendBtn.classList.toggle("is-stop", busy);
 sendBtn.textContent = busy ? "Stop" : "Send";
 sendBtn.setAttribute("aria-label", busy ? "Stop generating" : "Send message");
+updateComposerState();
+}
+
+function isOffline() {
+return typeof navigator !== "undefined" && navigator.onLine === false;
+}
+
+// Send is disabled for an empty (or whitespace-only) message and while
+// offline; while a reply is generating the same button is Stop and stays
+// enabled.
+function updateComposerState() {
+sendBtn.disabled = isBusy ? false : (!input.value.trim() || isOffline());
 }
 
 sendBtn.addEventListener("click", () => {
@@ -369,14 +384,16 @@ sendMessage();
 }
 });
 
-// Auto-resize while typing, not just after sending (Task 7).
+// Auto-grow while typing. The textarea's CSS max-height is 8 lines, so the
+// height set here is clamped there and the field scrolls beyond that.
 function autoResizeComposer() {
 input.style.height = "auto";
-input.style.height = Math.min(input.scrollHeight, 200) + "px";
+input.style.height = input.scrollHeight + "px";
 }
 input.addEventListener("input", () => {
 autoResizeComposer();
 applyRtlIfNeeded(input, input.value);
+updateComposerState();
 });
 
 chatBox.addEventListener("scroll", () => {
@@ -435,6 +452,7 @@ card.appendChild(text);
 card.addEventListener("click", () => {
 input.value = item.prompt;
 autoResizeComposer();
+updateComposerState();
 input.focus();
 input.setSelectionRange(input.value.length, input.value.length);
 });
@@ -535,14 +553,30 @@ LinguaHubTheme.setMode(resolved === "dark" ? "light" : "dark");
 }
 
 input.addEventListener("keydown", (e) => {
+// Enter that confirms an IME composition (Arabic, Chinese, Japanese...)
+// must not send the half-composed message.
+if (e.isComposing || e.keyCode === 229) return;
 if (e.key === "Enter" && !e.shiftKey) {
 const enterToSend = window.LinguaHubSettingsUI ? window.LinguaHubSettingsUI.isEnterToSendEnabled() : true;
 if (enterToSend) {
 e.preventDefault();
-sendMessage();
+if (!isBusy) sendMessage();
 }
 }
 });
+
+// Esc stops a running generation (the message keeps its partial text).
+// Anything that owns Escape first - an open dialog, the chat menu, the edit
+// box (they call preventDefault) - wins.
+if (typeof document.addEventListener === "function") {
+document.addEventListener("keydown", (e) => {
+if (e.key !== "Escape" || e.defaultPrevented || !isBusy) return;
+if (typeof document.querySelector === "function" && document.querySelector(".lh-dialog-backdrop")) return;
+const menuList = document.getElementById("chat-menu-list");
+if (menuList && !menuList.hidden) return;
+abortActiveGeneration();
+});
+}
 
 // Single token-provider function: attaches Authorization only when a real
 // user is signed in and a token is actually available. Never attaches an
@@ -758,7 +792,12 @@ detail: { text: isHardError ? "" : rawText, status: finalStatus, wrapper: aiBubb
 
 async function sendMessage() {
 const message = input.value.trim();
-if (!message) return;
+if (!message || isBusy) return;
+if (isOffline()) {
+// Keep the draft; the composer already explains why Send is disabled.
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: "You're offline. Reconnect to send messages." });
+return;
+}
 
 const mode = modeSelect.value;
 if (typeof CustomEvent === "function") {
@@ -776,6 +815,8 @@ addMessage("user", message, { status: "complete", messageId: userMessage.id });
 input.value = "";
 input.style.height = "auto";
 input.removeAttribute("dir");
+updateComposerState();
+input.focus();
 
 if (conversationId) {
 const saveResult = historyUI.store.saveMessage(conversationId, userMessage);

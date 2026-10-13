@@ -591,5 +591,10 @@ test("app.js: logout aborts an active streaming generation", async () => {
   await sendPromise;
 
   assert.equal(streamCall.init.signal.aborted, true, "logout must abort the in-flight generation");
-  assert.equal(elements["send-btn"].disabled, false, "the send button must be re-enabled after cancellation");
+  // Phase 2: Send is disabled while the composer is empty, so "re-enabled" is
+  // now "back from Stop to a normal Send state" (and the composer was never
+  // disabled, so it keeps focus and can be typed into).
+  assert.equal(elements["send-btn"].textContent, "Send", "the button must leave the Stop state after cancellation");
+  assert.equal(elements["send-btn"].classList.contains("is-stop"), false);
+  assert.equal(elements["user-input"].disabled, false, "the composer must stay enabled");
 });
