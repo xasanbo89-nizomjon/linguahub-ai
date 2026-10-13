@@ -12,6 +12,7 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
 const http = require("node:http");
+const aiModes = require("../lib/aiModes.js");
 
 process.env.RATE_LIMIT_MAX_REQUESTS = process.env.RATE_LIMIT_MAX_REQUESTS || "1000";
 process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || "sk-test-placeholder-not-a-real-key";
@@ -46,7 +47,7 @@ test("GET /api/ai/modes returns exactly the public fields, for every mode, match
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.ok(Array.isArray(body.modes));
-  assert.equal(body.modes.length, 8);
+  assert.equal(body.modes.length, aiModes.MODE_IDS.length); // registry grew when the tutor modes were added
 
   for (const mode of body.modes) {
     assert.deepEqual(Object.keys(mode).sort(), ["capability", "description", "enabled", "id", "label"]);
@@ -189,4 +190,10 @@ test("multi-turn context is accepted and reaches the provider call (fails only a
     mode: "general"
   });
   assert.equal(status, 500, "should pass validation and only fail at the OpenAI call itself");
+});
+
+test("the general mode is shown as 'Free chat' (label only - the stable id stays 'general')", () => {
+  assert.equal(aiModes.getModeConfig("general").label, "Free chat");
+  assert.equal(aiModes.getModeConfig("general").id, "general");
+  assert.equal(aiModes.isValidModeId("general"), true);
 });

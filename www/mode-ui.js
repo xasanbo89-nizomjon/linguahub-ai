@@ -59,7 +59,7 @@ return MODE_PROMPT_SUGGESTIONS[modeId] || MODE_PROMPT_SUGGESTIONS[DEFAULT_MODE_I
 // hasn't actually confirmed. enabled/disabled state matches the real
 // registry as of Phase 6.
 var OFFLINE_FALLBACK_MODES = [
-{ id: "general", label: "General AI", description: "A broad, helpful assistant for everyday questions, writing, and multilingual conversation.", enabled: true, capability: "chat" },
+{ id: "general", label: "Free chat", description: "A broad, helpful assistant for everyday questions, writing, and multilingual conversation.", enabled: true, capability: "chat" },
 { id: "codex", label: "Codex AI", description: "A coding assistant for debugging, architecture, review, and secure code.", enabled: true, capability: "chat" },
 { id: "cyber", label: "Cyber AI", description: "A defensive cybersecurity assistant for secure coding, vulnerability explanation, and threat modeling.", enabled: true, capability: "chat" },
 { id: "deep-thinking", label: "Deep Thinking", description: "Slower, structured analysis for complex or ambiguous questions - more reasoning, longer answers.", enabled: true, capability: "chat" },

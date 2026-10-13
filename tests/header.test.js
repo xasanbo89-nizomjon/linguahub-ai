@@ -54,3 +54,8 @@ test("app.js has no leftover header-account wiring", () => {
 test("embedded mode hides the whole mode picker, not just the select", () => {
   assert.match(STYLES_CSS, /\[data-app-mode="embedded"\][^{]*\.mode-picker/);
 });
+
+test("voice-orb button has an accessible name from the moment it is created", () => {
+  const voice = read("voice.js");
+  assert.match(voice, /orb\.className = "voice-orb";\s*(?:\/\/[^\n]*\n\s*)?orb\.setAttribute\("aria-label", "Start talking"\)/);
+});

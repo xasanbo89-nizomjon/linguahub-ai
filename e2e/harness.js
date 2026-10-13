@@ -127,4 +127,16 @@ async function withApp(fn) {
   }
 }
 
-module.exports = { withApp, BACKEND_URL, FRONTEND_URL };
+// Export/import have no buttons in the current UI (removed in Integration
+// Prep - tests/integration-prep.test.js pins that), so e2e drives the same
+// real code paths through window.LinguaHubHistoryUI.
+function exportActiveConversation(page) {
+  return page.evaluate(() => window.LinguaHubHistoryUI.exportActiveConversation());
+}
+
+async function importConversationFile(page, filePath) {
+  const text = require("node:fs").readFileSync(filePath, "utf8");
+  await page.evaluate((json) => window.LinguaHubHistoryUI.importFile(new File([json], "import.json", { type: "application/json" })), text);
+}
+
+module.exports = { withApp, BACKEND_URL, FRONTEND_URL, exportActiveConversation, importConversationFile };

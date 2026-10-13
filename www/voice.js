@@ -697,6 +697,8 @@ panel.dataset.state = "idle";
 var orb = document.createElement("button");
 orb.type = "button";
 orb.className = "voice-orb";
+// Initial name; setState() below keeps it in sync with the voice state.
+orb.setAttribute("aria-label", "Start talking");
 var core = document.createElement("span");
 core.className = "voice-orb-core";
 core.setAttribute("aria-hidden", "true");

@@ -276,27 +276,8 @@ async function run() {
       `existsButHidden=${logoutBtnExistsButHidden} inTrapSet=${drawerFocusables.ids.includes("logout-btn")}`
     );
 
-    // Import is a <label for="import-chat-input"> wrapping a hidden file
-    // input, not a real <button> - mouse users get a click "for free" via
-    // the browser's native label/for forwarding, but that alone isn't
-    // keyboard-reachable. Verify it directly: focusable via Tab, and
-    // Enter actually opens the real file picker (not a silent no-op).
-    await page.evaluate(() => document.getElementById("import-label-btn").focus());
-    const importLabelFocus = await activeElementInfo(page);
-    results.check(
-      "Import (a <label>, not a <button>) is keyboard-focusable",
-      importLabelFocus.cls.includes("sidebar-import-label"),
-      JSON.stringify(importLabelFocus)
-    );
-    const [importFileChooser] = await Promise.all([
-      page.waitForEvent("filechooser", { timeout: 3000 }).catch(() => null),
-      page.keyboard.press("Enter")
-    ]);
-    results.check(
-      "Import is Enter-activatable via keyboard (opens the real file picker, not a mouse-only no-op)",
-      !!importFileChooser,
-      importFileChooser ? "filechooser event fired" : "no filechooser event within timeout"
-    );
+    // (The sidebar Import <label> and its keyboard checks were removed along
+    // with the control itself in Integration Prep; see tests/integration-prep.test.js.)
 
     results.check(
       "keyboard order matches the approved layout: New Chat comes after search/history and before the utility controls",

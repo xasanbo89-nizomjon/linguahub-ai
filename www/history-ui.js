@@ -599,6 +599,9 @@ clearActiveConversation: handleClearActiveConversation,
 clearAllConversations: handleClearAllConversations,
 exportActiveConversation: handleExport,
 triggerImport: function () { if (importInput) importInput.click(); },
+// Same validated pipeline the (currently UI-less) file input uses; lets e2e
+// and any future entry point import a File without a DOM input.
+importFile: handleImportFile,
 closeMobileDrawer: closeMobileDrawer,
 start: function () {
 // One-time, idempotent legacy-data migration (safe no-op if there is

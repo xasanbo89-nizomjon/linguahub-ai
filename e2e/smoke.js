@@ -11,7 +11,7 @@
 
 const path = require("node:path");
 const fs = require("node:fs");
-const { withApp } = require("./harness");
+const { withApp, exportActiveConversation, importConversationFile } = require("./harness");
 const { createResults } = require("./results");
 
 async function run() {
@@ -318,7 +318,7 @@ async function run() {
 
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.click("#export-chat-btn")
+      exportActiveConversation(page)
     ]);
     const downloadPath = path.join(__dirname, "screenshots", "exported-conversation.json");
     await download.saveAs(downloadPath);
@@ -330,7 +330,7 @@ async function run() {
     );
 
     const convCountBeforeImport = await page.locator(".conversation-item").count();
-    await page.setInputFiles("#import-chat-input", downloadPath);
+    await importConversationFile(page, downloadPath);
     await page.waitForTimeout(400);
     const convCountAfterImport = await page.locator(".conversation-item").count();
     results.check("35b. Import adds a new conversation from the exported file", convCountAfterImport === convCountBeforeImport + 1, `before=${convCountBeforeImport} after=${convCountAfterImport}`);

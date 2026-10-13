@@ -345,7 +345,7 @@ html[data-desktop] .sidebar-brand .sidebar-brand-name{
 display: none;
 }
 html[data-desktop] .sidebar-brand{
-padding-top: var(--space-3);
+padding: var(--space-2) var(--space-3) 0;
 }
 
 .sidebar-brand-name{

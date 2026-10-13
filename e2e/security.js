@@ -6,7 +6,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { withApp } = require("./harness");
+const { withApp, exportActiveConversation, importConversationFile } = require("./harness");
 const { createResults } = require("./results");
 
 function readSource(relPath) {
@@ -144,7 +144,7 @@ async function run() {
     };
     const tmpFile = path.join(__dirname, "screenshots", "malicious-import.json");
     fs.writeFileSync(tmpFile, JSON.stringify(maliciousExport));
-    await page.setInputFiles("#import-chat-input", tmpFile);
+    await importConversationFile(page, tmpFile);
     await page.waitForTimeout(400);
     const importXssResult = await page.evaluate(() => ({
       flagSet: window.__importXss === true,
@@ -165,7 +165,7 @@ async function run() {
     await page.waitForSelector('.message[data-role="assistant"][data-status="complete"]', { timeout: 10000 });
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.click("#export-chat-btn")
+      exportActiveConversation(page)
     ]);
     const exportPath = path.join(__dirname, "screenshots", "security-export-check.json");
     await download.saveAs(exportPath);
