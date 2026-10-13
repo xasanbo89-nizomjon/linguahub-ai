@@ -14,7 +14,8 @@ const OUT = path.join(ROOT, "www", "fonts");
 
 const FILES = [
   ["inter", [400, 500, 600, 700], ["latin", "latin-ext"]],
-  ["fraunces", [400, 600, 700], ["latin"]]
+  ["fraunces", [400, 600, 700], ["latin"]],
+  ["noto-sans-arabic", [400, 500, 600, 700], ["arabic"]]
 ];
 
 fs.mkdirSync(OUT, { recursive: true });

@@ -1,9 +1,12 @@
 /* LinguaHub AI - bundled fonts (offline-safe, no CDN).
-   Source: @fontsource/inter and @fontsource/fraunces (SIL OFL 1.1, see the
-   LICENSE-*.txt files next to the .woff2 files). Only the latin and
-   latin-ext subsets are bundled; Arabic and other scripts fall back to the
-   system UI font via the --font-family stack in theme.css. Regenerate the
-   files with scripts/copy-fonts.js after bumping either package. */
+   Source: @fontsource/inter, @fontsource/fraunces and
+   @fontsource/noto-sans-arabic (SIL OFL 1.1, see the LICENSE-*.txt files
+   next to the .woff2 files).
+   Inter/Fraunces: latin and latin-ext subsets only. Noto Sans Arabic covers
+   the Arabic script; it sits right after Inter/Fraunces in the --font-family
+   stacks in theme.css, so Arabic characters use it per-glyph. Other scripts
+   fall back to the system font. Regenerate the files with
+   scripts/copy-fonts.js after bumping any of the packages. */
 
 @font-face{
 font-family: "Inter";
@@ -102,4 +105,40 @@ font-display: swap;
 font-weight: 700;
 src: url("fonts/fraunces-latin-700-normal.woff2") format("woff2");
 unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face{
+font-family: "Noto Sans Arabic";
+font-style: normal;
+font-display: swap;
+font-weight: 400;
+src: url("fonts/noto-sans-arabic-arabic-400-normal.woff2") format("woff2");
+unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face{
+font-family: "Noto Sans Arabic";
+font-style: normal;
+font-display: swap;
+font-weight: 500;
+src: url("fonts/noto-sans-arabic-arabic-500-normal.woff2") format("woff2");
+unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face{
+font-family: "Noto Sans Arabic";
+font-style: normal;
+font-display: swap;
+font-weight: 600;
+src: url("fonts/noto-sans-arabic-arabic-600-normal.woff2") format("woff2");
+unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face{
+font-family: "Noto Sans Arabic";
+font-style: normal;
+font-display: swap;
+font-weight: 700;
+src: url("fonts/noto-sans-arabic-arabic-700-normal.woff2") format("woff2");
+unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC;
 }

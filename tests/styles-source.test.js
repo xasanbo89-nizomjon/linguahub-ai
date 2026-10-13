@@ -178,3 +178,10 @@ test("fonts are bundled locally: fonts.css is linked before theme.css, every fil
     assert.ok(fs.existsSync(path.join(__dirname, "..", "www", rel)), "missing font file: " + rel);
   });
 });
+
+test("Noto Sans Arabic is bundled and sits right after Inter / Fraunces in the font stacks", () => {
+  const FONTS_CSS = fs.readFileSync(path.join(__dirname, "..", "www", "fonts.css"), "utf8");
+  assert.match(FONTS_CSS, /font-family:\s*"Noto Sans Arabic"/);
+  assert.match(THEME_CSS, /--font-family:\s*"Inter",\s*"Noto Sans Arabic"/);
+  assert.match(THEME_CSS, /--font-family-heading:\s*"Fraunces",\s*"Noto Sans Arabic"/);
+});

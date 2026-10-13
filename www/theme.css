@@ -17,8 +17,8 @@
 
 :root{
 /* ---- typography ---- */
---font-family: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
---font-family-heading: "Fraunces", Georgia, "Times New Roman", serif;
+--font-family: "Inter", "Noto Sans Arabic", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+--font-family-heading: "Fraunces", "Noto Sans Arabic", Georgia, "Times New Roman", serif;
 --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 /* Type scale xs - 3xl. md is the base UI/body size. */
 --font-size-xs: 0.75rem;
