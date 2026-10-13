@@ -192,3 +192,44 @@ test("layout: chat content and composer are capped at 760px; the hero is not pus
   assert.match(STYLES_CSS, /\.chat-scroll-wrapper:has\(> \.empty-state:not\(\[hidden\]\)\) > \.chat-box\s*\{\s*display:\s*none/);
   assert.match(STYLES_CSS, /\.empty-state\s*\{[^}]*scrollbar-gutter:\s*stable both-edges/);
 });
+
+test("restyle: sidebar on --surface-2, active chat on --accent-soft, New chat and Send on --accent", () => {
+  assert.match(STYLES_CSS, /\.sidebar\{[^}]*background:\s*var\(--surface-2\)/);
+  assert.match(STYLES_CSS, /\.conversation-item\.active\{\s*background:\s*var\(--accent-soft\)/);
+  assert.match(STYLES_CSS, /\.new-chat-btn\{[^}]*background:\s*var\(--accent\)/);
+  assert.match(STYLES_CSS, /\.controls:focus-within\{[^}]*border-color:\s*var\(--accent\)/);
+});
+
+test("restyle: the heading font is used only for the hero title and Settings section headings", () => {
+  const uses = STYLES_CSS.match(/font-family:\s*var\(--font-family-heading\)/g) || [];
+  assert.equal(uses.length, 2);
+  assert.match(STYLES_CSS, /\.empty-state-title\{\s*font-family:\s*var\(--font-family-heading\)/);
+  assert.match(STYLES_CSS, /\.settings-section-title\{\s*font-family:\s*var\(--font-family-heading\)/);
+});
+
+test("restyle: Settings' Clear all is an outlined danger button, not a solid red block", () => {
+  const rule = STYLES_CSS.split(".lh-settings-dialog .lh-btn-danger{")[1].split("}")[0];
+  assert.match(rule, /background:\s*transparent/);
+  assert.match(rule, /border:\s*1px solid var\(--danger\)/);
+  assert.match(rule, /color:\s*var\(--danger-text\)/);
+});
+
+test("contrast tokens exist in every palette (muted text on surface-2, danger text on dark surfaces)", () => {
+  const light = THEME_CSS.split(':root[data-theme="light"]')[1].split("}")[0];
+  const dark = THEME_CSS.split(':root[data-theme="dark"]')[1].split("}")[0];
+  [light, dark].forEach((block) => {
+    assert.match(block, /--text-muted-strong:/);
+    assert.match(block, /--danger-text:/);
+    assert.match(block, /--accent-text:/);
+  });
+});
+
+test("tall dialogs (Settings) scroll inside the window and stay below the title bar", () => {
+  assert.match(STYLES_CSS, /\.lh-dialog-backdrop\{[^}]*inset:\s*var\(--titlebar-height\) 0 0 0/);
+  assert.match(STYLES_CSS, /\.lh-dialog\{[^}]*max-height:\s*100%;[^}]*overflow-y:\s*auto/);
+});
+
+test("collapsed sidebar: the icon-only New chat and sign-in buttons keep an accessible name", () => {
+  assert.match(INDEX_HTML, /id="new-chat-btn"[^>]*aria-label="New chat"/);
+  assert.match(INDEX_HTML, /id="login-btn"[^>]*aria-label="Guest User, sign in for sync"/);
+});

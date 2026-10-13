@@ -270,9 +270,15 @@ padding-left: 80px;
 /* ---- Sidebar ---- */
 
 .sidebar{
+/* The sidebar sits on --surface-2, where the normal --text-muted only
+   reaches ~4.2:1; its secondary text uses the slightly darker
+   --text-muted-strong so small text stays WCAG AA (4.5:1). */
+--text-muted: var(--text-muted-strong);
+--color-text-muted: var(--text-muted-strong);
+--color-text-secondary: var(--text-muted-strong);
 width: 260px;
 flex-shrink: 0;
-background: var(--color-surface);
+background: var(--surface-2);
 border: 0;
 border-right: 1px solid var(--color-border);
 border-radius: 0;
@@ -332,6 +338,16 @@ border-radius: var(--radius-md);
 box-shadow: var(--shadow-xs);
 }
 
+/* Inside the desktop app the title bar already shows the logo and name, so
+   the sidebar's own brand row keeps only the collapse button. */
+html[data-desktop] .sidebar-brand .lh-mark,
+html[data-desktop] .sidebar-brand .sidebar-brand-name{
+display: none;
+}
+html[data-desktop] .sidebar-brand{
+padding-top: var(--space-3);
+}
+
 .sidebar-brand-name{
 font-weight: 600;
 font-size: var(--font-size-md);
@@ -373,10 +389,10 @@ right: calc(var(--space-4) + var(--space-2));
 top: 50%;
 transform: translateY(-50%);
 padding: 1px 6px;
-border: 1px solid var(--color-border);
+border: 1px solid var(--border);
 border-radius: var(--radius-sm);
-background: var(--color-surface);
-color: var(--color-text-muted);
+background: var(--surface-2);
+color: var(--text-muted);
 font-family: var(--font-family);
 font-size: var(--font-size-xs);
 font-weight: 600;
@@ -387,19 +403,18 @@ pointer-events: none;
 width: 100%;
 min-height: var(--touch-target-min);
 padding: var(--space-2) var(--space-8) var(--space-2) var(--space-8);
-border: 1px solid transparent;
+border: 1px solid var(--border);
 border-radius: var(--radius-md);
-background: var(--color-bg);
-color: var(--color-text);
+background: var(--surface);
+color: var(--text);
 font-size: var(--font-size-sm);
 transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .sidebar-search input:focus-visible{
-border-color: var(--color-border-strong);
-outline: 2px solid var(--focus-ring-color);
-outline-offset: 1px;
-box-shadow: none;
+border-color: var(--accent);
+outline: none;
+box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .conversation-list{
@@ -426,18 +441,34 @@ min-height: var(--touch-target-min);
 }
 
 .conversation-item:hover{
-background: var(--color-surface-elevated);
+background: var(--border);
 }
 
 /* Elegant accent: a soft-tinted background plus a thin accent bar on the
    leading edge, not a full bordered box (Phase 13 - "selected conversation
    uses elegant accent", less boxy than the previous full-outline treatment). */
 .conversation-item.active{
-background: var(--color-surface-elevated);
+background: var(--accent-soft);
 }
 
 .conversation-item.active::before{
-display: none;
+content: "";
+position: absolute;
+left: 0;
+top: 10px;
+bottom: 10px;
+width: 3px;
+border-radius: var(--radius-full);
+background: var(--accent);
+}
+
+.conversation-item.active .conversation-item-title{
+color: var(--accent-text);
+font-weight: 600;
+}
+
+.conversation-item.active .conversation-item-meta{
+color: var(--accent-text);
 }
 
 .conversation-item:focus-visible{
@@ -497,7 +528,7 @@ cursor: pointer;
 }
 
 .conversation-item-actions button:hover:not(:disabled){
-background: var(--color-surface-elevated);
+background: var(--surface);
 color: var(--color-text);
 }
 
@@ -609,10 +640,11 @@ width: calc(100% - var(--space-6));
 margin: 0 var(--space-3) var(--space-3);
 min-height: 40px;
 padding: var(--space-2) var(--space-3);
-background: var(--color-surface-elevated);
-color: var(--color-text);
-border: 1px solid var(--color-border);
-border-radius: var(--radius-sm);
+background: var(--accent);
+color: var(--on-accent);
+border: 1px solid transparent;
+border-radius: var(--radius-md);
+box-shadow: var(--shadow-1);
 font-size: var(--font-size-sm);
 font-weight: 600;
 cursor: pointer;
@@ -625,8 +657,9 @@ line-height: 1;
 }
 
 .new-chat-btn:hover:not(:disabled){
-background: var(--color-border);
-box-shadow: none;
+background: var(--accent-hover);
+box-shadow: var(--shadow-1);
+transform: none;
 }
 
 .new-chat-btn:active:not(:disabled){
@@ -1053,13 +1086,13 @@ transform: none;
 }
 
 .chat-menu-item-danger{
-color: var(--danger);
+color: var(--danger-text);
 }
 
 .chat-menu-item-danger:hover:not(:disabled),
 .chat-menu-item-danger:focus-visible{
 background: var(--danger-soft);
-color: var(--danger);
+color: var(--danger-text);
 }
 
 .auth-area{
@@ -1391,9 +1424,10 @@ line-height: 1;
 }
 
 .empty-state-title{
+font-family: var(--font-family-heading);
 font-size: var(--font-size-3xl);
 font-weight: 600;
-letter-spacing: -0.025em;
+letter-spacing: -0.02em;
 }
 
 .empty-state-subtitle{
@@ -1417,18 +1451,19 @@ gap: 0;
 text-align: center;
 padding: 9px var(--space-3);
 border-radius: var(--radius-full);
-border: 1px solid var(--color-border);
-background: transparent;
-color: var(--color-text);
+border: 1px solid var(--border);
+background: var(--surface);
+color: var(--text);
 cursor: pointer;
-font-size: var(--font-size-xs);
+font-size: var(--font-size-sm);
 min-height: 36px;
 transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
 .empty-state-card:hover:not(:disabled){
-border-color: var(--color-border-strong);
-background: var(--color-surface-elevated);
+border-color: var(--accent);
+background: var(--accent-soft);
+color: var(--accent-text);
 box-shadow: none;
 transform: none;
 }
@@ -1490,9 +1525,16 @@ gap: var(--space-2);
 max-width: var(--composer-max-width);
 margin: 0 auto;
 padding: var(--space-2);
-background: var(--color-surface-elevated);
-border: 1px solid var(--color-border);
+background: var(--surface);
+border: 1px solid var(--border);
 border-radius: var(--radius-lg);
+box-shadow: var(--shadow-1);
+transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.controls:focus-within{
+border-color: var(--accent);
+box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 textarea{
@@ -1799,7 +1841,7 @@ min-height: var(--touch-target-min);
 padding: 0;
 border-radius: 50%;
 background: var(--color-danger-soft);
-color: var(--color-danger);
+color: var(--danger-text);
 box-shadow: none;
 }
 .voice-panel-end:hover:not(:disabled){
@@ -1913,7 +1955,7 @@ z-index: var(--z-drawer-backdrop);
 
 .lh-dialog-backdrop{
 position: fixed;
-inset: 0;
+inset: var(--titlebar-height) 0 0 0;
 background: var(--overlay);
 display: flex;
 align-items: center;
@@ -1926,10 +1968,14 @@ animation: lh-fade-in var(--duration-fast) var(--ease-standard);
 .lh-dialog{
 width: 100%;
 max-width: 420px;
-background: var(--color-surface-elevated);
-border: 1px solid var(--color-border);
+/* Tall dialogs (Settings) scroll inside the window instead of running
+   off-screen or under the title bar. */
+max-height: 100%;
+overflow-y: auto;
+background: var(--surface);
+border: 1px solid var(--border);
 border-radius: var(--radius-lg);
-box-shadow: var(--shadow-lg);
+box-shadow: var(--shadow-2);
 padding: var(--space-5);
 z-index: var(--z-dialog);
 animation: lh-dialog-in var(--duration-base) var(--ease-standard);
@@ -1970,7 +2016,7 @@ box-shadow: none;
 }
 
 .lh-dialog-field-error{
-color: var(--color-danger);
+color: var(--danger-text);
 font-size: var(--font-size-xs);
 min-height: 16px;
 margin-top: var(--space-1);
@@ -1983,7 +2029,7 @@ gap: var(--space-2);
 }
 
 .lh-dialog-destructive .lh-dialog-title{
-color: var(--color-danger);
+color: var(--danger-text);
 }
 
 /* ---------------------------------------------------------------------
@@ -2050,11 +2096,24 @@ margin-bottom: var(--space-5);
 }
 
 .settings-section-title{
-font-size: var(--font-size-xs);
-text-transform: uppercase;
-letter-spacing: 0.04em;
-color: var(--color-text-muted);
+font-family: var(--font-family-heading);
+font-size: var(--font-size-lg);
+font-weight: 600;
+letter-spacing: -0.01em;
+color: var(--text);
 margin-bottom: var(--space-2);
+}
+
+/* Destructive action inside Settings: outlined, not a solid red block. */
+.lh-settings-dialog .lh-btn-danger{
+background: transparent;
+color: var(--danger-text);
+border: 1px solid var(--danger);
+}
+
+.lh-settings-dialog .lh-btn-danger:hover:not(:disabled){
+background: var(--danger-soft);
+color: var(--danger-text);
 }
 
 .settings-row{
@@ -2522,7 +2581,7 @@ gap: var(--space-2);
 margin-top: var(--space-2);
 }
 .message-edit-error{
-color: var(--color-danger);
+color: var(--danger-text);
 font-size: var(--font-size-xs);
 margin-top: var(--space-1);
 min-height: 14px;
@@ -2538,7 +2597,7 @@ color: var(--color-text-muted);
 margin-top: 2px;
 }
 .message.error .message-status-label{
-color: var(--color-danger);
+color: var(--danger-text);
 }
 
 .message-action-btn[data-action="retry"],
