@@ -1,7 +1,15 @@
-/* LinguaHub AI - design tokens.
-   Centralized CSS custom properties consumed by styles.css. Nothing in
-   styles.css should hardcode a repeated color, radius, spacing, shadow, or
-   z-index value - every reusable value lives here exactly once.
+/* LinguaHub AI - design tokens (single source of truth).
+   Every color, radius, shadow, font size, and spacing value used by
+   styles.css comes from this file. Nothing in styles.css should hardcode a
+   repeated value.
+
+   Structure:
+     1. :root                 - non-color tokens (type, spacing, radius, motion, layout, z-index)
+     2. :root[data-theme=...] - the two color palettes (light / dark)
+     3. :root (aliases)       - legacy --color-* names mapped onto the palette
+     4. no-JS fallback        - light default, dark via prefers-color-scheme
+
+   Fonts (Inter + Fraunces) are declared in fonts.css and bundled locally.
 
    Breakpoints (referenced by comments in styles.css, since CSS custom
    properties cannot be used inside @media conditions):
@@ -9,14 +17,17 @@
 
 :root{
 /* ---- typography ---- */
---font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+--font-family: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+--font-family-heading: "Fraunces", Georgia, "Times New Roman", serif;
 --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+/* Type scale xs - 3xl. md is the base UI/body size. */
 --font-size-xs: 0.75rem;
 --font-size-sm: 0.8125rem;
 --font-size-md: 0.9375rem;
 --font-size-lg: 1.0625rem;
 --font-size-xl: 1.25rem;
 --font-size-2xl: 1.5rem;
+--font-size-3xl: 1.875rem;
 --line-height-tight: 1.25;
 --line-height-normal: 1.5;
 --line-height-relaxed: 1.7;
@@ -34,8 +45,7 @@
 /* ---- radius ---- */
 --radius-sm: 6px;
 --radius-md: 10px;
---radius-lg: 14px;
---radius-xl: 18px;
+--radius-lg: 16px;
 --radius-full: 999px;
 
 /* ---- motion ---- */
@@ -55,9 +65,6 @@
 --blur-sm: 8px;
 --blur-md: 18px;
 --blur-lg: 28px;
-
-/* ---- radius (premium, softer than --radius-xl for large glass panels) ---- */
---radius-2xl: 22px;
 
 /* ---- z-index layers ---- */
 /* Lets real chat content (.chat-box, .empty-state) paint above the
@@ -81,165 +88,176 @@
 --z-dialog: 41;
 --z-toast: 50;
 
-/* Fallback (no-JS) palette - overridden by [data-theme] below once
-   theme.js runs, which happens before first paint in the normal case.
-   Phase 14: LinguaHub brand colors (emerald green + white/off-white),
-   replacing the previous gold/amber accent everywhere - see the light
-   theme block below for the full rationale on the accent/accent-vivid
-   split. */
---color-accent: #047857;
---color-accent-hover: #036650;
---color-accent-contrast: #ffffff;
---color-accent-vivid: #059669;
---color-accent-soft: #ecfdf5;
---color-bg: #f8fbf9;
---color-surface: #ffffff;
---color-surface-elevated: #ffffff;
---color-glass: #ffffff;
---color-border: #e5e7eb;
---color-border-strong: #d1d5db;
-/* An even lighter "hairline" border for surfaces that should read as
-   barely-there separation rather than a boxed outline (sidebar/container
-   shells, the composer) - --color-border itself is left untouched since
-   it's still the right weight for genuinely functional dividers (input
-   fields, table cells) that need to stay clearly visible. */
---color-border-hairline: rgba(17, 24, 39, 0.06);
---color-text: #111827;
---color-text-secondary: #64748b;
-/* Slightly darker than --color-text-secondary, for smaller/lower-emphasis
-   text (relative timestamps, hints) - kept as its own token, verified
-   separately by axe-core, exactly like Phase 7's original discovery that
-   a muted-text shade good enough for --color-text-secondary's larger use
-   can still fail WCAG AA at a smaller size against a tinted background. */
---color-text-muted: #5b6472;
---color-success: #1a7f4b;
---color-success-soft: rgba(26, 127, 75, 0.12);
---color-warning: #92620a;
---color-warning-soft: rgba(146, 98, 10, 0.12);
---color-danger: #b3261e;
---color-danger-soft: rgba(179, 38, 30, 0.12);
---color-info: #2761b3;
---color-info-soft: rgba(39, 97, 179, 0.12);
---focus-ring-color: #059669;
---shadow-xs: 0 1px 3px rgba(17, 24, 39, 0.05);
---shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
---shadow-md: 0 8px 24px rgba(17, 24, 39, 0.10);
---shadow-lg: 0 16px 48px rgba(17, 24, 39, 0.16);
-/* Subtle premium glow (Phase 14) - applied only to a short, deliberate
-   list of interactive/important elements (send button, focused composer,
-   active conversation, LH avatar, New Chat hover) - never as a static
-   ambient effect on ordinary surfaces. */
+/* ---- legacy aliases ----
+   The pre-Phase-1 --color-* names, kept as aliases so styles.css keeps
+   working; each resolves to the palette below. New code should use the
+   short names (--bg, --surface, --text, --accent ...) directly. */
+--color-bg: var(--bg);
+--color-surface: var(--surface);
+--color-surface-elevated: var(--surface);
+--color-glass: var(--surface);
+--color-border: var(--border);
+--color-border-strong: var(--border-strong);
+--color-border-hairline: var(--border-hairline);
+--color-text: var(--text);
+--color-text-secondary: var(--text-muted);
+--color-text-muted: var(--text-muted);
+--color-accent: var(--accent);
+--color-accent-vivid: var(--accent);
+--color-accent-hover: var(--accent-hover);
+--color-accent-soft: var(--accent-soft);
+--color-accent-contrast: var(--on-accent);
+--color-danger: var(--danger);
+--color-danger-soft: var(--danger-soft);
+--color-success: var(--success);
+--color-success-soft: var(--success-soft);
+--color-warning: var(--warning);
+--color-warning-soft: var(--warning-soft);
+--color-info: var(--info);
+--color-info-soft: var(--info-soft);
+--focus-ring-color: var(--accent);
+/* Elevation: two soft levels. The xs/sm/md/lg names are aliases. */
+--shadow-xs: var(--shadow-1);
+--shadow-sm: var(--shadow-1);
+--shadow-md: var(--shadow-2);
+--shadow-lg: var(--shadow-2);
+/* No static glows - kept as tokens because components reference them. */
 --glow-accent: none;
 --glow-accent-strong: none;
 }
 
 /* ---------------------------------------------------------------------
-   Light theme - THE PRIMARY LinguaHub AI appearance (Phase 14). White/
-   off-white surfaces, dark charcoal text, an emerald green brand accent.
-   The previous gold/amber/yellow brand accent is fully removed.
-
-   Two green tokens, not one, and this is deliberate:
-     --color-accent (#047857, "emerald-700") is used everywhere a SOLID
-     fill sits directly under real text (buttons, the user chat bubble,
-     the avatar-initial fallback) - verified by direct luminance
-     calculation at ~5.5:1 against white, comfortably clearing WCAG AA's
-     4.5:1 text threshold.
-     --color-accent-vivid (#059669, "emerald-600" - the exact shade the
-     approved design direction specifies as "primary green") is used for
-     borders, icons-on-white, focus rings, glows, and soft-tint sources -
-     contexts governed by the 3:1 non-text/UI-component contrast
-     threshold, not the stricter 4.5:1 text threshold, where the
-     brief's exact requested hue reads correctly at full vividness.
-   This split exists to hit the brief's exact requested hue AND real
-   verified AA text contrast at the same time, rather than trading one
-   for the other - re-verified live via axe-core, not just calculated
-   (see e2e/accessibility.js's real results this phase).
+   Light theme - warm off-white surfaces, terracotta accent.
+   --on-accent is the text color on a solid --accent fill: white on
+   #C2562F is ~4.7:1 (WCAG AA).
    --------------------------------------------------------------------- */
 :root[data-theme="light"]{
---color-accent: #047857;
---color-accent-hover: #036650;
---color-accent-contrast: #ffffff;
---color-accent-vivid: #059669;
---color-accent-soft: #ecfdf5;
+--bg: #FAF8F5;
+--surface: #FFFFFF;
+--surface-2: #F3EFEA;
+--border: #E7E2DC;
+--border-strong: #D6CFC7;
+--border-hairline: rgba(28, 25, 23, 0.06);
+--text: #1C1917;
+--text-muted: #78716C;
 
---color-bg: #f8fbf9;
---color-surface: #ffffff;
---color-surface-elevated: #ffffff;
---color-glass: #ffffff;
---color-border: #e5e7eb;
---color-border-strong: #d1d5db;
---color-border-hairline: rgba(17, 24, 39, 0.06);
+--accent: #C2562F;
+--accent-hover: #A84724;
+--accent-soft: #F8E7DF;
+--on-accent: #FFFFFF;
+/* Accent used as TEXT/icon color on --bg/--surface/--accent-soft: --accent
+   itself is only ~4.2:1 on the warm backgrounds (WCAG AA needs 4.5:1), so
+   light theme uses the darker --accent-hover shade for text. */
+--accent-text: #A84724;
+--accent-glow: rgba(194, 86, 47, 0.35);
 
---color-text: #111827;
---color-text-secondary: #64748b;
---color-text-muted: #5b6472;
+--danger: #B42318;
+--danger-soft: rgba(180, 35, 24, 0.10);
+--on-danger: #FFFFFF;
+--success: #1A7F4B;
+--success-soft: rgba(26, 127, 75, 0.12);
+--warning: #92620A;
+--warning-soft: rgba(146, 98, 10, 0.12);
+--info: #2761B3;
+--info-soft: rgba(39, 97, 179, 0.12);
 
---color-success: #1a7f4b;
---color-success-soft: rgba(26, 127, 75, 0.12);
---color-warning: #92620a;
---color-warning-soft: rgba(146, 98, 10, 0.12);
---color-danger: #b3261e;
---color-danger-soft: rgba(179, 38, 30, 0.12);
---color-info: #2761b3;
---color-info-soft: rgba(39, 97, 179, 0.12);
---focus-ring-color: #059669;
+--overlay: rgba(28, 25, 23, 0.45);
+--shadow-1: 0 1px 2px rgba(28, 25, 23, 0.06), 0 1px 3px rgba(28, 25, 23, 0.05);
+--shadow-2: 0 8px 24px rgba(28, 25, 23, 0.10), 0 2px 6px rgba(28, 25, 23, 0.06);
 
---shadow-xs: 0 1px 3px rgba(17, 24, 39, 0.05);
---shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
---shadow-md: 0 8px 24px rgba(17, 24, 39, 0.10);
---shadow-lg: 0 16px 48px rgba(17, 24, 39, 0.16);
+/* Code blocks are always dark (syntax colors are designed against a dark
+   background) in both themes. */
+--code-bg: #1C1917;
+--code-text: #F5F0EA;
+--code-comment: #A8A29E;
+--code-keyword: #C586C0;
+--code-string: #CE9178;
+--code-number: #B5CEA8;
 
---glow-accent: none;
---glow-accent-strong: none;
+color-scheme: light;
 }
 
 /* ---------------------------------------------------------------------
-   Dark theme (Phase 14) - deep graphite/charcoal background (unchanged
-   from prior phases - already exactly what the brief asks for), soft
-   elevated panels, an emerald accent (brighter than light theme's, since
-   a dark background needs a lighter/more saturated accent to read
-   clearly), near-black-green contrast text on solid accent fills -
-   mirrors the exact bright-accent/dark-contrast-text structure the
-   previous gold dark theme already used and had verified, just re-hued.
-   Restrained, not neon - see --glow-accent below, unchanged strength
-   from light theme's.
+   Dark theme - warm near-black. --on-accent is dark: white on the lighter
+   dark-mode accent (#E07A52) would only reach ~3:1.
    --------------------------------------------------------------------- */
 :root[data-theme="dark"]{
---color-accent: #10b981;
---color-accent-hover: #34d399;
---color-accent-contrast: #042f2e;
---color-accent-vivid: #34d399;
---color-accent-soft: rgba(255, 255, 255, 0.06);
+--bg: #171412;
+--surface: #211D1A;
+--surface-2: #2A2521;
+--border: #3A332D;
+--border-strong: #4A423B;
+--border-hairline: rgba(245, 240, 234, 0.08);
+--text: #F5F0EA;
+--text-muted: #A8A29E;
 
---color-bg: #0b0f17;
---color-surface: #111827;
---color-surface-elevated: #1A2234;
---color-glass: #111827;
---color-border: #1f2937;
---color-border-strong: rgba(148, 163, 184, 0.24);
---color-border-hairline: rgba(148, 163, 184, 0.12);
+--accent: #E07A52;
+--accent-hover: #EA8E6A;
+--accent-soft: #3A2A22;
+--on-accent: #171412;
+--accent-text: #E07A52;
+--accent-glow: rgba(224, 122, 82, 0.35);
 
---color-text: #F9FAFB;
---color-text-secondary: #9CA3AF;
---color-text-muted: #94a3b8;
+--danger: #F04438;
+--danger-soft: rgba(240, 68, 56, 0.14);
+--on-danger: #171412;
+--success: #4ADE80;
+--success-soft: rgba(74, 222, 128, 0.14);
+--warning: #FBBF24;
+--warning-soft: rgba(251, 191, 36, 0.14);
+--info: #60A5FA;
+--info-soft: rgba(96, 165, 250, 0.14);
 
---color-success: #4ade80;
---color-success-soft: rgba(74, 222, 128, 0.14);
---color-warning: #fbbf24;
---color-warning-soft: rgba(251, 191, 36, 0.14);
---color-danger: #f87171;
---color-danger-soft: rgba(248, 113, 113, 0.14);
---color-info: #60a5fa;
---color-info-soft: rgba(96, 165, 250, 0.14);
---focus-ring-color: #34d399;
+--overlay: rgba(0, 0, 0, 0.6);
+--shadow-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
+--shadow-2: 0 12px 32px rgba(0, 0, 0, 0.40), 0 2px 8px rgba(0, 0, 0, 0.25);
 
---shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.18);
---shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.16);
---shadow-md: 0 12px 32px rgba(0, 0, 0, 0.22);
---shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.32);
+--code-bg: #100E0C;
+--code-text: #F5F0EA;
+--code-comment: #A8A29E;
+--code-keyword: #C586C0;
+--code-string: #CE9178;
+--code-number: #B5CEA8;
 
---glow-accent: none;
---glow-accent-strong: none;
+color-scheme: dark;
+}
+
+/* No-JS fallback, light (default): applies only while data-theme is unset.
+   Declared BEFORE the dark media query below so the dark rule wins when the
+   OS prefers dark (same specificity, later rule wins). */
+:root:not([data-theme]){
+--bg: #FAF8F5;
+--surface: #FFFFFF;
+--surface-2: #F3EFEA;
+--border: #E7E2DC;
+--border-strong: #D6CFC7;
+--border-hairline: rgba(28, 25, 23, 0.06);
+--text: #1C1917;
+--text-muted: #78716C;
+--accent: #C2562F;
+--accent-hover: #A84724;
+--accent-soft: #F8E7DF;
+--on-accent: #FFFFFF;
+--accent-text: #A84724;
+--accent-glow: rgba(194, 86, 47, 0.35);
+--danger: #B42318;
+--danger-soft: rgba(180, 35, 24, 0.10);
+--on-danger: #FFFFFF;
+--success: #1A7F4B;
+--success-soft: rgba(26, 127, 75, 0.12);
+--warning: #92620A;
+--warning-soft: rgba(146, 98, 10, 0.12);
+--info: #2761B3;
+--info-soft: rgba(39, 97, 179, 0.12);
+--overlay: rgba(28, 25, 23, 0.45);
+--shadow-1: 0 1px 2px rgba(28, 25, 23, 0.06), 0 1px 3px rgba(28, 25, 23, 0.05);
+--shadow-2: 0 8px 24px rgba(28, 25, 23, 0.10), 0 2px 6px rgba(28, 25, 23, 0.06);
+--code-bg: #1C1917;
+--code-text: #F5F0EA;
+--code-comment: #A8A29E;
+--code-keyword: #C586C0;
+--code-string: #CE9178;
+--code-number: #B5CEA8;
 }
 
 /* If JS never ran (theme.js failed to load) and the OS prefers dark, still
@@ -247,22 +265,38 @@
    the same way theme.js itself resolves "system" mode. */
 @media (prefers-color-scheme: dark){
 :root:not([data-theme]){
---color-accent: #10b981;
---color-accent-hover: #34d399;
---color-accent-contrast: #042f2e;
---color-accent-vivid: #34d399;
---color-accent-soft: rgba(255, 255, 255, 0.06);
---color-bg: #0b0f17;
---color-surface: #111827;
---color-surface-elevated: #1A2234;
---color-glass: #111827;
---color-border: #1f2937;
---color-border-strong: rgba(148, 163, 184, 0.24);
---color-border-hairline: rgba(148, 163, 184, 0.12);
---color-text: #F9FAFB;
---color-text-secondary: #9CA3AF;
---color-text-muted: #94a3b8;
---glow-accent: none;
---glow-accent-strong: none;
+--bg: #171412;
+--surface: #211D1A;
+--surface-2: #2A2521;
+--border: #3A332D;
+--border-strong: #4A423B;
+--border-hairline: rgba(245, 240, 234, 0.08);
+--text: #F5F0EA;
+--text-muted: #A8A29E;
+--accent: #E07A52;
+--accent-hover: #EA8E6A;
+--accent-soft: #3A2A22;
+--on-accent: #171412;
+--accent-text: #E07A52;
+--accent-glow: rgba(224, 122, 82, 0.35);
+--danger: #F04438;
+--danger-soft: rgba(240, 68, 56, 0.14);
+--on-danger: #171412;
+--success: #4ADE80;
+--success-soft: rgba(74, 222, 128, 0.14);
+--warning: #FBBF24;
+--warning-soft: rgba(251, 191, 36, 0.14);
+--info: #60A5FA;
+--info-soft: rgba(96, 165, 250, 0.14);
+--overlay: rgba(0, 0, 0, 0.6);
+--shadow-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
+--shadow-2: 0 12px 32px rgba(0, 0, 0, 0.40), 0 2px 8px rgba(0, 0, 0, 0.25);
+--code-bg: #100E0C;
+--code-text: #F5F0EA;
+--code-comment: #A8A29E;
+--code-keyword: #C586C0;
+--code-string: #CE9178;
+--code-number: #B5CEA8;
+color-scheme: dark;
 }
 }

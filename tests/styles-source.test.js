@@ -58,7 +58,7 @@ test("no unbounded z-index or magic numbers - z-index values come from tokens", 
 test("light and dark theme palettes are both fully defined", () => {
   assert.match(THEME_CSS, /:root\[data-theme="light"\]\{/);
   assert.match(THEME_CSS, /:root\[data-theme="dark"\]\{/);
-  ["--color-bg", "--color-surface", "--color-text", "--color-accent", "--color-border"].forEach((token) => {
+  ["--bg", "--surface", "--surface-2", "--text", "--text-muted", "--accent", "--accent-hover", "--accent-soft", "--border", "--danger"].forEach((token) => {
     const lightBlock = THEME_CSS.split(':root[data-theme="light"]')[1].split("}")[0];
     const darkBlock = THEME_CSS.split(':root[data-theme="dark"]')[1].split("}")[0];
     assert.match(lightBlock, new RegExp(token.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")), `light theme missing ${token}`);
@@ -134,4 +134,47 @@ test("exactly one role=\"main\" landmark exists and covers the composer, not jus
 
 test("role=\"banner\" is not used (would nest inside the single role=\"main\" landmark, which axe-core flags as invalid)", () => {
   assert.doesNotMatch(INDEX_HTML, /role="banner"/);
+});
+
+test("styles.css hardcodes no colors outside comments - every color comes from a theme.css token", () => {
+  const withoutComments = STYLES_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const hardcoded = withoutComments.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g) || [];
+  assert.deepEqual(hardcoded, [], "move these into theme.css tokens");
+});
+
+test("styles.css hardcodes no font sizes or px radii - they come from the type scale and radius tokens", () => {
+  const withoutComments = STYLES_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.deepEqual(withoutComments.match(/font-size:\s*[0-9.]+(rem|px)/g) || [], []);
+  assert.deepEqual(withoutComments.match(/border-radius:\s*[0-9]+px/g) || [], []);
+});
+
+test("palette matches the Phase 1 spec (light + dark accent and background)", () => {
+  const lightBlock = THEME_CSS.split(':root[data-theme="light"]')[1].split("}")[0];
+  const darkBlock = THEME_CSS.split(':root[data-theme="dark"]')[1].split("}")[0];
+  assert.match(lightBlock, /--accent:\s*#C2562F/i);
+  assert.match(lightBlock, /--bg:\s*#FAF8F5/i);
+  assert.match(darkBlock, /--accent:\s*#E07A52/i);
+  assert.match(darkBlock, /--bg:\s*#171412/i);
+});
+
+test("type scale defines xs through 3xl; heading family is Fraunces and body family is Inter", () => {
+  ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"].forEach((step) => {
+    assert.match(THEME_CSS, new RegExp("--font-size-" + step + ":"));
+  });
+  assert.match(THEME_CSS, /--font-family-heading:\s*"Fraunces"/);
+  assert.match(THEME_CSS, /--font-family:\s*"Inter"/);
+});
+
+test("fonts are bundled locally: fonts.css is linked before theme.css, every file exists, and no CDN is used", () => {
+  const FONTS_CSS = fs.readFileSync(path.join(__dirname, "..", "www", "fonts.css"), "utf8");
+  const fontsIndex = INDEX_HTML.indexOf('href="fonts.css"');
+  assert.ok(fontsIndex !== -1 && fontsIndex < INDEX_HTML.indexOf('href="theme.css"'));
+  assert.doesNotMatch(FONTS_CSS, /https?:\/\//, "fonts must never load from a CDN (the app must work offline)");
+  assert.doesNotMatch(INDEX_HTML, /fonts\.googleapis|fonts\.gstatic/);
+  const urls = FONTS_CSS.match(/url\("([^"]+)"\)/g) || [];
+  assert.ok(urls.length > 0);
+  urls.forEach((u) => {
+    const rel = u.slice(5, -2);
+    assert.ok(fs.existsSync(path.join(__dirname, "..", "www", rel)), "missing font file: " + rel);
+  });
 });
