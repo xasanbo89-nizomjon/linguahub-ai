@@ -633,6 +633,29 @@ scrollChatToBottom();
 }
 
 historyUI.onActiveConversationChanged(renderConversationMessages);
+
+// After the search palette opens a chat: bring the matched message into view
+// and flash it. Scrolling there counts as "scrolled up" so a stream that is
+// still running does not pull the view back down.
+function revealMessage(messageId) {
+const target = Array.from(chatBox.children).find((m) => m.dataset && m.dataset.messageId === messageId);
+if (!target) return;
+userScrolledUp = true;
+if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "center" });
+target.classList.add("is-search-hit");
+setTimeout(() => target.classList.remove("is-search-hit"), 2200);
+updateScrollButton();
+}
+
+if (window.LinguaHubSearchPalette) {
+window.LinguaHubSearchPalette.init({
+getConversations: () => historyUI.store.listConversations(),
+openConversation: (id, messageId) => {
+historyUI.selectConversation(id);
+if (messageId) revealMessage(messageId);
+}
+});
+}
 historyUI.registerAbortActiveGeneration(abortActiveGeneration);
 
 // Modes are fetched from the backend before the first conversation restore

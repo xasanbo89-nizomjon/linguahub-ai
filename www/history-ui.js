@@ -725,27 +725,8 @@ renderList();
 }, 200));
 }
 
-// Ctrl/Cmd+K focuses conversation search (Phase 14 - a real, wired
-// shortcut behind the sidebar's "Ctrl K" hint, not just a decorative
-// label). Opens the mobile drawer first if the sidebar is currently
-// off-canvas (mirrors the same display:none breakpoint check the CSS
-// itself uses for #sidebar-toggle-btn, rather than a second hardcoded
-// width value). Never fires while a dialog/settings panel has its own
-// keyboard handling active - simplest safe check is that no dialog exists.
-document.addEventListener("keydown", function (event) {
-if (!(event.key === "k" || event.key === "K") || !(event.ctrlKey || event.metaKey)) return;
-if (!searchInput) return;
-if (document.querySelector(".lh-dialog-backdrop")) return;
-event.preventDefault();
-var inDrawerMode = sidebarToggleBtn && window.getComputedStyle(sidebarToggleBtn).display !== "none";
-if (inDrawerMode && appShell && !appShell.classList.contains("sidebar-open")) {
-openMobileDrawer();
-setTimeout(function () { searchInput.focus(); searchInput.select(); }, 50);
-} else {
-searchInput.focus();
-searchInput.select();
-}
-});
+// Ctrl/Cmd+K is handled by www/search-palette.js (a full chats + messages
+// search overlay); the sidebar field above still filters the list by title.
 
 function restoreOrCreateActiveConversation() {
 var activeId = store.getActiveConversationId();

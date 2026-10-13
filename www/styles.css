@@ -1136,6 +1136,141 @@ border-color: var(--color-accent-vivid);
 box-shadow: none;
 }
 
+/* ---------------------------------------------------------------------
+   Search palette (Ctrl/Cmd+K) - www/search-palette.js
+   --------------------------------------------------------------------- */
+.lh-palette-backdrop{
+position: fixed;
+inset: var(--titlebar-height) 0 0 0;
+z-index: var(--z-dialog-backdrop);
+display: flex;
+justify-content: center;
+align-items: flex-start;
+padding: 12vh var(--space-4) var(--space-4);
+background: var(--overlay);
+animation: lh-fade-in var(--duration-fast) var(--ease-standard);
+}
+
+.lh-palette{
+width: min(640px, 100%);
+max-height: min(70vh, 560px);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow-2);
+animation: lh-dialog-in var(--duration-base) var(--ease-standard);
+}
+
+.lh-palette-input-row{
+padding: var(--space-3) var(--space-4);
+border-bottom: 1px solid var(--border);
+}
+
+.lh-palette-input{
+width: 100%;
+min-height: var(--space-10);
+padding: var(--space-2) 0;
+background: transparent;
+color: var(--text);
+border: 0;
+outline: none;
+font-size: var(--font-size-lg);
+font-family: inherit;
+}
+
+.lh-palette-heading{
+padding: var(--space-3) var(--space-4) var(--space-1);
+font-size: var(--font-size-xs);
+font-weight: 600;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+color: var(--text-muted);
+}
+
+.lh-palette-list{
+flex: 1;
+min-height: 0;
+overflow-y: auto;
+padding: var(--space-2);
+}
+
+.lh-palette-item{
+padding: var(--space-2) var(--space-3);
+border-radius: var(--radius-md);
+cursor: pointer;
+}
+
+.lh-palette-item[aria-selected="true"]{
+background: var(--accent-soft);
+}
+
+.lh-palette-item-head{
+display: flex;
+align-items: baseline;
+justify-content: space-between;
+gap: var(--space-3);
+}
+
+.lh-palette-item-title{
+min-width: 0;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+font-size: var(--font-size-md);
+font-weight: 600;
+color: var(--text);
+}
+
+.lh-palette-item-meta{
+flex-shrink: 0;
+font-size: var(--font-size-xs);
+color: var(--text-muted-strong);
+}
+
+.lh-palette-item-snippet{
+margin-top: 2px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+font-size: var(--font-size-sm);
+color: var(--text-muted-strong);
+}
+
+/* Matched text: bold and tinted - never color alone. */
+.lh-palette mark{
+background: var(--warning-soft);
+color: inherit;
+font-weight: 700;
+border-radius: var(--radius-sm);
+}
+
+.lh-palette-empty{
+padding: var(--space-6) var(--space-4);
+text-align: center;
+color: var(--text-muted-strong);
+font-size: var(--font-size-md);
+}
+
+.lh-palette-footer{
+padding: var(--space-2) var(--space-4);
+border-top: 1px solid var(--border);
+font-size: var(--font-size-xs);
+color: var(--text-muted-strong);
+}
+
+/* A message that a search result jumped to flashes briefly. */
+.message.is-search-hit{
+animation: lh-search-hit 2.2s var(--ease-standard);
+}
+
+@keyframes lh-search-hit{
+0%, 60%{ background: var(--accent-soft); }
+100%{ background: transparent; }
+}
+
 /* Chat actions "..." menu (www/chat-menu.js). The items are the old
    #clear-chat-btn / #tutor-dashboard-btn, restyled as menu rows. */
 .chat-menu{
