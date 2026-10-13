@@ -168,3 +168,32 @@ test("composer: programmatic prompt fills (tutor dashboard, suggestion chips) re
   assert.match(read("tutor-dashboard.js"), /input\.value = prompt; input\.dispatchEvent\(new Event\("input"/);
   assert.match(APP_JS, /input\.value = item\.prompt;\s*autoResizeComposer\(\);\s*updateComposerState\(\);/);
 });
+
+// ---- Step 5: scrolling -----------------------------------------------------------
+
+test("scrolling: following a stream stops on any deliberate upward scroll (wheel, touch, scrollbar) and resumes at the very bottom", () => {
+  assert.match(APP_JS, /return !userScrolledUp && isNearBottom\(\);/);
+  assert.match(APP_JS, /chatBox\.addEventListener\("wheel", \(e\) => \{\s*if \(e\.deltaY < 0\) userScrolledUp = true;/);
+  assert.match(APP_JS, /chatBox\.addEventListener\("touchmove"/);
+  assert.match(APP_JS, /chatBox\.addEventListener\("pointerdown"/);
+  assert.match(APP_JS, /scrollHeight - chatBox\.scrollTop - chatBox\.clientHeight < 4\) userScrolledUp = false/);
+});
+
+test("scrolling: both addMessage and live streaming use shouldFollowStream (never the plain near-bottom check)", () => {
+  assert.equal((APP_JS.match(/const shouldStick = shouldFollowStream\(\);/g) || []).length, 2);
+});
+
+test("scrolling: the jump button updates when content grows (no scroll event) and is instant while streaming", () => {
+  assert.match(APP_JS, /Content grew without any scroll event[\s\S]*?updateScrollButton\(\);/);
+  assert.match(APP_JS, /behavior: isBusy \? "instant" : "smooth"/);
+});
+
+test("scrolling: sending a message always brings it into view and resumes following", () => {
+  assert.match(APP_JS, /userScrolledUp = false;\s*addMessage\("user", message[\s\S]*?scrollChatToBottom\(\);/);
+});
+
+test("scrolling: the jump control is a labelled round arrow button, hidden by default", () => {
+  const html = read("index.html");
+  assert.match(html, /id="scroll-to-bottom-btn"[^>]*aria-label="Jump to latest message"[^>]*hidden/);
+  assert.match(STYLES_CSS, /\.scroll-to-bottom-btn\{[^}]*width:\s*40px;[^}]*height:\s*40px;[^}]*border-radius:\s*var\(--radius-full\)/);
+});

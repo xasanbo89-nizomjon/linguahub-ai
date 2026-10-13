@@ -1414,28 +1414,36 @@ outline-offset: 1px;
 animation: lh-message-in var(--duration-base) var(--ease-standard);
 }
 
+/* Floating "jump to latest" button: a round arrow centered above the
+   composer, shown only while the latest message is out of view. */
 .scroll-to-bottom-btn{
 position: absolute;
 bottom: var(--space-4);
 left: 50%;
 transform: translateX(-50%);
-padding: var(--space-2) var(--space-4);
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 40px;
+height: 40px;
+min-height: 0;
+padding: 0;
 border-radius: var(--radius-full);
-background: var(--color-surface-elevated);
-color: var(--color-text);
-border: 1px solid var(--color-border-strong);
-box-shadow: var(--shadow-md);
-font-size: var(--font-size-xs);
+background: var(--surface);
+color: var(--text);
+border: 1px solid var(--border-strong);
+box-shadow: var(--shadow-2);
 cursor: pointer;
 z-index: 5;
-transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+animation: lh-fade-in var(--duration-fast) var(--ease-standard);
+transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
 }
 
 .scroll-to-bottom-btn:hover:not(:disabled){
-background: var(--color-accent-soft);
-border-color: var(--color-accent-vivid);
+background: var(--accent-soft);
+border-color: var(--accent);
 color: var(--accent-text);
-box-shadow: var(--shadow-sm);
+transform: translateX(-50%);
 }
 
 /* ---- Empty state ---- */

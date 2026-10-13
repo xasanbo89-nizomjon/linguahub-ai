@@ -73,6 +73,22 @@ function isNearBottom() {
 return chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 80;
 }
 
+// Following a streaming reply is opt-out: any deliberate upward scroll (wheel,
+// touch drag, scrollbar drag) stops the view from following - even a small
+// one that still leaves the user within the "near bottom" distance, which
+// would otherwise be yanked straight back down on the next chunk. Following
+// resumes once the user is back at the very bottom (or clicks the jump
+// button, or sends a message).
+let userScrolledUp = false;
+
+function shouldFollowStream() {
+return !userScrolledUp && isNearBottom();
+}
+
+function updateScrollButton() {
+if (scrollToBottomBtn) scrollToBottomBtn.hidden = isNearBottom();
+}
+
 const MAX_EDIT_LENGTH = 8000; // mirrors the backend's default MAX_MESSAGE_LENGTH
 
 // Instant, never smooth: .chat-box has scroll-behavior: smooth for the user's
@@ -132,7 +148,7 @@ target.appendChild(cursor);
 }
 
 function renderStreamingContent(bubble, text) {
-const shouldStick = isNearBottom();
+const shouldStick = shouldFollowStream();
 if (window.LinguaHubMarkdown) {
 bubble.contentEl.innerHTML = window.LinguaHubMarkdown.renderToSafeHtml(text);
 bubble.contentEl.removeAttribute("dir");
@@ -142,6 +158,9 @@ bubble.contentEl.textContent = text;
 applyRtlIfNeeded(bubble.contentEl, text);
 }
 if (shouldStick) scrollChatToBottom();
+// Content grew without any scroll event: the jump button still has to show
+// when the user is following something that is now off-screen.
+updateScrollButton();
 }
 
 function showTypingIndicator(contentEl) {
@@ -278,7 +297,7 @@ function addMessage(role, text, options) {
 const opts = options || {};
 const status = opts.status || "complete";
 const cssType = role === "user" ? "user" : "ai";
-const shouldStick = isNearBottom();
+const shouldStick = shouldFollowStream();
 
 const wrapper = document.createElement("div");
 wrapper.className = `message ${cssType}`;
@@ -330,6 +349,7 @@ wrapper.appendChild(buildMessageActions(role, status, wrapper.dataset.feedback))
 
 chatBox.appendChild(wrapper);
 if (shouldStick) scrollChatToBottom();
+updateScrollButton();
 return wrapper;
 }
 
@@ -397,11 +417,35 @@ updateComposerState();
 });
 
 chatBox.addEventListener("scroll", () => {
-if (scrollToBottomBtn) scrollToBottomBtn.hidden = isNearBottom();
+if (chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 4) userScrolledUp = false;
+updateScrollButton();
+});
+// Deliberate upward scrolling = "stop following". (Programmatic scrolling
+// while streaming only ever moves down, so it can never trip these.)
+chatBox.addEventListener("wheel", (e) => {
+if (e.deltaY < 0) userScrolledUp = true;
+});
+let lastTouchY = null;
+chatBox.addEventListener("touchstart", (e) => {
+lastTouchY = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+});
+chatBox.addEventListener("touchmove", (e) => {
+const y = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+if (lastTouchY !== null && y !== null && y > lastTouchY) userScrolledUp = true; // finger down = content up
+lastTouchY = y;
+});
+chatBox.addEventListener("pointerdown", (e) => {
+// Grabbing the scrollbar itself (the pointer is over the box's own scrollbar gutter).
+if (e.target === chatBox && e.offsetX >= chatBox.clientWidth) userScrolledUp = true;
 });
 if (scrollToBottomBtn) {
 scrollToBottomBtn.addEventListener("click", () => {
-chatBox.scrollTop = chatBox.scrollHeight;
+userScrolledUp = false;
+// Smooth only when nothing is streaming: a smooth scroll aimed at the
+// current bottom is already out of date a few frames later while a reply is
+// still growing, so the view would never catch up and following would not resume.
+if (typeof chatBox.scrollTo === "function") chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: isBusy ? "instant" : "smooth" });
+else chatBox.scrollTop = chatBox.scrollHeight;
 scrollToBottomBtn.hidden = true;
 });
 }
@@ -811,7 +855,9 @@ if (emptyStateEl) emptyStateEl.hidden = true;
 // the DOM wrapper below - otherwise the Edit action has no message id to
 // look up in the store.
 const userMessage = window.LinguaHubChatStore.createMessage("user", message, "complete");
+userScrolledUp = false;
 addMessage("user", message, { status: "complete", messageId: userMessage.id });
+scrollChatToBottom();
 input.value = "";
 input.style.height = "auto";
 input.removeAttribute("dir");
