@@ -45,10 +45,22 @@ if (mode === "light" || mode === "dark") return mode;
 return prefersDark() ? "dark" : "light";
 }
 
+// Desktop (Electron) only: tell the main process the choice so it can sync
+// nativeTheme (native scrollbars/dialogs, prefers-color-scheme) and remember
+// it for the next launch's window background. No-op in a browser/Android.
+function syncDesktop(mode) {
+try {
+if (window.linguahubDesktop && typeof window.linguahubDesktop.setTheme === "function") {
+window.linguahubDesktop.setTheme(mode);
+}
+} catch (err) { /* cosmetic - never break theming */ }
+}
+
 function apply(mode) {
 var resolved = resolve(mode);
 document.documentElement.setAttribute("data-theme", resolved);
 document.documentElement.setAttribute("data-theme-mode", mode);
+syncDesktop(mode);
 return resolved;
 }
 

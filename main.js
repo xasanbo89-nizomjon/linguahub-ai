@@ -2,17 +2,21 @@ const { app, BrowserWindow, Menu, ipcMain, nativeTheme } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
 const { isTrustedGoogleAuthUrl, isTrustedSenderUrl } = require("./lib/electronSecurity");
+const { isThemeMode, readThemePref, writeThemePref, backgroundFor } = require("./lib/themePref");
 
 const IS_MAC = process.platform === "darwin";
 const indexFileUrl = pathToFileURL(path.join(__dirname, "www", "index.html")).href;
 
-// Matches --bg in www/theme.css. Shown while the page loads so there is no
-// white flash; the window background follows the OS theme until the
-// renderer's own theme preference is known.
-const BACKGROUND = { light: "#FAF8F5", dark: "#171412" };
+// Theme: the renderer (www/theme.js) owns the choice and reports it over
+// "window:set-theme"; main mirrors it into userData/theme.json (see
+// lib/themePref.js). On the next launch nativeTheme.themeSource is restored
+// from that file BEFORE the window is created, so the window's
+// backgroundColor - shown while the page loads - already matches the user's
+// theme (explicit light/dark or the OS) and there is no white flash.
+let themeFile = null;
 
 function windowBackground() {
-  return nativeTheme.shouldUseDarkColors ? BACKGROUND.dark : BACKGROUND.light;
+  return backgroundFor(nativeTheme.shouldUseDarkColors);
 }
 
 // The default File/Edit/View/Window/Help bar is gone (the window is
@@ -34,7 +38,7 @@ function buildMenu() {
   return Menu.buildFromTemplate(template);
 }
 
-// Window-control IPC for the custom title bar. These four channels (plus the
+// Window-control + theme IPC. These five invokable channels (plus the
 // maximize-state event sent below) are the entire IPC surface - keep them in
 // sync with preload.js. Every handler first checks that the message came
 // from the app's own page, not from an auth popup or any other frame.
@@ -59,6 +63,13 @@ ipcMain.on("window:toggle-maximize", (event) => {
 ipcMain.on("window:close", (event) => {
   const win = windowForTrustedSender(event);
   if (win) win.close();
+});
+
+ipcMain.on("window:set-theme", (event, mode) => {
+  if (!windowForTrustedSender(event) || !isThemeMode(mode)) return;
+  nativeTheme.themeSource = mode;
+  if (themeFile) writeThemePref(themeFile, mode);
+  BrowserWindow.getAllWindows().forEach((win) => win.setBackgroundColor(windowBackground()));
 });
 
 ipcMain.handle("window:is-maximized", (event) => {
@@ -136,6 +147,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  themeFile = path.join(app.getPath("userData"), "theme.json");
+  nativeTheme.themeSource = readThemePref(themeFile);
   Menu.setApplicationMenu(buildMenu());
   createWindow();
 });

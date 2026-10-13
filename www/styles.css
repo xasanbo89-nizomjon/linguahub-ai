@@ -10,6 +10,14 @@ html, body{
 height: 100%;
 }
 
+/* Themed, slim scrollbars everywhere (no arrow buttons, no default
+   Windows chrome). color-scheme in theme.css also keeps native form
+   controls and select popups in the active theme. */
+*{
+scrollbar-width: thin;
+scrollbar-color: var(--border-strong) transparent;
+}
+
 body{
 margin: 0;
 background: var(--color-bg);

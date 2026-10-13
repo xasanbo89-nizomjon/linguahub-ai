@@ -58,6 +58,7 @@ const EXPECTED_CHANNELS = [
   "window:is-maximized",
   "window:maximized-changed",
   "window:minimize",
+  "window:set-theme",
   "window:toggle-maximize"
 ];
 
@@ -72,18 +73,18 @@ test("main.js: the window uses preload.js, sandboxed, with contextIsolation on a
   assert.match(MAIN_SRC, /sandbox:\s*true/);
 });
 
-test("IPC surface is exactly the five window:* channels, identical in main.js and preload.js", () => {
+test("IPC surface is exactly the six window:* channels, identical in main.js and preload.js", () => {
   assert.deepEqual(channelsIn(MAIN_SRC), EXPECTED_CHANNELS);
   assert.deepEqual(channelsIn(PRELOAD_SRC), EXPECTED_CHANNELS);
   const ipcNames = (MAIN_SRC.match(/ipcMain\.(?:on|handle)\(\s*["']([^"']+)["']/g) || [])
     .map((m) => m.replace(/.*["']([^"']+)["']$/, "$1"));
   ipcNames.forEach((name) => assert.match(name, /^window:/, `unexpected IPC channel: ${name}`));
-  assert.equal(ipcNames.length, 4, "four invokable channels (the fifth is main -> renderer only)");
+  assert.equal(ipcNames.length, 5, "five renderer -> main channels (maximized-changed is main -> renderer only)");
 });
 
 test("main.js: every IPC handler authenticates its sender through windowForTrustedSender", () => {
   const handlerBodies = MAIN_SRC.split(/ipcMain\.(?:on|handle)\(/).slice(1);
-  assert.equal(handlerBodies.length, 4);
+  assert.equal(handlerBodies.length, 5);
   handlerBodies.forEach((body) => {
     const handler = body.split(/\n\}\);/)[0];
     assert.match(handler, /windowForTrustedSender\(event\)/);
