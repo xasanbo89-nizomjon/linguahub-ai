@@ -587,6 +587,8 @@ modeSelect.addEventListener("change", renderEmptyStateCards);
 // ---------------------------------------------------------------------
 
 const historyUI = window.LinguaHubHistoryUI.init();
+// Handle for e2e/debugging (the controller is otherwise a private const).
+window.linguahubHistory = historyUI;
 
 // Populated once mode-ui.js resolves GET /api/ai/modes (see
 // bootstrapModesAndHistory below) - the backend's public mode registry is

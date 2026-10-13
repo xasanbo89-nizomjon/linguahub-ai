@@ -125,7 +125,7 @@ async function run() {
     // waiting on a browser-style "download" event that Electron doesn't
     // reliably emit for this API even when the download itself works.
     const historyStatusBefore = await window.locator("#history-status").textContent();
-    await window.evaluate(() => window.LinguaHubHistoryUI.exportActiveConversation()); // no export button in the current UI
+    await window.evaluate(() => window.linguahubHistory.exportActiveConversation()); // no export button in the current UI
     await window.waitForTimeout(500);
     const historyStatusAfter = await window.locator("#history-status").textContent();
     results.check(
@@ -158,7 +158,7 @@ async function run() {
     fs.writeFileSync(importFixturePath, JSON.stringify(importFixture));
 
     const convCountBefore = await window.locator(".conversation-item").count();
-    await window.evaluate((json) => window.LinguaHubHistoryUI.importFile(new File([json], "import.json", { type: "application/json" })), fs.readFileSync(importFixturePath, "utf8"));
+    await window.evaluate((json) => window.linguahubHistory.importFile(new File([json], "import.json", { type: "application/json" })), fs.readFileSync(importFixturePath, "utf8"));
     await window.waitForTimeout(400);
     const convCountAfter = await window.locator(".conversation-item").count();
     results.check("12b. Import adds a real conversation from within Electron", convCountAfter === convCountBefore + 1, `before=${convCountBefore} after=${convCountAfter}`);

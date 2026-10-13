@@ -131,12 +131,12 @@ async function withApp(fn) {
 // Prep - tests/integration-prep.test.js pins that), so e2e drives the same
 // real code paths through window.LinguaHubHistoryUI.
 function exportActiveConversation(page) {
-  return page.evaluate(() => window.LinguaHubHistoryUI.exportActiveConversation());
+  return page.evaluate(() => window.linguahubHistory.exportActiveConversation());
 }
 
 async function importConversationFile(page, filePath) {
   const text = require("node:fs").readFileSync(filePath, "utf8");
-  await page.evaluate((json) => window.LinguaHubHistoryUI.importFile(new File([json], "import.json", { type: "application/json" })), text);
+  await page.evaluate((json) => window.linguahubHistory.importFile(new File([json], "import.json", { type: "application/json" })), text);
 }
 
 module.exports = { withApp, BACKEND_URL, FRONTEND_URL, exportActiveConversation, importConversationFile };
