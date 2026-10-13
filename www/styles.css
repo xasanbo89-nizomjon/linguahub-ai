@@ -1186,6 +1186,14 @@ scroll-behavior: smooth;
 max-width: 100%;
 }
 
+/* The empty .chat-box and the empty-state hero are flex siblings inside
+   .chat-scroll-wrapper; while the hero is showing, the (message-less)
+   chat box must not claim half the width, or the hero lands right of
+   center. */
+.chat-scroll-wrapper:has(> .empty-state:not([hidden])) > .chat-box{
+display: none;
+}
+
 .message{
 display: flex;
 flex-direction: column;
@@ -1390,6 +1398,17 @@ text-align: center;
 padding: var(--space-10) var(--space-6);
 gap: var(--space-3);
 overflow-y: auto;
+/* Keeps the block horizontally centered even when a short window makes
+   the hero scroll (a scrollbar would otherwise shift it ~8px). */
+scrollbar-gutter: stable both-edges;
+}
+
+.empty-state > *{
+max-width: var(--content-max-width);
+/* Optical centering: the block sits slightly above the true vertical
+   center of the chat area, without adding scrollable height. */
+position: relative;
+top: calc(-1 * min(6vh, var(--space-10)));
 }
 
 .empty-state-icon{

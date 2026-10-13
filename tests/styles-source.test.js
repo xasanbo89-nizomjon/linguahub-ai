@@ -185,3 +185,10 @@ test("Noto Sans Arabic is bundled and sits right after Inter / Fraunces in the f
   assert.match(THEME_CSS, /--font-family:\s*"Inter",\s*"Noto Sans Arabic"/);
   assert.match(THEME_CSS, /--font-family-heading:\s*"Fraunces",\s*"Noto Sans Arabic"/);
 });
+
+test("layout: chat content and composer are capped at 760px; the hero is not pushed right by the empty chat box", () => {
+  assert.match(THEME_CSS, /--content-max-width:\s*760px/);
+  assert.match(THEME_CSS, /--composer-max-width:\s*760px/);
+  assert.match(STYLES_CSS, /\.chat-scroll-wrapper:has\(> \.empty-state:not\(\[hidden\]\)\) > \.chat-box\s*\{\s*display:\s*none/);
+  assert.match(STYLES_CSS, /\.empty-state\s*\{[^}]*scrollbar-gutter:\s*stable both-edges/);
+});

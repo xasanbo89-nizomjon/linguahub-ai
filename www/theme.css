@@ -57,8 +57,8 @@
 /* ---- layout ---- */
 --sidebar-width: 272px;
 --sidebar-width-collapsed: 72px;
---content-max-width: 900px;
---composer-max-width: 900px;
+--content-max-width: 760px;
+--composer-max-width: 760px;
 --touch-target-min: 44px;
 
 /* ---- elevation / glass ---- */
