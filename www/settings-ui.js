@@ -256,6 +256,11 @@ panel.appendChild(title);
 
 panel.appendChild(buildAppearanceSection());
 panel.appendChild(buildChatSection(controller));
+// Voice (Phase 14) - owned and persisted by www/voice.js under its own
+// storage key; this dialog only provides the shared row/switch builders.
+if (window.LinguaHubVoice && window.LinguaHubVoice.buildSettingsSection) {
+panel.appendChild(window.LinguaHubVoice.buildSettingsSection({ section: section, row: row, buildSwitch: buildSwitch }));
+}
 panel.appendChild(buildDataSection(controller));
 // Task 5: embedded mode assumes LinguaHub's own shell already shows the
 // signed-in account - this dialog's Account section (email/logout) would

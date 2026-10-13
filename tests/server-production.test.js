@@ -102,13 +102,14 @@ test("an unmatched /api/* 404 response includes a requestId", async () => {
   assert.ok(body.requestId);
 });
 
-test("Permissions-Policy header is present and denies camera/microphone/geolocation/payment/usb", async () => {
+test("Permissions-Policy header denies camera/geolocation/payment/usb and limits microphone to self (voice chat)", async () => {
   const res = await fetch(`${baseUrl}/health`);
   const policy = res.headers.get("permissions-policy");
   assert.ok(policy);
-  for (const feature of ["camera", "microphone", "geolocation", "payment", "usb"]) {
+  for (const feature of ["camera", "geolocation", "payment", "usb"]) {
     assert.match(policy, new RegExp(`${feature}=\\(\\)`));
   }
+  assert.match(policy, /microphone=\(self\)/);
 });
 
 test("Strict-Transport-Security header is present", async () => {

@@ -9,7 +9,7 @@
 
 :root{
 /* ---- typography ---- */
---font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+--font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 --font-size-xs: 0.75rem;
 --font-size-sm: 0.8125rem;
@@ -32,10 +32,10 @@
 --space-10: 40px;
 
 /* ---- radius ---- */
---radius-sm: 8px;
---radius-md: 12px;
---radius-lg: 18px;
---radius-xl: 24px;
+--radius-sm: 6px;
+--radius-md: 10px;
+--radius-lg: 14px;
+--radius-xl: 18px;
 --radius-full: 999px;
 
 /* ---- motion ---- */
@@ -57,7 +57,7 @@
 --blur-lg: 28px;
 
 /* ---- radius (premium, softer than --radius-xl for large glass panels) ---- */
---radius-2xl: 28px;
+--radius-2xl: 22px;
 
 /* ---- z-index layers ---- */
 /* Lets real chat content (.chat-box, .empty-state) paint above the
@@ -95,7 +95,7 @@
 --color-bg: #f8fbf9;
 --color-surface: #ffffff;
 --color-surface-elevated: #ffffff;
---color-glass: rgba(255, 255, 255, 0.72);
+--color-glass: #ffffff;
 --color-border: #e5e7eb;
 --color-border-strong: #d1d5db;
 /* An even lighter "hairline" border for surfaces that should read as
@@ -129,8 +129,8 @@
    list of interactive/important elements (send button, focused composer,
    active conversation, LH avatar, New Chat hover) - never as a static
    ambient effect on ordinary surfaces. */
---glow-accent: 0 0 20px rgba(16, 185, 129, 0.12);
---glow-accent-strong: 0 0 28px rgba(16, 185, 129, 0.20);
+--glow-accent: none;
+--glow-accent-strong: none;
 }
 
 /* ---------------------------------------------------------------------
@@ -165,7 +165,7 @@
 --color-bg: #f8fbf9;
 --color-surface: #ffffff;
 --color-surface-elevated: #ffffff;
---color-glass: rgba(255, 255, 255, 0.72);
+--color-glass: #ffffff;
 --color-border: #e5e7eb;
 --color-border-strong: #d1d5db;
 --color-border-hairline: rgba(17, 24, 39, 0.06);
@@ -189,8 +189,8 @@
 --shadow-md: 0 8px 24px rgba(17, 24, 39, 0.10);
 --shadow-lg: 0 16px 48px rgba(17, 24, 39, 0.16);
 
---glow-accent: 0 0 20px rgba(16, 185, 129, 0.12);
---glow-accent-strong: 0 0 28px rgba(16, 185, 129, 0.20);
+--glow-accent: none;
+--glow-accent-strong: none;
 }
 
 /* ---------------------------------------------------------------------
@@ -205,23 +205,23 @@
    from light theme's.
    --------------------------------------------------------------------- */
 :root[data-theme="dark"]{
---color-accent: #34d399;
---color-accent-hover: #6ee7b7;
---color-accent-contrast: #062419;
---color-accent-vivid: #10b981;
---color-accent-soft: rgba(16, 185, 129, 0.16);
+--color-accent: #10b981;
+--color-accent-hover: #34d399;
+--color-accent-contrast: #042f2e;
+--color-accent-vivid: #34d399;
+--color-accent-soft: rgba(255, 255, 255, 0.06);
 
---color-bg: #14151a;
---color-surface: #1b1c22;
---color-surface-elevated: #22232b;
---color-glass: rgba(34, 35, 43, 0.55);
---color-border: rgba(255, 255, 255, 0.08);
---color-border-strong: rgba(255, 255, 255, 0.14);
---color-border-hairline: rgba(255, 255, 255, 0.06);
+--color-bg: #0b0f17;
+--color-surface: #111827;
+--color-surface-elevated: #1A2234;
+--color-glass: #111827;
+--color-border: #1f2937;
+--color-border-strong: rgba(148, 163, 184, 0.24);
+--color-border-hairline: rgba(148, 163, 184, 0.12);
 
---color-text: #f1efe9;
---color-text-secondary: #c7c4ba;
---color-text-muted: #8f8c83;
+--color-text: #F9FAFB;
+--color-text-secondary: #9CA3AF;
+--color-text-muted: #94a3b8;
 
 --color-success: #4ade80;
 --color-success-soft: rgba(74, 222, 128, 0.14);
@@ -233,13 +233,13 @@
 --color-info-soft: rgba(96, 165, 250, 0.14);
 --focus-ring-color: #34d399;
 
---shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.25);
---shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
---shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
---shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.55);
+--shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.18);
+--shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.16);
+--shadow-md: 0 12px 32px rgba(0, 0, 0, 0.22);
+--shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.32);
 
---glow-accent: 0 0 20px rgba(52, 211, 153, 0.18);
---glow-accent-strong: 0 0 28px rgba(52, 211, 153, 0.28);
+--glow-accent: none;
+--glow-accent-strong: none;
 }
 
 /* If JS never ran (theme.js failed to load) and the OS prefers dark, still
@@ -247,22 +247,22 @@
    the same way theme.js itself resolves "system" mode. */
 @media (prefers-color-scheme: dark){
 :root:not([data-theme]){
---color-accent: #34d399;
---color-accent-hover: #6ee7b7;
---color-accent-contrast: #062419;
---color-accent-vivid: #10b981;
---color-accent-soft: rgba(16, 185, 129, 0.16);
---color-bg: #14151a;
---color-surface: #1b1c22;
---color-surface-elevated: #22232b;
---color-glass: rgba(34, 35, 43, 0.55);
---color-border: rgba(255, 255, 255, 0.08);
---color-border-strong: rgba(255, 255, 255, 0.14);
---color-border-hairline: rgba(255, 255, 255, 0.06);
---color-text: #f1efe9;
---color-text-secondary: #c7c4ba;
---color-text-muted: #8f8c83;
---glow-accent: 0 0 20px rgba(52, 211, 153, 0.18);
---glow-accent-strong: 0 0 28px rgba(52, 211, 153, 0.28);
+--color-accent: #10b981;
+--color-accent-hover: #34d399;
+--color-accent-contrast: #042f2e;
+--color-accent-vivid: #34d399;
+--color-accent-soft: rgba(255, 255, 255, 0.06);
+--color-bg: #0b0f17;
+--color-surface: #111827;
+--color-surface-elevated: #1A2234;
+--color-glass: #111827;
+--color-border: #1f2937;
+--color-border-strong: rgba(148, 163, 184, 0.24);
+--color-border-hairline: rgba(148, 163, 184, 0.12);
+--color-text: #F9FAFB;
+--color-text-secondary: #9CA3AF;
+--color-text-muted: #94a3b8;
+--glow-accent: none;
+--glow-accent-strong: none;
 }
 }

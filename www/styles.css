@@ -27,105 +27,6 @@ overflow: hidden;
 
 /* WOW Effects is deliberately an opt-in enhancement. Its pseudo-elements
    never receive pointer events; normal mode has none of these layers. */
-html[data-wow-effects] body::before,
-html[data-wow-effects] body::after{
-content: "";
-position: fixed;
-inset: 0;
-pointer-events: none;
-z-index: var(--z-background);
-}
-
-html[data-wow-effects] body::before{
-background:
-radial-gradient(circle at 12% 16%, rgba(16,185,129,.10), transparent 20rem),
-radial-gradient(circle at 88% 80%, rgba(5,150,105,.08), transparent 24rem);
-}
-
-html[data-wow-effects] body::after{
-inset: 0;
-opacity: .38;
-background-image: radial-gradient(circle, rgba(5,150,105,.32) 1px, transparent 1.5px);
-background-size: 72px 72px;
-animation: lh-particles-drift 22s linear infinite;
-}
-
-html[data-wow-effects] .sidebar,
-html[data-wow-effects] .container,
-html[data-wow-effects] .lh-dialog{
-background: var(--color-glass);
-backdrop-filter: blur(var(--blur-md));
--webkit-backdrop-filter: blur(var(--blur-md));
-box-shadow: var(--shadow-md), 0 0 0 1px rgba(16,185,129,.10);
-}
-
-html[data-wow-effects] .sidebar,
-html[data-wow-effects] .container{
-position: relative;
-overflow: hidden;
-}
-
-html[data-wow-effects] .sidebar::after,
-html[data-wow-effects] .container::after{
-content: "";
-position: absolute;
-inset: 0;
-pointer-events: none;
-border: 1px solid transparent;
-border-radius: inherit;
-background: linear-gradient(115deg, transparent 20%, rgba(16,185,129,.52), transparent 58%) border-box;
-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-mask-composite: exclude;
-opacity: .58;
-animation: lh-border-shimmer 7s linear infinite;
-}
-
-html[data-wow-effects] .lh-mark{
-animation: lh-logo-glow 3.4s ease-in-out infinite;
-}
-
-html[data-wow-effects] #send-btn{
-box-shadow: 0 8px 22px rgba(5,150,105,.24), 0 0 0 1px rgba(255,255,255,.18) inset;
-}
-
-html[data-wow-effects] #send-btn:hover:not(:disabled){
-box-shadow: 0 10px 28px rgba(5,150,105,.34), 0 0 22px rgba(16,185,129,.22);
-transform: translateY(-1px);
-}
-
-html[data-wow-effects] :focus-visible{
-outline-color: var(--color-accent-vivid);
-box-shadow: 0 0 0 4px rgba(16,185,129,.16);
-transition: outline-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
-}
-
-html[data-wow-effects] button:not(:disabled),
-html[data-wow-effects] .conversation-item{
-transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
-}
-
-@keyframes lh-logo-glow{
-0%,100%{ box-shadow: 0 1px 2px rgba(5,150,105,.25), 0 0 10px rgba(16,185,129,.10); }
-50%{ box-shadow: 0 2px 8px rgba(5,150,105,.28), 0 0 20px rgba(16,185,129,.26); }
-}
-
-@keyframes lh-border-shimmer{
-from{ background-position: 0 0; }
-to{ background-position: 340px 0; }
-}
-
-@keyframes lh-particles-drift{
-from{ background-position: 0 0; }
-to{ background-position: 72px -144px; }
-}
-
-@media (prefers-reduced-motion: reduce){
-html[data-wow-effects] body::after,
-html[data-wow-effects] .sidebar::after,
-html[data-wow-effects] .container::after,
-html[data-wow-effects] .lh-mark{ animation: none; }
-}
-
 h1, h2, h3, p{
 margin: 0;
 }
@@ -158,19 +59,20 @@ color: inherit;
 button{
 padding: var(--space-3) var(--space-5);
 border: none;
-border-radius: var(--radius-xl);
+border-radius: var(--radius-md);
 background: var(--color-accent);
 color: var(--color-accent-contrast);
 cursor: pointer;
-font-weight: 700;
+font-weight: 600;
 min-height: var(--touch-target-min);
-box-shadow: var(--shadow-sm);
+box-shadow: none;
 transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
 button:hover:not(:disabled){
 background: var(--color-accent-hover);
-box-shadow: var(--glow-accent-strong);
+box-shadow: none;
+transform: scale(1.015);
 }
 
 button:active:not(:disabled){
@@ -233,25 +135,26 @@ align-items: center;
 }
 
 .app-shell{
-width: 96%;
-max-width: 1400px;
-height: 92vh;
+width: min(100%, 1540px);
+max-width: 1540px;
+height: 100vh;
 display: flex;
-gap: var(--space-4);
+gap: 0;
 }
 
 /* ---- Sidebar ---- */
 
 .sidebar{
-width: var(--sidebar-width);
+width: 260px;
 flex-shrink: 0;
 background: var(--color-surface);
-border: 1px solid var(--color-border-hairline);
-border-radius: var(--radius-xl);
+border: 0;
+border-right: 1px solid var(--color-border);
+border-radius: 0;
 display: flex;
 flex-direction: column;
 overflow: hidden;
-box-shadow: var(--shadow-sm);
+box-shadow: none;
 transition: width var(--duration-slow) var(--ease-standard);
 }
 
@@ -259,13 +162,12 @@ transition: width var(--duration-slow) var(--ease-standard);
 display: flex;
 align-items: center;
 gap: var(--space-2);
-padding: var(--space-4) var(--space-4) var(--space-3);
+padding: 18px var(--space-4) var(--space-3);
 }
 
 /* ---------------------------------------------------------------------
    LH mark (Phase 14) - the one, official, reusable brand mark. Emerald
-   background, bold white "LH", a very subtle top-light gradient and an
-   even more subtle glow - never a robot/mascot/cartoon character
+   background and bold white "LH" - never a robot/mascot/cartoon character
    anywhere in this product. Used identically for the sidebar brand, the
    header assistant identity, empty-state icon, and every assistant
    message avatar - one logo system, sized via modifier classes only. */
@@ -274,41 +176,41 @@ display: flex;
 align-items: center;
 justify-content: center;
 flex-shrink: 0;
-border-radius: var(--radius-md);
-background: linear-gradient(155deg, var(--color-accent-vivid), var(--color-accent));
+border-radius: var(--radius-sm);
+background: var(--color-accent);
 color: #ffffff;
 font-family: var(--font-family);
 font-weight: 700;
 line-height: 1;
 letter-spacing: -0.02em;
-box-shadow: 0 1px 2px rgba(5, 150, 105, 0.25);
+box-shadow: none;
 }
 
 .lh-mark-sm{
-width: 30px;
-height: 30px;
-font-size: 0.6875rem;
+width: 26px;
+height: 26px;
+font-size: 0.625rem;
 border-radius: var(--radius-sm);
 }
 
 .lh-mark-md{
-width: 34px;
-height: 34px;
+width: 28px;
+height: 28px;
 font-size: var(--font-size-xs);
 }
 
 .lh-mark-lg{
-width: 56px;
-height: 56px;
-font-size: var(--font-size-md);
-border-radius: var(--radius-lg);
-box-shadow: var(--shadow-xs), 0 0 24px rgba(16, 185, 129, 0.14);
+width: 44px;
+height: 44px;
+font-size: var(--font-size-sm);
+border-radius: var(--radius-md);
+box-shadow: var(--shadow-xs);
 }
 
 .sidebar-brand-name{
-font-weight: 700;
-font-size: var(--font-size-lg);
-letter-spacing: -0.01em;
+font-weight: 600;
+font-size: var(--font-size-md);
+letter-spacing: -0.015em;
 white-space: nowrap;
 overflow: hidden;
 text-overflow: ellipsis;
@@ -319,12 +221,12 @@ text-overflow: ellipsis;
    safe to use directly here, unlike the previous gold accent which
    needed a separately darkened override for this exact usage. */
 .sidebar-brand-accent{
-color: var(--color-accent);
+color: var(--color-text-secondary);
 }
 
 .sidebar-search{
 position: relative;
-padding: 0 var(--space-4) var(--space-3);
+padding: 0 var(--space-3) var(--space-3);
 }
 
 .sidebar-search-icon{
@@ -369,15 +271,16 @@ transition: border-color var(--duration-fast) var(--ease-standard), box-shadow v
 }
 
 .sidebar-search input:focus-visible{
-border-color: var(--color-accent);
-outline: none;
-box-shadow: 0 0 0 3px var(--color-accent-soft);
+border-color: var(--color-border-strong);
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 1px;
+box-shadow: none;
 }
 
 .conversation-list{
 flex: 1;
 overflow-y: auto;
-padding: 0 var(--space-2) var(--space-2);
+padding: 0 var(--space-3) var(--space-3);
 display: flex;
 flex-direction: column;
 gap: 2px;
@@ -388,8 +291,8 @@ position: relative;
 display: flex;
 align-items: center;
 gap: var(--space-2);
-padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
-border-radius: var(--radius-md);
+padding: 9px var(--space-3);
+border-radius: var(--radius-sm);
 cursor: pointer;
 background: transparent;
 border: none;
@@ -398,26 +301,18 @@ min-height: var(--touch-target-min);
 }
 
 .conversation-item:hover{
-background: var(--color-bg);
+background: var(--color-surface-elevated);
 }
 
 /* Elegant accent: a soft-tinted background plus a thin accent bar on the
    leading edge, not a full bordered box (Phase 13 - "selected conversation
    uses elegant accent", less boxy than the previous full-outline treatment). */
 .conversation-item.active{
-background: var(--color-accent-soft);
+background: var(--color-surface-elevated);
 }
 
 .conversation-item.active::before{
-content: "";
-position: absolute;
-left: 2px;
-top: 20%;
-bottom: 20%;
-width: 3px;
-border-radius: var(--radius-full);
-background: var(--color-accent-vivid);
-box-shadow: var(--glow-accent);
+display: none;
 }
 
 .conversation-item:focus-visible{
@@ -497,7 +392,7 @@ font-size: var(--font-size-sm);
 .sidebar-bottom{
 display: flex;
 flex-direction: column;
-gap: var(--space-2);
+gap: var(--space-1);
 padding: var(--space-3);
 border-top: 1px solid var(--color-border-hairline);
 }
@@ -585,13 +480,14 @@ display: flex;
 align-items: center;
 justify-content: center;
 gap: var(--space-2);
-width: 100%;
-min-height: var(--touch-target-min);
-padding: var(--space-2) var(--space-4);
-background: var(--color-surface);
-color: var(--color-accent);
-border: 1px solid var(--color-accent-vivid);
-border-radius: var(--radius-full);
+width: calc(100% - var(--space-6));
+margin: 0 var(--space-3) var(--space-3);
+min-height: 40px;
+padding: var(--space-2) var(--space-3);
+background: var(--color-surface-elevated);
+color: var(--color-text);
+border: 1px solid var(--color-border);
+border-radius: var(--radius-sm);
 font-size: var(--font-size-sm);
 font-weight: 600;
 cursor: pointer;
@@ -604,8 +500,8 @@ line-height: 1;
 }
 
 .new-chat-btn:hover:not(:disabled){
-background: var(--color-accent-soft);
-box-shadow: var(--glow-accent);
+background: var(--color-border);
+box-shadow: none;
 }
 
 .new-chat-btn:active:not(:disabled){
@@ -843,20 +739,18 @@ outline-offset: 1px;
 .container{
 flex: 1;
 min-width: 0;
-background: var(--color-surface);
-border: 1px solid var(--color-border-hairline);
-border-radius: var(--radius-xl);
+background: var(--color-bg);
+border: 0;
+border-radius: 0;
 display: flex;
 flex-direction: column;
 overflow: hidden;
-box-shadow: var(--shadow-sm);
+box-shadow: none;
 }
 
 .header{
-padding: var(--space-3) var(--space-5);
-background: var(--color-glass);
-backdrop-filter: blur(var(--blur-md));
--webkit-backdrop-filter: blur(var(--blur-md));
+padding: var(--space-3) var(--space-6);
+background: var(--color-bg);
 border-bottom: 1px solid var(--color-border-hairline);
 display: flex;
 align-items: center;
@@ -864,6 +758,10 @@ gap: var(--space-3);
 flex-wrap: wrap;
 position: relative;
 z-index: var(--z-header);
+}
+
+.header > .lh-mark{
+display: none;
 }
 
 #sidebar-toggle-btn{
@@ -895,9 +793,9 @@ gap: 2px;
 }
 
 .header-conversation-title{
-font-size: var(--font-size-md);
-font-weight: 600;
-letter-spacing: -0.005em;
+font-size: var(--font-size-sm);
+font-weight: 500;
+letter-spacing: 0;
 white-space: nowrap;
 overflow: hidden;
 text-overflow: ellipsis;
@@ -938,7 +836,7 @@ transition: background-color var(--duration-fast) var(--ease-standard), box-shad
 .context-chip.has-context{
 background: var(--color-accent-soft);
 color: var(--color-text-secondary);
-box-shadow: var(--glow-accent);
+box-shadow: none;
 }
 
 .context-chip-dot{
@@ -986,39 +884,83 @@ gap: var(--space-2);
 flex-wrap: wrap;
 }
 
+.header-account-btn{
+display: inline-flex;
+align-items: center;
+gap: var(--space-2);
+min-height: 36px;
+padding: 4px 8px 4px 4px;
+background: transparent;
+border: 1px solid transparent;
+border-radius: var(--radius-md);
+box-shadow: none;
+color: var(--color-text-secondary);
+font-size: var(--font-size-sm);
+font-weight: 600;
+max-width: 168px;
+}
+
+.header-account-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
+border-color: var(--color-border-hairline);
+box-shadow: none;
+transform: scale(1.015);
+}
+
+.header-account-avatar{
+display: grid;
+place-items: center;
+width: 28px;
+height: 28px;
+flex-shrink: 0;
+border-radius: 50%;
+background: var(--color-surface-elevated);
+border: 1px solid var(--color-border-strong);
+color: var(--color-accent-vivid);
+font-size: var(--font-size-xs);
+font-weight: 700;
+}
+
+.header-account-label{
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
 .wow-mode-btn{
 display: inline-flex;
 align-items: center;
 gap: 6px;
-min-height: var(--touch-target-min);
-padding: var(--space-2) var(--space-3);
-border: 1px solid var(--color-border-hairline);
-background: var(--color-surface);
+min-height: 32px;
+padding: 6px 10px;
+border: 1px solid transparent;
+background: transparent;
 color: var(--color-text-secondary);
 font-size: var(--font-size-xs);
 letter-spacing: .055em;
 box-shadow: none;
+border-radius: var(--radius-full);
 }
 
 .wow-mode-btn:hover:not(:disabled){
 background: var(--color-accent-soft);
 color: var(--color-accent);
-box-shadow: var(--glow-accent);
+box-shadow: none;
 transform: translateY(-1px);
 }
 
 .wow-mode-btn[aria-pressed="true"]{
-border-color: rgba(16,185,129,.44);
-background: linear-gradient(135deg, rgba(16,185,129,.16), rgba(52,211,153,.06));
-color: var(--color-accent);
-box-shadow: 0 0 18px rgba(16,185,129,.15);
+border-color: var(--color-border);
+background: var(--color-surface-elevated);
+color: var(--color-text-secondary);
+box-shadow: none;
 }
 
 #mode-select{
-background: transparent;
+background: var(--color-surface-elevated);
 color: var(--color-text-secondary);
 border: 1px solid var(--color-border-hairline);
-border-radius: var(--radius-full);
+border-radius: var(--radius-sm);
 padding: var(--space-2) var(--space-3);
 font-size: var(--font-size-sm);
 font-weight: 600;
@@ -1033,7 +975,7 @@ border-color: var(--color-border);
 
 #mode-select:focus-visible{
 border-color: var(--color-accent-vivid);
-box-shadow: var(--glow-accent);
+box-shadow: none;
 }
 
 /* #clear-chat-btn is styled entirely by the shared .header-icon-btn class
@@ -1111,41 +1053,15 @@ min-height: 0;
 display: flex;
 }
 
-/* Extremely subtle abstract background detail (approved design direction:
-   "may include a very subtle abstract green visual pattern... must NEVER
-   reduce text readability"). Two soft, static radial gradients, no
-   animation, no image asset, opacity low enough that it reads as a
-   faint room-tone rather than a visible shape - verified by eye against
-   real chat content, and left out of dark mode entirely (a dark
-   background makes even this faint a highlight noticeably more visible,
-   and the approved direction is explicit that dark mode stays
-   restrained). Purely decorative and inert - never intercepts a click
-   (pointer-events: none) and sits behind every real child, which all
-   explicitly use var(--z-content) below - it needs no z-index of its own
-   (generated content paints first/behind at the implicit level). */
-.chat-scroll-wrapper::before{
-content: "";
-position: absolute;
-inset: 0;
-pointer-events: none;
-background-image:
-radial-gradient(ellipse 640px 420px at 12% 8%, rgba(16, 185, 129, 0.05), transparent 65%),
-radial-gradient(ellipse 560px 380px at 88% 92%, rgba(5, 150, 105, 0.04), transparent 65%);
-}
-
-:root[data-theme="dark"] .chat-scroll-wrapper::before{
-display: none;
-}
-
 .chat-box{
 position: relative;
 z-index: var(--z-content);
 flex: 1;
-padding: var(--space-6) var(--space-5);
+padding: 56px max(var(--space-6), calc((100% - var(--content-max-width)) / 2));
 overflow-y: auto;
 display: flex;
 flex-direction: column;
-gap: var(--space-5);
+gap: var(--space-8);
 scroll-behavior: smooth;
 }
 
@@ -1157,14 +1073,14 @@ max-width: 100%;
 display: flex;
 flex-direction: column;
 gap: var(--space-1);
-max-width: min(800px, 88%);
+max-width: min(720px, 100%);
 align-self: flex-start;
 }
 
 .message.user{
 align-self: flex-end;
 align-items: flex-end;
-max-width: min(640px, 80%);
+max-width: min(680px, 88%);
 }
 
 /* Assistant messages: a two-column grid (LH avatar | text column) rather
@@ -1177,10 +1093,10 @@ max-width: min(640px, 80%);
 .message.ai{
 align-self: flex-start;
 display: grid;
-grid-template-columns: 34px 1fr;
+grid-template-columns: 28px 1fr;
 column-gap: var(--space-3);
 row-gap: var(--space-1);
-max-width: min(840px, 90%);
+max-width: min(720px, 100%);
 }
 
 .message-avatar{
@@ -1198,16 +1114,17 @@ grid-column: 2;
 word-wrap: break-word;
 overflow-wrap: anywhere;
 white-space: pre-wrap;
-line-height: var(--line-height-relaxed);
+font-size: 0.975rem;
+line-height: 1.75;
 }
 
 .message.user .message-content{
-padding: var(--space-2) var(--space-4);
-border-radius: var(--radius-lg);
-background: var(--color-accent);
-color: var(--color-accent-contrast);
-border-bottom-right-radius: var(--radius-sm);
-box-shadow: var(--shadow-xs);
+padding: var(--space-3) var(--space-4);
+border-radius: 16px;
+background: var(--color-surface-elevated);
+color: var(--color-text);
+border: 1px solid var(--color-border);
+box-shadow: none;
 }
 
 /* Assistant replies are text-first with minimal container treatment
@@ -1339,7 +1256,7 @@ transition: background-color var(--duration-fast) var(--ease-standard), border-c
 background: var(--color-accent-soft);
 border-color: var(--color-accent-vivid);
 color: var(--color-accent);
-box-shadow: var(--glow-accent);
+box-shadow: var(--shadow-sm);
 }
 
 /* ---- Empty state ---- */
@@ -1353,8 +1270,8 @@ flex-direction: column;
 align-items: center;
 justify-content: center;
 text-align: center;
-padding: var(--space-6);
-gap: var(--space-2);
+padding: var(--space-10) var(--space-6);
+gap: var(--space-3);
 overflow-y: auto;
 }
 
@@ -1362,21 +1279,21 @@ overflow-y: auto;
 display: flex;
 align-items: center;
 justify-content: center;
-width: 56px;
-height: 56px;
+width: 44px;
+height: 44px;
 margin: 0 auto;
-border-radius: 50%;
-background: linear-gradient(155deg, var(--color-accent-soft), transparent);
-border: 1px solid var(--color-border-hairline);
-color: var(--color-accent);
-font-size: 22px;
+border-radius: var(--radius-md);
+background: var(--color-surface-elevated);
+border: 1px solid var(--color-border);
+color: var(--color-text);
+font-size: var(--font-size-sm);
 line-height: 1;
 }
 
 .empty-state-title{
-font-size: var(--font-size-xl);
-font-weight: 700;
-letter-spacing: -0.01em;
+font-size: 1.75rem;
+font-weight: 600;
+letter-spacing: -0.025em;
 }
 
 .empty-state-subtitle{
@@ -1386,33 +1303,34 @@ max-width: 440px;
 
 .empty-state-cards{
 display: grid;
-grid-template-columns: repeat(2, minmax(0, 240px));
+grid-template-columns: repeat(3, minmax(0, 1fr));
 gap: var(--space-2);
-margin-top: var(--space-6);
-max-width: 560px;
+margin-top: var(--space-5);
+max-width: 680px;
 }
 
 .empty-state-card{
-display: flex;
-align-items: flex-start;
-gap: var(--space-2);
-text-align: left;
-padding: var(--space-3);
-border-radius: var(--radius-lg);
-border: 1px solid var(--color-border-hairline);
-background: var(--color-surface);
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 0;
+text-align: center;
+padding: 9px var(--space-3);
+border-radius: var(--radius-full);
+border: 1px solid var(--color-border);
+background: transparent;
 color: var(--color-text);
 cursor: pointer;
-font-size: var(--font-size-sm);
-min-height: var(--touch-target-min);
+font-size: var(--font-size-xs);
+min-height: 36px;
 transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
 .empty-state-card:hover:not(:disabled){
-border-color: var(--color-accent-vivid);
+border-color: var(--color-border-strong);
 background: var(--color-surface-elevated);
-box-shadow: var(--glow-accent);
-transform: translateY(-1px);
+box-shadow: none;
+transform: none;
 }
 
 .empty-state-card:active:not(:disabled){
@@ -1425,34 +1343,21 @@ outline-offset: 2px;
 }
 
 .empty-state-card-icon{
-flex-shrink: 0;
-width: 26px;
-height: 26px;
-display: flex;
-align-items: center;
-justify-content: center;
-border-radius: var(--radius-sm);
-background: var(--color-accent-soft);
-color: var(--color-accent);
-font-size: var(--font-size-sm);
+display: none;
 }
 
 .empty-state-card-text{
-display: flex;
-flex-direction: column;
-min-width: 0;
+display: block;
 }
 
 .empty-state-card-label{
-display: block;
-font-weight: 600;
-margin-bottom: 2px;
+display: inline;
+font-weight: 500;
+margin: 0;
 }
 
 .empty-state-card-hint{
-display: block;
-color: var(--color-text-muted);
-font-size: var(--font-size-xs);
+display: none;
 }
 
 /* ---- Composer ---- */
@@ -1461,11 +1366,9 @@ font-size: var(--font-size-xs);
    it - this split is what lets .composer-hint sit below the input row
    without inheriting its own padding twice (Phase 13). */
 .composer{
-border-top: 1px solid var(--color-border-hairline);
-background: var(--color-glass);
-backdrop-filter: blur(var(--blur-md));
--webkit-backdrop-filter: blur(var(--blur-md));
-padding: var(--space-3) var(--space-4);
+border-top: 0;
+background: var(--color-bg);
+padding: var(--space-5) var(--space-6);
 /* Safe-area support for mobile devices with a home indicator/gesture
    bar (Phase 13 - previously absent entirely). max() keeps the existing
    visual spacing on devices with no inset (env() resolves to 0 there). */
@@ -1477,16 +1380,7 @@ transition: box-shadow var(--duration-base) var(--ease-standard);
    it has focus (not just the textarea's own ring below) - "one of the
    most important components" per the approved design direction. */
 .composer:focus-within{
-box-shadow: var(--glow-accent);
-}
-
-html[data-wow-effects] .composer{
-border-top-color: rgba(16,185,129,.24);
-box-shadow: 0 -8px 28px rgba(5,150,105,.08);
-}
-
-html[data-wow-effects] .composer:focus-within{
-box-shadow: 0 -8px 28px rgba(5,150,105,.13), 0 0 0 1px rgba(16,185,129,.20);
+box-shadow: none;
 }
 
 .controls{
@@ -1495,28 +1389,33 @@ align-items: flex-end;
 gap: var(--space-2);
 max-width: var(--composer-max-width);
 margin: 0 auto;
+padding: var(--space-2);
+background: var(--color-surface-elevated);
+border: 1px solid var(--color-border);
+border-radius: 16px;
 }
 
 textarea{
 flex: 1;
-padding: var(--space-3) var(--space-4);
-border: 1px solid var(--color-border-hairline);
+padding: var(--space-3) var(--space-2);
+border: 0;
 outline: none;
-border-radius: var(--radius-xl);
+border-radius: 14px;
 resize: none;
 font-size: var(--font-size-md);
 font-family: inherit;
-background: var(--color-surface);
+background: transparent;
 color: var(--color-text);
 max-height: 200px;
 overflow-y: auto;
-box-shadow: var(--shadow-xs);
+box-shadow: none;
 transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 textarea:focus-visible{
-border-color: var(--color-accent-vivid);
-box-shadow: 0 0 0 3px var(--color-accent-soft);
+border-color: transparent;
+box-shadow: none;
+outline: none;
 }
 
 textarea:disabled{
@@ -1538,28 +1437,340 @@ color: #fff;
 box-shadow: var(--shadow-sm);
 }
 
+#send-btn{
+min-width: 40px;
+min-height: 40px;
+padding: var(--space-2) var(--space-3);
+border-radius: 12px;
+box-shadow: none;
+}
+
 .voice-ptt-btn{
 min-width: var(--touch-target-min);
 padding: var(--space-2);
-border: 1px solid var(--color-border-hairline);
-background: var(--color-surface);
+border: 0;
+background: transparent;
+color: var(--color-text-secondary);
+box-shadow: none;
+}
+.voice-ptt-btn:disabled{
+background: transparent;
+color: var(--color-text-muted);
+opacity: 0.55;
+}
+
+/* ---------------------------------------------------------------------
+   Voice chat (Phase 14 - www/voice.js)
+   --------------------------------------------------------------------- */
+
+.voice-btn{
+display: inline-flex;
+align-items: center;
+justify-content: center;
+min-width: 40px;
+min-height: 40px;
+padding: 0;
+border: 0;
+border-radius: 12px;
+background: transparent;
+color: var(--color-text-secondary);
+box-shadow: none;
+position: relative;
+transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+.voice-btn:hover:not(:disabled){
+background: var(--color-accent-soft);
 color: var(--color-accent);
 box-shadow: none;
 }
-.voice-ptt-btn.is-recording{ background: var(--color-accent); color: var(--color-accent-contrast); animation: lh-pulse 1.2s ease-in-out infinite; }
+.voice-btn:focus-visible{
+outline: 2px solid var(--color-accent);
+outline-offset: 2px;
+}
+.voice-btn.is-unsupported{
+opacity: 0.5;
+}
+.voice-btn.is-recording{
+background: var(--color-accent);
+color: var(--color-accent-contrast);
+}
+/* Expanding ring - "the mic is live" is unmistakable at a glance. */
+.voice-btn.is-recording::after{
+content: "";
+position: absolute;
+inset: 0;
+border-radius: inherit;
+border: 2px solid var(--color-accent);
+animation: lh-voice-ring 1.4s ease-out infinite;
+pointer-events: none;
+}
 
-.tutor-dashboard{ width: min(760px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 32px)); overflow: auto; position: relative; background: var(--color-glass); backdrop-filter: blur(var(--blur-lg)); -webkit-backdrop-filter: blur(var(--blur-lg)); }
+/* Hidden everywhere when the user switches voice features off. */
+:root[data-voice-off] .voice-btn,
+:root[data-voice-off] .message-action-btn[data-action="speak"]{
+display: none;
+}
+
+.message-action-btn.is-speaking{
+color: var(--color-accent);
+background: var(--color-accent-soft);
+}
+
+/* Shared animated wave - bars bounce harder once speech is detected. */
+.voice-wave{
+display: inline-flex;
+align-items: center;
+gap: 3px;
+height: 18px;
+}
+.voice-wave i{
+display: block;
+width: 3px;
+height: 100%;
+border-radius: var(--radius-full);
+background: var(--color-accent);
+transform: scaleY(0.3);
+animation: lh-voice-bar 1.1s ease-in-out infinite;
+}
+.voice-wave i:nth-child(2){ animation-delay: -0.9s; }
+.voice-wave i:nth-child(3){ animation-delay: -0.6s; }
+.voice-wave i:nth-child(4){ animation-delay: -0.3s; }
+.voice-wave i:nth-child(5){ animation-delay: -0.75s; }
+.is-hearing .voice-wave i{ animation-duration: 0.55s; }
+
+/* Dictation "Listening..." bar, directly above the input row. */
+.voice-status{
+display: flex;
+align-items: center;
+gap: var(--space-3);
+max-width: var(--composer-max-width);
+margin: 0 auto var(--space-2);
+padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+border: 1px solid var(--color-border);
+border-radius: var(--radius-full);
+background: var(--color-surface-elevated);
+box-shadow: var(--shadow-sm);
+animation: lh-voice-in var(--duration-base) var(--ease-standard);
+}
+.voice-status-label{
+font-size: var(--font-size-sm);
+font-weight: 600;
+color: var(--color-accent);
+white-space: nowrap;
+}
+.voice-status-transcript{
+flex: 1;
+min-width: 0;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+font-size: var(--font-size-sm);
+color: var(--color-text-secondary);
+}
+.voice-status-stop{
+min-height: 32px;
+padding: var(--space-1) var(--space-3);
+border-radius: var(--radius-full);
+font-size: var(--font-size-sm);
+box-shadow: none;
+}
+
+/* Voice Conversation Mode - replaces the input row, so the conversation
+   (and each streamed reply) stays visible above it. */
+.composer.is-voice-mode .controls{
+display: none;
+}
+.voice-panel{
+display: flex;
+align-items: center;
+gap: var(--space-4);
+max-width: var(--composer-max-width);
+margin: 0 auto;
+padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+border: 1px solid var(--color-border);
+border-radius: 20px;
+background: var(--color-surface-elevated);
+box-shadow: var(--shadow-md);
+animation: lh-voice-in var(--duration-slow) var(--ease-standard);
+}
+.voice-orb{
+flex: none;
+position: relative;
+width: 64px;
+height: 64px;
+min-height: var(--touch-target-min);
+padding: 0;
+border: 0;
+border-radius: 50%;
+background: radial-gradient(circle at 35% 30%, var(--color-accent-vivid), var(--color-accent) 70%);
+color: var(--color-accent-contrast);
+box-shadow: 0 6px 20px rgba(4, 120, 87, 0.35);
+transition: transform var(--duration-base) var(--ease-standard);
+}
+.voice-orb:hover:not(:disabled){
+transform: scale(1.04);
+background: radial-gradient(circle at 35% 30%, var(--color-accent-vivid), var(--color-accent) 70%);
+}
+.voice-orb:focus-visible{
+outline: 3px solid var(--color-accent);
+outline-offset: 3px;
+}
+.voice-orb-core{
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+height: 100%;
+}
+.voice-orb .voice-wave{ height: 24px; gap: 4px; }
+.voice-orb .voice-wave i{ width: 4px; background: currentColor; animation-play-state: paused; }
+.voice-orb::before,
+.voice-orb::after{
+content: "";
+position: absolute;
+inset: 0;
+border-radius: 50%;
+border: 2px solid var(--color-accent);
+opacity: 0;
+pointer-events: none;
+}
+.voice-panel[data-state="listening"] .voice-orb::before,
+.voice-panel[data-state="listening"] .voice-orb::after{
+animation: lh-voice-ring 1.8s ease-out infinite;
+}
+.voice-panel[data-state="listening"] .voice-orb::after{ animation-delay: 0.9s; }
+.voice-panel[data-state="listening"] .voice-wave i,
+.voice-panel[data-state="speaking"] .voice-wave i{
+animation-play-state: running;
+}
+.voice-panel[data-state="speaking"] .voice-wave i{ animation-duration: 0.7s; }
+.voice-panel[data-state="thinking"] .voice-orb{
+animation: lh-voice-breathe 1.6s ease-in-out infinite;
+}
+.voice-panel[data-state="idle"] .voice-orb{
+background: var(--color-surface);
+color: var(--color-accent);
+box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+.voice-panel-body{
+flex: 1;
+min-width: 0;
+}
+.voice-panel-label{
+font-size: var(--font-size-md);
+font-weight: 600;
+color: var(--color-text);
+}
+.voice-panel-transcript{
+margin-top: 2px;
+font-size: var(--font-size-sm);
+color: var(--color-text-secondary);
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+.voice-panel-transcript.is-hint{
+color: var(--color-text-muted);
+}
+.voice-panel-actions{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+}
+.voice-panel-lang{
+min-height: 36px;
+padding: var(--space-1) var(--space-2);
+border: 1px solid var(--color-border);
+border-radius: var(--radius-md);
+background: var(--color-surface);
+color: var(--color-text);
+font: inherit;
+font-size: var(--font-size-xs);
+font-weight: 600;
+}
+.voice-panel-end{
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: var(--touch-target-min);
+height: var(--touch-target-min);
+min-height: var(--touch-target-min);
+padding: 0;
+border-radius: 50%;
+background: var(--color-danger-soft);
+color: var(--color-danger);
+box-shadow: none;
+}
+.voice-panel-end:hover:not(:disabled){
+background: var(--color-danger);
+color: #fff;
+box-shadow: none;
+}
+
+/* Settings > Voice */
+.settings-select{
+min-height: 36px;
+padding: var(--space-1) var(--space-3);
+border: 1px solid var(--color-border);
+border-radius: var(--radius-md);
+background: var(--color-surface);
+color: var(--color-text);
+font: inherit;
+font-size: var(--font-size-sm);
+}
+.settings-select:disabled{
+opacity: 0.55;
+}
+.settings-inline-controls{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+}
+.settings-note{
+margin-top: var(--space-2);
+font-size: var(--font-size-xs);
+color: var(--color-text-muted);
+}
+
+@keyframes lh-voice-bar{
+0%, 100%{ transform: scaleY(0.3); }
+50%{ transform: scaleY(1); }
+}
+@keyframes lh-voice-ring{
+0%{ transform: scale(1); opacity: 0.6; }
+100%{ transform: scale(1.6); opacity: 0; }
+}
+@keyframes lh-voice-breathe{
+0%, 100%{ transform: scale(1); }
+50%{ transform: scale(0.92); }
+}
+@keyframes lh-voice-in{
+from{ opacity: 0; transform: translateY(6px); }
+to{ opacity: 1; transform: none; }
+}
+
+@media (max-width: 430px){
+.voice-btn{ min-width: 36px; }
+.voice-panel{ gap: var(--space-3); padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2); }
+.voice-orb{ width: 56px; height: 56px; }
+.voice-panel-lang{ display: none; }
+.voice-status{ padding-left: var(--space-3); gap: var(--space-2); }
+.settings-row .settings-inline-controls{ flex-wrap: wrap; justify-content: flex-end; }
+}
+
+.tutor-dashboard{ width: min(760px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 32px)); overflow: auto; position: relative; background: var(--color-surface-elevated); }
 .tutor-dashboard-close{ position: absolute; top: var(--space-3); right: var(--space-3); min-width: 36px; min-height: 36px; padding: 0; background: transparent; color: var(--color-text-secondary); box-shadow: none; font-size: 1.4rem; }
 .tutor-dashboard-heading{ display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-5); }.tutor-dashboard-heading h2{ font-size:var(--font-size-xl); }.tutor-dashboard-heading p{ color:var(--color-text-muted); font-size:var(--font-size-sm); }
 .tutor-stats{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--space-2); }.tutor-stats article{ padding:var(--space-3); border:1px solid var(--color-border-hairline); border-radius:var(--radius-lg); background:var(--color-surface); box-shadow:var(--shadow-xs); transition:transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard); }.tutor-stats article:hover{ transform:translateY(-2px); box-shadow:var(--glow-accent); }.tutor-stats strong{ display:block; color:var(--color-accent); font-size:var(--font-size-xl); }.tutor-stats span{ color:var(--color-text-muted); font-size:var(--font-size-xs); }
-.tutor-level{ margin:var(--space-5) 0; padding:var(--space-3); border-radius:var(--radius-lg); background:var(--color-accent-soft); }.tutor-level div:first-child{ display:flex; justify-content:space-between; gap:var(--space-3); font-weight:700; }.tutor-level small{ color:var(--color-text-secondary); font-weight:500; }.tutor-progress{ height:8px; border-radius:var(--radius-full); overflow:hidden; background:rgba(16,185,129,.16); margin-top:var(--space-2); }.tutor-progress i{ display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg, #10B981, #34D399); transition:width var(--duration-slow) var(--ease-standard); }
+.tutor-level{ margin:var(--space-5) 0; padding:var(--space-3); border-radius:var(--radius-lg); background:var(--color-accent-soft); }.tutor-level div:first-child{ display:flex; justify-content:space-between; gap:var(--space-3); font-weight:700; }.tutor-level small{ color:var(--color-text-secondary); font-weight:500; }.tutor-progress{ height:8px; border-radius:var(--radius-full); overflow:hidden; background:rgba(16,185,129,.16); margin-top:var(--space-2); }.tutor-progress i{ display:block; height:100%; border-radius:inherit; background:var(--color-accent); transition:width var(--duration-slow) var(--ease-standard); }
 .tutor-dashboard h3{ margin:var(--space-4) 0 var(--space-2); font-size:var(--font-size-md); }.tutor-workflows{ display:grid; grid-template-columns:repeat(2, 1fr); gap:var(--space-2); }.tutor-workflows button{ text-align:left; background:var(--color-surface); color:var(--color-text); border:1px solid var(--color-border-hairline); box-shadow:none; }.tutor-workflows button:hover:not(:disabled){ color:var(--color-accent); background:var(--color-accent-soft); transform:translateY(-1px); box-shadow:var(--glow-accent); }.tutor-achievements{ display:flex; flex-wrap:wrap; gap:var(--space-2); }.tutor-achievements span{ padding:var(--space-2) var(--space-3); border-radius:var(--radius-full); background:var(--color-accent-soft); color:var(--color-accent); font-size:var(--font-size-sm); }
 @media (max-width: 600px){ .tutor-stats{ grid-template-columns:repeat(2,1fr); }.tutor-workflows{ grid-template-columns:1fr; }.tutor-level div:first-child{ flex-direction:column; gap:var(--space-1); } }
 
 #send-btn.is-stop:hover:not(:disabled){
 background: var(--color-danger);
 filter: brightness(1.08);
-box-shadow: 0 0 20px rgba(179, 38, 30, 0.18);
+box-shadow: var(--shadow-sm);
 }
 
 /* Phase 2 visual refinement: calm, layered surfaces rather than high-cost
@@ -1574,33 +1785,16 @@ transform: translateY(-1px);
 }
 
 .message.ai .message-content{
-border-color: rgba(16,185,129,.14);
-box-shadow: var(--shadow-xs), inset 3px 0 0 rgba(16,185,129,.55);
+border-color: transparent;
+box-shadow: none;
 }
 
 .message.user .message-content{
-box-shadow: var(--shadow-sm);
+box-shadow: none;
 }
 
-html[data-wow-effects] .message.ai .message-content{
-background: linear-gradient(135deg, var(--color-glass), var(--color-surface));
-box-shadow: var(--shadow-sm), inset 3px 0 0 var(--color-accent-vivid), 0 0 20px rgba(16,185,129,.07);
-}
-
-html[data-wow-effects] .message.user .message-content{
-box-shadow: 0 8px 24px rgba(5,150,105,.15);
-}
-
-html[data-wow-effects] .sidebar-profile-card,
-html[data-wow-effects] .new-chat-btn,
-html[data-wow-effects] .empty-state-card{
-box-shadow: 0 8px 24px rgba(5,150,105,.08);
-}
-
-html[data-wow-effects] .new-chat-btn:hover:not(:disabled),
-html[data-wow-effects] .empty-state-card:hover:not(:disabled){
-transform: translateY(-2px);
-}
+/* WOW Mode is a quiet preference pill only; it intentionally adds no
+   effects, surface changes, or motion. */
 
 /* ---------------------------------------------------------------------
    Mobile drawer
@@ -1670,8 +1864,9 @@ min-height: var(--touch-target-min);
 
 .lh-dialog-input:focus-visible{
 border-color: var(--color-accent);
-outline: none;
-box-shadow: 0 0 0 3px var(--color-accent-soft);
+outline: 2px solid var(--focus-ring-color);
+outline-offset: 2px;
+box-shadow: none;
 }
 
 .lh-dialog-field-error{
@@ -2017,6 +2212,12 @@ justify-content: center;
 }
 .header{
 padding: var(--space-3);
+}
+.header-account-label{
+display: none;
+}
+.header-account-btn{
+padding: 4px;
 }
 .header-conversation-title{
 font-size: var(--font-size-md);

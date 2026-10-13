@@ -125,13 +125,16 @@ strictTransportSecurity: { maxAge: 15552000, includeSubDomains: true }
 // Permissions-Policy is not part of Helmet 8's own API (confirmed by
 // inspecting its exports - it dropped built-in support for this header
 // years ago since the spec was still in flux, and recommends setting it
-// directly). This app uses no camera/microphone/geolocation/USB/payment
-// API anywhere (confirmed by source review) - deny them all by default.
+// directly). This app uses no camera/geolocation/USB/payment API anywhere
+// (confirmed by source review) - deny them all by default. The microphone
+// is allowed for this origin only (self - never third-party frames) since
+// Phase 14's voice chat uses the browser's Web Speech API (www/voice.js);
+// the browser still asks the user for permission before any capture.
 // Clipboard access (the Copy feature) is governed by the separate
 // Clipboard API permission model, not Permissions-Policy, so it's
 // unaffected by this list.
 app.use((req, res, next) => {
-res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+res.setHeader("Permissions-Policy", "camera=(), microphone=(self), geolocation=(), payment=(), usb=()");
 next();
 });
 

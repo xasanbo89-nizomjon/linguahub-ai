@@ -27,6 +27,9 @@ const userAvatarFallback = document.getElementById("user-avatar-fallback");
 const userNameEl = document.getElementById("user-name");
 const userEmailEl = document.getElementById("user-email");
 const authStatusEl = document.getElementById("auth-status");
+const headerAccountBtn = document.getElementById("header-account-btn");
+const headerAccountAvatar = document.getElementById("header-account-avatar");
+const headerAccountLabel = document.getElementById("header-account-label");
 
 // Composer disclaimer text (Integration Prep phase, Task 14) - the single
 // centralized source of truth lives in www/strings.js, never hardcoded
@@ -167,6 +170,18 @@ retryBtn.setAttribute("aria-label", "Retry this response");
 retryBtn.textContent = "↻ Retry";
 actions.appendChild(retryBtn);
 } else if (status === "complete" || status === "stopped") {
+// Read aloud (Phase 14) - handled by www/voice.js; hidden via CSS when
+// the user turns voice features off, omitted entirely without TTS.
+if (typeof window !== "undefined" && window.speechSynthesis) {
+const speakBtn = document.createElement("button");
+speakBtn.type = "button";
+speakBtn.className = "message-action-btn";
+speakBtn.dataset.action = "speak";
+speakBtn.setAttribute("aria-label", "Read aloud");
+speakBtn.setAttribute("aria-pressed", "false");
+speakBtn.textContent = "🔊 Read aloud";
+actions.appendChild(speakBtn);
+}
 const regenBtn = document.createElement("button");
 regenBtn.type = "button";
 regenBtn.className = "message-action-btn";
@@ -290,10 +305,21 @@ scrollToBottomBtn.hidden = true;
 // and focuses the composer; the user decides whether/what to send. The
 // suggestion set itself is mode-specific (see www/mode-ui.js) and re-rendered
 // whenever the selected mode changes.
+const HOME_PROMPT_SUGGESTIONS = [
+{ label: "Translate text", prompt: "Translate the following text to English:\n\n" },
+{ label: "Practice English", prompt: "Help me practice English conversation. " },
+{ label: "Practice Arabic", prompt: "Help me practice Arabic conversation. " },
+{ label: "Improve writing", prompt: "Improve the clarity and tone of this text:\n\n" },
+{ label: "Explain grammar", prompt: "Explain this grammar rule with examples: " },
+{ label: "Study vocabulary", prompt: "Help me learn vocabulary for: " }
+];
+
 function renderEmptyStateCards() {
 if (!emptyStateCardsEl) return;
 emptyStateCardsEl.textContent = "";
-const suggestions = window.LinguaHubModeUI
+const suggestions = modeSelect.value === "general"
+? HOME_PROMPT_SUGGESTIONS
+: window.LinguaHubModeUI
 ? window.LinguaHubModeUI.getPromptSuggestions(modeSelect.value)
 : [];
 suggestions.forEach((item) => {
@@ -347,6 +373,8 @@ const historyUI = window.LinguaHubHistoryUI.init();
 let availableModes = [];
 
 function renderConversationMessages(conversation) {
+// Never keep reading aloud a message that is about to leave the DOM.
+if (window.LinguaHubVoice) window.LinguaHubVoice.stopSpeaking();
 chatBox.textContent = "";
 
 if (conversationTitleEl) {
@@ -620,6 +648,13 @@ historyUI.refreshList();
 refreshMessageActions(aiBubble, finalStatus);
 activeChatAbortController = null;
 setBusy(false);
+// Voice chat hook (Phase 14, www/voice.js): auto-read and Voice Mode's
+// listen -> reply -> speak loop both key off this one settled event.
+if (typeof CustomEvent === "function") {
+document.dispatchEvent(new CustomEvent("linguahub:assistant-reply", {
+detail: { text: isHardError ? "" : rawText, status: finalStatus, wrapper: aiBubble }
+}));
+}
 }
 }
 
@@ -871,6 +906,7 @@ const action = actionBtn.dataset.action;
 if (action === "copy") handleCopyMessage(wrapper);
 else if (action === "edit") handleEditUserMessage(wrapper);
 else if (action === "regenerate" || action === "retry") handleRegenerateOrRetry(wrapper);
+else if (action === "speak" && window.LinguaHubVoice) window.LinguaHubVoice.toggleReadAloud(wrapper);
 });
 
 // ---------------------------------------------------------------------
@@ -886,6 +922,9 @@ loginBtn.hidden = false;
 loginBtn.disabled = false;
 loginBtn.removeAttribute("aria-busy");
 userProfile.hidden = true;
+if (headerAccountAvatar) headerAccountAvatar.textContent = "G";
+if (headerAccountLabel) headerAccountLabel.textContent = "Guest";
+if (headerAccountBtn) headerAccountBtn.title = "Sign in";
 }
 
 function showAvatarFallback(name) {
@@ -901,6 +940,10 @@ userProfile.hidden = false;
 
 const name = user.displayName || user.email || "Signed in";
 const email = user.email || "";
+
+if (headerAccountAvatar) headerAccountAvatar.textContent = (name || "?").trim().charAt(0).toUpperCase() || "?";
+if (headerAccountLabel) headerAccountLabel.textContent = name;
+if (headerAccountBtn) headerAccountBtn.title = "Account settings";
 
 // textContent only - never innerHTML - so a malicious displayName/email
 // can never inject markup.
@@ -995,6 +1038,12 @@ logoutBtn.removeAttribute("aria-busy");
 
 loginBtn.addEventListener("click", handleLogin);
 logoutBtn.addEventListener("click", handleLogout);
+if (headerAccountBtn) {
+headerAccountBtn.addEventListener("click", () => {
+if (loginBtn.hidden) settingsBtn.click();
+else loginBtn.click();
+});
+}
 
 if (window.LinguaHubAuth && LinguaHubAuth.isAvailable()) {
 loginBtn.disabled = true;

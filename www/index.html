@@ -34,6 +34,10 @@
 <button id="sidebar-collapse-btn" type="button" class="sidebar-collapse-btn" aria-label="Collapse sidebar" aria-expanded="true">⟨</button>
 </div>
 
+<button id="new-chat-btn" type="button" class="new-chat-btn">
+<span class="new-chat-btn-icon" aria-hidden="true">+</span><span>New chat</span>
+</button>
+
 <div class="sidebar-search">
 <span class="sidebar-search-icon" aria-hidden="true">⌕</span>
 <label for="chat-search-input" class="sr-only">Search conversations</label>
@@ -72,10 +76,6 @@
 <button id="logout-btn" type="button" class="auth-btn auth-btn-secondary">Logout</button>
 </div>
 </div>
-
-<button id="new-chat-btn" type="button" class="new-chat-btn">
-<span class="new-chat-btn-icon" aria-hidden="true">+</span><span>New Chat</span>
-</button>
 
 <div class="sidebar-footer">
 <button id="quick-theme-btn" type="button" class="sidebar-icon-btn" title="Toggle theme">
@@ -130,6 +130,10 @@
 <button id="clear-chat-btn" type="button" class="header-icon-btn" title="Clear chat">
 <span aria-hidden="true">⟲</span><span class="sr-only">Clear chat</span>
 </button>
+<button id="header-account-btn" type="button" class="header-account-btn" title="Account">
+<span id="header-account-avatar" class="header-account-avatar" aria-hidden="true">G</span>
+<span id="header-account-label" class="header-account-label">Guest</span>
+</button>
 </div>
 </div>
 
@@ -139,8 +143,8 @@
 <div class="chat-box" id="chat-box"></div>
 <div id="empty-state" class="empty-state" hidden>
 <div class="lh-mark lh-mark-lg empty-state-icon" aria-hidden="true">LH</div>
-<h2 class="empty-state-title">LinguaHub AI</h2>
-<p class="empty-state-subtitle">How can I help you learn today? Start typing below, or try a suggestion.</p>
+<h2 class="empty-state-title">What would you like to learn today?</h2>
+<p class="empty-state-subtitle">LinguaHub AI helps you learn languages, improve writing, translate, and study smarter.</p>
 <div class="empty-state-cards" id="empty-state-cards"></div>
 </div>
 <button id="scroll-to-bottom-btn" type="button" class="scroll-to-bottom-btn" hidden>↓ New messages</button>
@@ -156,13 +160,21 @@ placeholder="Message LinguaHub AI..."
 rows="1"
 ></textarea>
 
+<button id="attach-btn" type="button" class="voice-ptt-btn" title="Attachments are coming soon" disabled>
+<span aria-hidden="true">+</span><span class="sr-only">Attachments are coming soon</span>
+</button>
+<!-- Voice chat (Phase 14, www/voice.js): tap-to-dictate mic and the
+     hands-free Voice Conversation Mode. Browser-native Web Speech API
+     only - recognized speech is sent through the normal send path. -->
+<button id="voice-ptt-btn" type="button" class="voice-btn" aria-pressed="false" aria-label="Voice input" title="Voice input">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+</button>
+<button id="voice-mode-btn" type="button" class="voice-btn voice-mode-btn" aria-label="Start voice conversation" title="Voice conversation">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>
+</button>
 <button id="send-btn" type="button">
 Send
 </button>
-<button id="voice-ptt-btn" type="button" class="voice-ptt-btn" aria-pressed="false" title="Hold to talk">
-<span aria-hidden="true">🎙</span><span class="sr-only">Push to talk</span>
-</button>
-<button id="voice-speak-btn" type="button" class="voice-ptt-btn" title="Read latest reply aloud"><span aria-hidden="true">🔊</span><span class="sr-only">Read latest reply aloud</span></button>
 
 </div>
 <!-- Text populated by www/app.js from the single centralized source
