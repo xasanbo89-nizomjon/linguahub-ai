@@ -12,6 +12,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const HISTORY_UI_SRC = fs.readFileSync(path.join(__dirname, "..", "www", "history-ui.js"), "utf8");
+const ChatGroupsModule = require("../www/chat-groups.js");
 const ChatStoreModule = require("../www/chatStore.js");
 
 function createFakeStorage() {
@@ -35,6 +36,8 @@ function createFakeElement(tag) {
     download: "",
     files: null,
     focus() { el._focused = true; },
+    style: {},
+    contains(other) { return other === el || el.children.some((c) => c === other || (c.contains && c.contains(other))); },
     classList: {
       _set: new Set(),
       add(c) { this._set.add(c); },
@@ -119,8 +122,13 @@ function buildHistoryUiSandbox({ store, promptImpl, confirmImpl, localStorage, a
     LinguaHubChatStore: ChatStoreModule,
     matchMedia: () => ({ matches: false }),
     prompt: promptImpl || (() => null),
-    confirm: confirmImpl || (() => true)
+    confirm: confirmImpl || (() => true),
+    LinguaHubChatGroups: ChatGroupsModule,
+    innerWidth: 1280,
+    innerHeight: 800
   };
+  const toasts = [];
+  sandbox.LinguaHubToast = { show(opts) { toasts.push(opts); return () => {}; } };
   if (appMode) sandbox.LinguaHubAppMode = appMode;
   sandbox.window = sandbox;
 
@@ -128,8 +136,38 @@ function buildHistoryUiSandbox({ store, promptImpl, confirmImpl, localStorage, a
   vm.runInContext(HISTORY_UI_SRC, sandbox, { filename: "history-ui.js" });
 
   const controller = sandbox.LinguaHubHistoryUI.init({ store });
-  return { sandbox, elements, controller };
+  return { sandbox, elements, controller, toasts };
 }
+
+// The list is now groups > lists > items; these helpers hide that structure.
+function itemsOf(list) {
+  const out = [];
+  (function walk(el) {
+    el.children.forEach((c) => {
+      if (typeof c.className === "string" && c.className.split(/\s+/).indexOf("conversation-item") !== -1) out.push(c);
+      else walk(c);
+    });
+  })(list);
+  return out;
+}
+const titleOf = (item) => item.children[0].children[0].textContent;
+const menuButtonOf = (item) => item.children[1].children[0];
+function groupLabelsOf(list) {
+  return list.children.map((g) => g.children[0]).filter((c) => c && c.className === "conversation-group-label").map((c) => c.textContent);
+}
+function openMenuItem(sandbox, label) {
+  const menu = sandbox.document.body.children.find((c) => c.className === "conversation-menu");
+  assert.ok(menu, "the item menu should be open");
+  const entry = menu.children.find((b) => b.textContent === label);
+  assert.ok(entry, "menu entry " + label);
+  return entry;
+}
+function renameInputOf(list) {
+  let found = null;
+  (function walk(el) { el.children.forEach((c) => { if (c.className === "conversation-rename-input") found = c; else walk(c); }); })(list);
+  return found;
+}
+const keyEvent = (key) => ({ key, preventDefault() {}, stopPropagation() {} });
 
 function makeStore() {
   return ChatStoreModule.createChatStore({ storage: createFakeStorage() });
@@ -183,12 +221,9 @@ test("selecting a conversation from the list switches the active conversation", 
   controller.onActiveConversationChanged((conv) => notifications.push(conv));
   controller.start();
 
-  // The list renders b then a (most-recently-updated first); click the
-  // second rendered item (a) to select it explicitly regardless of order.
-  const items = elements["conversation-list"].children;
+  const items = itemsOf(elements["conversation-list"]);
   assert.equal(items.length, 2);
-  const bItem = items.find((item) => item.children[0].children[0].textContent === "conversation b");
-  bItem.click();
+  items.find((item) => titleOf(item) === "conversation b").click();
 
   assert.equal(store.getActiveConversationId(), b.id);
 });
@@ -203,31 +238,39 @@ test("search filters the rendered conversation list and clearing the query resto
   const { elements, controller } = buildHistoryUiSandbox({ store });
   controller.onActiveConversationChanged(() => {});
   controller.start();
-  assert.equal(elements["conversation-list"].children.length, 2);
+  assert.equal(itemsOf(elements["conversation-list"]).length, 2);
 
   elements["chat-search-input"].value = "python";
   elements["chat-search-input"].dispatch("input");
   await new Promise((r) => setTimeout(r, 250));
-  assert.equal(elements["conversation-list"].children.length, 1);
+  assert.equal(itemsOf(elements["conversation-list"]).length, 1);
+  assert.deepEqual(groupLabelsOf(elements["conversation-list"]), [], "search results are a flat list, no date groups");
 
   elements["chat-search-input"].value = "";
   elements["chat-search-input"].dispatch("input");
   await new Promise((r) => setTimeout(r, 250));
-  assert.equal(elements["conversation-list"].children.length, 2);
+  assert.equal(itemsOf(elements["conversation-list"]).length, 2);
 });
 
-test("rename via the prompt dialog updates the title and the rendered list", async () => {
+test("rename is inline: Rename opens an input, Enter saves, and the list shows the new title", () => {
   const store = makeStore();
-  const { elements, controller } = buildHistoryUiSandbox({ store, promptImpl: () => "Renamed Title" });
+  const { sandbox, elements, controller } = buildHistoryUiSandbox({ store });
   controller.onActiveConversationChanged(() => {});
   controller.start();
 
-  const renameBtn = elements["conversation-list"].children[0].children[1].children[0];
-  renameBtn.click();
-  await new Promise((r) => setTimeout(r, 10));
+  menuButtonOf(itemsOf(elements["conversation-list"])[0]).click();
+  openMenuItem(sandbox, "Rename").click();
+
+  const input = renameInputOf(elements["conversation-list"]);
+  assert.ok(input, "an inline rename input replaces the title");
+  assert.equal(input.value, "New Chat");
+  input.value = "Renamed Title";
+  input.dispatch("input", {});
+  input.dispatch("keydown", keyEvent("Enter"));
 
   assert.equal(store.listConversations()[0].title, "Renamed Title");
-  assert.equal(elements["conversation-list"].children[0].children[0].children[0].textContent, "Renamed Title");
+  assert.equal(renameInputOf(elements["conversation-list"]), null);
+  assert.equal(titleOf(itemsOf(elements["conversation-list"])[0]), "Renamed Title");
 });
 
 // Regression test (Phase 7): a real browser keyboard test found that
@@ -252,12 +295,11 @@ test("Enter/Space on the item's own keydown only selects when the item itself is
   controller.onActiveConversationChanged(() => {});
   controller.start();
 
-  const items = elements["conversation-list"].children;
-  const bItem = items.find((item) => item.children[0].children[0].textContent === "conversation b");
-  const bRenameBtn = bItem.children[1].children[0];
+  const bItem = itemsOf(elements["conversation-list"]).find((item) => titleOf(item) === "conversation b");
+  const bMenuBtn = menuButtonOf(bItem);
 
   let prevented = false;
-  bItem.dispatch("keydown", { key: "Enter", target: bRenameBtn, preventDefault() { prevented = true; } });
+  bItem.dispatch("keydown", { key: "Enter", target: bMenuBtn, preventDefault() { prevented = true; } });
   assert.equal(prevented, false, "keydown originating from the nested button must not be intercepted");
   assert.equal(store.getActiveConversationId(), a.id, "selecting must not happen when the event target was the nested button");
 
@@ -267,49 +309,107 @@ test("Enter/Space on the item's own keydown only selects when the item itself is
   assert.equal(store.getActiveConversationId(), b.id);
 });
 
-test("cancelling the rename prompt (returns null) leaves the title unchanged", async () => {
+test("Escape cancels an inline rename and leaves the title unchanged", () => {
   const store = makeStore();
   const conv = store.createConversation().conversation;
   store.renameConversation(conv.id, "Original");
-  const { elements, controller } = buildHistoryUiSandbox({ store, promptImpl: () => null });
+  const { sandbox, elements, controller } = buildHistoryUiSandbox({ store });
   controller.onActiveConversationChanged(() => {});
   controller.start();
 
-  const renameBtn = elements["conversation-list"].children[0].children[1].children[0];
-  renameBtn.click();
-  await new Promise((r) => setTimeout(r, 10));
+  menuButtonOf(itemsOf(elements["conversation-list"])[0]).click();
+  openMenuItem(sandbox, "Rename").click();
+  const input = renameInputOf(elements["conversation-list"]);
+  input.value = "Something else";
+  input.dispatch("input", {});
+  input.dispatch("keydown", keyEvent("Escape"));
+
   assert.equal(store.getConversation(conv.id).title, "Original");
+  assert.equal(renameInputOf(elements["conversation-list"]), null);
+  assert.equal(titleOf(itemsOf(elements["conversation-list"])[0]), "Original");
 });
 
-test("delete requires confirmation and aborts generation only when deleting the active conversation", async () => {
+test("delete requires confirmation, aborts generation only for the active conversation, and offers Undo", async () => {
   const store = makeStore();
-  const { elements, controller } = buildHistoryUiSandbox({ store, confirmImpl: () => true });
+  const { sandbox, elements, controller, toasts } = buildHistoryUiSandbox({ store, confirmImpl: () => true });
   let aborted = false;
   controller.registerAbortActiveGeneration(() => { aborted = true; });
   controller.onActiveConversationChanged(() => {});
   controller.start();
 
   const activeId = store.getActiveConversationId();
-  const deleteBtn = elements["conversation-list"].children[0].children[1].children[1];
-  deleteBtn.click();
+  store.saveMessage(activeId, ChatStoreModule.createMessage("user", "keep me please"));
+  controller.refreshList();
+  menuButtonOf(itemsOf(elements["conversation-list"])[0]).click();
+  openMenuItem(sandbox, "Delete").click();
   await new Promise((r) => setTimeout(r, 10));
 
   assert.equal(store.getConversation(activeId), null);
   assert.equal(aborted, true);
+
+  assert.equal(toasts.length, 1);
+  assert.equal(toasts[0].duration, 5000);
+  assert.equal(toasts[0].action.label, "Undo");
+  toasts[0].action.onClick();
+
+  const restored = store.getConversation(activeId);
+  assert.ok(restored, "Undo puts the chat back");
+  assert.equal(restored.messages[0].content, "keep me please");
+  assert.equal(store.getActiveConversationId(), activeId, "an undone active chat becomes active again");
 });
 
-test("cancelling the delete confirmation keeps the conversation", async () => {
+test("cancelling the delete confirmation keeps the conversation and shows no Undo toast", async () => {
   const store = makeStore();
-  const { elements, controller } = buildHistoryUiSandbox({ store, confirmImpl: () => false });
+  const { sandbox, elements, controller, toasts } = buildHistoryUiSandbox({ store, confirmImpl: () => false });
   controller.onActiveConversationChanged(() => {});
   controller.start();
 
   const activeId = store.getActiveConversationId();
-  const deleteBtn = elements["conversation-list"].children[0].children[1].children[1];
-  deleteBtn.click();
+  menuButtonOf(itemsOf(elements["conversation-list"])[0]).click();
+  openMenuItem(sandbox, "Delete").click();
   await new Promise((r) => setTimeout(r, 10));
 
   assert.ok(store.getConversation(activeId));
+  assert.equal(toasts.length, 0);
+});
+
+test("Pin moves a chat into a Pinned group at the top without changing its last-updated time; Unpin returns it", () => {
+  const store = makeStore();
+  const a = store.createConversation().conversation;
+  store.saveMessage(a.id, ChatStoreModule.createMessage("user", "older chat"));
+  const b = store.createConversation().conversation;
+  store.saveMessage(b.id, ChatStoreModule.createMessage("user", "newer chat"));
+  const updatedBefore = store.getConversation(a.id).updatedAt;
+
+  const { sandbox, elements, controller } = buildHistoryUiSandbox({ store });
+  controller.onActiveConversationChanged(() => {});
+  controller.start();
+  assert.deepEqual(groupLabelsOf(elements["conversation-list"]), ["Today"]);
+
+  const olderItem = itemsOf(elements["conversation-list"]).find((i) => titleOf(i) === "older chat");
+  menuButtonOf(olderItem).click();
+  openMenuItem(sandbox, "Pin").click();
+
+  assert.deepEqual(groupLabelsOf(elements["conversation-list"]), ["Pinned", "Today"]);
+  assert.equal(titleOf(itemsOf(elements["conversation-list"])[0]), "older chat");
+  assert.equal(store.getConversation(a.id).pinned, true);
+  assert.equal(store.getConversation(a.id).updatedAt, updatedBefore, "pinning must not touch updatedAt");
+
+  menuButtonOf(itemsOf(elements["conversation-list"])[0]).click();
+  openMenuItem(sandbox, "Unpin").click();
+  assert.deepEqual(groupLabelsOf(elements["conversation-list"]), ["Today"]);
+  assert.equal(store.getConversation(a.id).updatedAt, updatedBefore);
+});
+
+test("each chat row carries its full title as a tooltip (long titles are truncated by CSS)", () => {
+  const store = makeStore();
+  const conv = store.createConversation().conversation;
+  const longTitle = "A very long conversation title that certainly will not fit in the narrow sidebar";
+  store.renameConversation(conv.id, longTitle);
+  const { elements, controller } = buildHistoryUiSandbox({ store });
+  controller.onActiveConversationChanged(() => {});
+  controller.start();
+  assert.equal(itemsOf(elements["conversation-list"])[0].attrs.title, longTitle);
 });
 
 test("Clear chat button clears only the active conversation's messages after confirmation", async () => {
@@ -414,19 +514,40 @@ test("import via the file input adds a new conversation and switches to it", asy
   assert.equal(store.getActiveConversationId(), imported.id);
 });
 
-test("Escape-equivalent (prompt returning null) and empty title are both rejected safely for rename", async () => {
+test("an empty or unchanged inline rename is rejected safely", () => {
   const store = makeStore();
-  const { elements, controller } = buildHistoryUiSandbox({ store, promptImpl: () => "   " });
+  const { sandbox, elements, controller } = buildHistoryUiSandbox({ store });
   controller.onActiveConversationChanged(() => {});
   controller.start();
   const originalTitle = store.listConversations()[0].title;
 
-  const renameBtn = elements["conversation-list"].children[0].children[1].children[0];
-  renameBtn.click();
-  await new Promise((r) => setTimeout(r, 10));
+  menuButtonOf(itemsOf(elements["conversation-list"])[0]).click();
+  openMenuItem(sandbox, "Rename").click();
+  const input = renameInputOf(elements["conversation-list"]);
+  input.value = "   ";
+  input.dispatch("input", {});
+  input.dispatch("keydown", keyEvent("Enter"));
 
   assert.equal(store.listConversations()[0].title, originalTitle);
-  assert.match(elements["history-status"].textContent, /empty/i);
+  assert.equal(renameInputOf(elements["conversation-list"]), null);
+});
+
+test("an in-progress rename survives a list refresh (e.g. when a reply finishes)", () => {
+  const store = makeStore();
+  const { sandbox, elements, controller } = buildHistoryUiSandbox({ store });
+  controller.onActiveConversationChanged(() => {});
+  controller.start();
+
+  menuButtonOf(itemsOf(elements["conversation-list"])[0]).click();
+  openMenuItem(sandbox, "Rename").click();
+  const input = renameInputOf(elements["conversation-list"]);
+  input.value = "Half typed";
+  input.dispatch("input", {});
+
+  controller.refreshList();
+  const again = renameInputOf(elements["conversation-list"]);
+  assert.ok(again, "the rename input is rebuilt");
+  assert.equal(again.value, "Half typed");
 });
 
 test("sidebar collapse toggles the collapsed class and persists across a fresh init against the same storage", () => {
@@ -516,8 +637,9 @@ test("mobile drawer: selecting a conversation closes it", () => {
   elements["sidebar-toggle-btn"].click();
   assert.equal(elements["app-shell"].classList.contains("sidebar-open"), true);
 
-  const items = elements["conversation-list"].children;
+  const items = itemsOf(elements["conversation-list"]);
   items[items.length - 1].click();
 
   assert.equal(elements["app-shell"].classList.contains("sidebar-open"), false);
 });
+

@@ -129,7 +129,7 @@ async function withApp(fn) {
 
 // Export/import have no buttons in the current UI (removed in Integration
 // Prep - tests/integration-prep.test.js pins that), so e2e drives the same
-// real code paths through window.LinguaHubHistoryUI.
+// real code paths through window.linguahubHistory (the controller exposed by app.js).
 function exportActiveConversation(page) {
   return page.evaluate(() => window.linguahubHistory.exportActiveConversation());
 }

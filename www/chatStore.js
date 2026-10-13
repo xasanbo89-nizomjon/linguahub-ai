@@ -423,6 +423,28 @@ var pruned = pruneForSize(data);
 return pruned.data;
 }
 
+// Change notifications (used by www/chat-sync.js). "changed" fires after every
+// successful write to the CURRENT namespace; "deleted" / "cleared" fire only
+// for explicit user deletions, so a conversation that merely disappears
+// through size pruning is never mistaken for a deletion (which sync would
+// propagate to the user's other devices).
+var listeners = [];
+
+function emit(event) {
+for (var i = 0; i < listeners.length; i += 1) {
+try { listeners[i](event); } catch (err) { /* a listener must never break a write */ }
+}
+}
+
+function subscribe(listener) {
+if (typeof listener !== "function") return function () {};
+listeners.push(listener);
+return function () {
+var index = listeners.indexOf(listener);
+if (index !== -1) listeners.splice(index, 1);
+};
+}
+
 function writeNamespace(ns, data) {
 var bounded = enforceMaxConversations(data);
 var payload;
@@ -446,6 +468,7 @@ var attempts = 0;
 while (attempts < 5) {
 try {
 storage.setItem(storageKeyForNamespace(ns), payload);
+if (ns === namespace) emit({ type: "changed" });
 return { ok: true, pruned: attempts > 0 };
 } catch (err) {
 if (!isQuotaError(err)) {
@@ -542,7 +565,9 @@ if (!result.ok) return { ok: false, reason: result.reason };
 return { ok: true, conversation: conversation, reused: false };
 }
 
-function updateConversation(id, patch) {
+// options.touch === false keeps updatedAt as it was: pinning or unpinning a
+// chat must not move it into a different date group.
+function updateConversation(id, patch, options) {
 var data = currentData();
 var index = findIndex(data, id);
 if (index === -1) return { ok: false, reason: "not-found" };
@@ -553,11 +578,25 @@ if (typeof patch.archived === "boolean") conversation.archived = patch.archived;
 if (isPlainObject(patch.metadata) && typeof patch.metadata.mode === "string" && patch.metadata.mode.trim()) {
 conversation.metadata = { mode: normalizeModeId(patch.metadata.mode) };
 }
-touch(conversation);
+if (!(options && options.touch === false)) touch(conversation);
 
 var result = writeNamespace(namespace, data);
 if (!result.ok) return { ok: false, reason: result.reason };
 return { ok: true, conversation: conversation };
+}
+
+// Puts a previously deleted conversation back exactly as it was (id,
+// timestamps, pin, messages) - the "Undo" after a delete. Refuses if a
+// conversation with that id already exists.
+function restoreConversation(snapshot) {
+var restored = sanitizeConversation(snapshot);
+if (!restored) return { ok: false, reason: "invalid-conversation" };
+var data = currentData();
+if (findIndex(data, restored.id) !== -1) return { ok: false, reason: "already-exists" };
+data.conversations.push(restored);
+var result = writeNamespace(namespace, data);
+if (!result.ok) return { ok: false, reason: result.reason };
+return { ok: true, conversation: restored };
 }
 
 function renameConversation(id, title) {
@@ -590,6 +629,7 @@ data.activeConversationId = data.conversations.length ? sortForDisplay(data.conv
 
 var result = writeNamespace(namespace, data);
 if (!result.ok) return { ok: false, reason: result.reason };
+emit({ type: "deleted", id: id });
 return { ok: true, activeConversationId: data.activeConversationId };
 }
 
@@ -598,9 +638,11 @@ function clearAllConversations() {
 // signed-in user's own uid namespace - never another namespace), then
 // seeds one fresh empty conversation so the app always has an active
 // conversation to land on afterward.
+var clearedIds = currentData().conversations.map(function (c) { return c.id; });
 var data = { schemaVersion: SCHEMA_VERSION, activeConversationId: null, conversations: [] };
 var result = writeNamespace(namespace, data);
 if (!result.ok) return { ok: false, reason: result.reason };
+emit({ type: "cleared", ids: clearedIds });
 return createConversation();
 }
 
@@ -907,6 +949,8 @@ clearConversationMessages: clearConversationMessages,
 clearAllConversations: clearAllConversations,
 saveMessage: saveMessage,
 replaceMessages: replaceMessages,
+restoreConversation: restoreConversation,
+subscribe: subscribe,
 setMessageFeedback: setMessageFeedback,
 searchConversations: searchConversations,
 exportConversationJson: exportConversationJson,

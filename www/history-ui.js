@@ -109,14 +109,9 @@ function setHistoryStatus(text) {
 if (historyStatusEl) historyStatusEl.textContent = text || "";
 }
 
-// Falls back to the native dialogs only if dialog.js somehow isn't loaded
+// Falls back to the native dialog only if dialog.js somehow isn't loaded
 // (it always is, in this app's own index.html) - keeps this module usable
 // standalone/defensively rather than hard-depending on load order.
-function confirmPrompt(opts) {
-if (window.LinguaHubDialog) return window.LinguaHubDialog.prompt(opts);
-return Promise.resolve(window.prompt(opts.title, opts.defaultValue || ""));
-}
-
 function confirmDialog(opts) {
 if (window.LinguaHubDialog) return window.LinguaHubDialog.confirm(opts);
 return Promise.resolve(window.confirm((opts.title ? opts.title + ": " : "") + (opts.message || "")));
@@ -136,11 +131,29 @@ activeConversationChangedHandler(conversation);
 }
 }
 
+// ---------------------------------------------------------------------
+// Conversation list: groups (Pinned, Today, Yesterday, ...), a "..." menu per
+// chat (Rename / Pin / Delete), inline rename, delete with Undo.
+// ---------------------------------------------------------------------
+
+// Inline rename state; kept outside renderList so a re-render (e.g. when a
+// reply finishes) rebuilds the input with what the user has typed so far
+// instead of throwing it away.
+var renaming = null; // { id, value } | null
+var openMenu = null; // { el, anchor, cleanup } | null
+
+function groupsFor(conversations) {
+if (currentQuery) return [{ key: "results", label: null, items: conversations }];
+if (window.LinguaHubChatGroups) return window.LinguaHubChatGroups.groupConversations(conversations, new Date());
+return [{ key: "all", label: null, items: conversations }];
+}
+
 function renderList() {
 if (!listEl) return;
 var conversations = currentQuery ? store.searchConversations(currentQuery) : store.listConversations();
 var activeId = store.getActiveConversationId();
 
+closeItemMenu();
 listEl.textContent = "";
 
 if (!conversations.length) {
@@ -152,85 +165,248 @@ return;
 }
 if (emptyStateEl) emptyStateEl.hidden = true;
 
-conversations.forEach(function (conv) {
+var focusInput = null;
+groupsFor(conversations).forEach(function (group, groupIndex) {
+var groupEl = document.createElement("div");
+groupEl.className = "conversation-group";
+
+var labelId = "conversation-group-" + groupIndex;
+if (group.label) {
+var labelEl = document.createElement("div");
+labelEl.className = "conversation-group-label";
+labelEl.id = labelId;
+labelEl.textContent = group.label;
+groupEl.appendChild(labelEl);
+}
+
+// Each group is its own list, so list semantics stay valid with the
+// labels in between (a role="list" may only own listitems).
+var itemsEl = document.createElement("div");
+itemsEl.className = "conversation-group-items";
+itemsEl.setAttribute("role", "list");
+if (group.label) itemsEl.setAttribute("aria-labelledby", labelId);
+else itemsEl.setAttribute("aria-label", "Conversations");
+
+group.items.forEach(function (conv) {
+var built = buildConversationItem(conv, activeId);
+itemsEl.appendChild(built.item);
+if (built.input) focusInput = built.input;
+});
+groupEl.appendChild(itemsEl);
+listEl.appendChild(groupEl);
+});
+
+if (focusInput) {
+focusInput.focus();
+if (typeof focusInput.select === "function") focusInput.select();
+}
+}
+
+function buildConversationItem(conv, activeId) {
 var item = document.createElement("div");
 item.className = "conversation-item" + (conv.id === activeId ? " active" : "");
 // role="listitem" (not "option") because this row contains real nested
-// interactive controls (rename/delete buttons) - the ARIA option/listbox
-// pattern disallows focusable descendants of an option, which a real
-// browser accessibility scan (axe-core, Phase 7) flagged as a serious
-// "nested-interactive" violation. aria-current (not aria-selected, which
-// is only valid on option/row/tab/etc.) marks which item is active, and is
-// only present at all on the active item per ARIA best practice.
+// interactive controls - the ARIA option/listbox pattern disallows
+// focusable descendants of an option (axe "nested-interactive", Phase 7).
+// aria-current (not aria-selected) marks the active item.
 item.setAttribute("role", "listitem");
-if (conv.id === activeId) {
-item.setAttribute("aria-current", "true");
-}
+if (conv.id === activeId) item.setAttribute("aria-current", "true");
 item.tabIndex = 0;
+// Long titles are cut with an ellipsis (CSS); the full title is the tooltip.
+item.setAttribute("title", conv.title);
 
 var main = document.createElement("div");
 main.className = "conversation-item-main";
 
+var input = null;
+var isRenaming = renaming && renaming.id === conv.id;
+if (isRenaming) {
+input = buildRenameInput(conv);
+main.appendChild(input);
+} else {
 var titleEl = document.createElement("div");
 titleEl.className = "conversation-item-title";
 titleEl.textContent = conv.title; // textContent only - never innerHTML
-
-var metaEl = document.createElement("div");
-metaEl.className = "conversation-item-meta";
-metaEl.textContent = formatRelativeTime(conv.updatedAt) + (conv.pinned ? " · pinned" : "");
-
 main.appendChild(titleEl);
-main.appendChild(metaEl);
+}
 
 var actions = document.createElement("div");
 actions.className = "conversation-item-actions";
 
-var renameBtn = document.createElement("button");
-renameBtn.type = "button";
-renameBtn.textContent = "✏️";
-renameBtn.setAttribute("aria-label", "Rename conversation: " + conv.title);
-renameBtn.addEventListener("click", function (e) {
+var menuBtn = document.createElement("button");
+menuBtn.type = "button";
+menuBtn.className = "conversation-item-menu-btn";
+menuBtn.setAttribute("aria-label", "Actions for " + conv.title);
+menuBtn.setAttribute("aria-haspopup", "menu");
+menuBtn.setAttribute("aria-expanded", "false");
+menuBtn.textContent = "⋯";
+menuBtn.addEventListener("click", function (e) {
 e.stopPropagation();
-handleRename(conv.id, conv.title);
+if (openMenu && openMenu.anchor === menuBtn) closeItemMenu(true);
+else openItemMenu(conv, menuBtn);
 });
-
-var deleteBtn = document.createElement("button");
-deleteBtn.type = "button";
-deleteBtn.textContent = "🗑️";
-deleteBtn.setAttribute("aria-label", "Delete conversation: " + conv.title);
-deleteBtn.addEventListener("click", function (e) {
-e.stopPropagation();
-handleDelete(conv.id, conv.title);
-});
-
-actions.appendChild(renameBtn);
-actions.appendChild(deleteBtn);
+actions.appendChild(menuBtn);
 
 item.appendChild(main);
-item.appendChild(actions);
+if (!isRenaming) item.appendChild(actions);
 
 function select() { selectConversation(conv.id); }
-item.addEventListener("click", select);
+item.addEventListener("click", function () { if (!isRenaming) select(); });
+item.addEventListener("contextmenu", function (e) {
+if (isRenaming) return;
+e.preventDefault();
+openItemMenu(conv, menuBtn);
+});
 item.addEventListener("keydown", function (e) {
-// Only the row itself (not the nested rename/delete buttons) should
-// select on Enter/Space - keydown bubbles from whichever element is
-// actually focused, and without this check, pressing Enter/Space while
-// a nested button had focus both selected the wrong conversation AND
-// (via preventDefault here) silently swallowed the key event that the
-// focused button's own native "activate on Enter/Space" behavior needed,
-// making Rename/Delete completely unreachable by keyboard (found via
-// real keyboard testing - Phase 7). The click listener above doesn't
-// need the same guard: renameBtn/deleteBtn already stopPropagation() on
-// click, which keydown never triggers.
-if (e.target !== item) return;
+// Only the row itself (not nested controls) selects on Enter/Space -
+// keydown bubbles from whichever element is focused, and handling it here
+// for a nested button would swallow that button's own activation (found
+// via real keyboard testing, Phase 7).
+if (e.target !== item || isRenaming) return;
 if (e.key === "Enter" || e.key === " ") {
 e.preventDefault();
 select();
 }
 });
 
-listEl.appendChild(item);
+return { item: item, input: input };
+}
+
+function buildRenameInput(conv) {
+var input = document.createElement("input");
+input.type = "text";
+input.className = "conversation-rename-input";
+input.value = renaming.value;
+input.maxLength = store.LIMITS.maxTitleChars;
+input.setAttribute("aria-label", "Rename conversation");
+input.addEventListener("input", function () { if (renaming) renaming.value = input.value; });
+input.addEventListener("click", function (e) { e.stopPropagation(); });
+input.addEventListener("keydown", function (e) {
+e.stopPropagation();
+if (e.key === "Enter") { e.preventDefault(); commitRename(conv.id, input.value); }
+else if (e.key === "Escape") { e.preventDefault(); cancelRename(); }
 });
+// Leaving the field saves, like most apps (Escape is the way to abandon).
+input.addEventListener("blur", function () { if (renaming && renaming.id === conv.id) commitRename(conv.id, input.value); });
+return input;
+}
+
+function startRename(conv) {
+renaming = { id: conv.id, value: conv.title };
+renderList();
+}
+
+function cancelRename() {
+renaming = null;
+renderList();
+}
+
+function commitRename(id, value) {
+if (!renaming || renaming.id !== id) return;
+renaming = null; // first: the re-render below removes the focused input
+var next = String(value || "").trim();
+var conversation = store.getConversation(id);
+if (!conversation || !next || next === conversation.title) { renderList(); return; }
+var result = store.renameConversation(id, next);
+if (!result.ok) {
+setHistoryStatus("Could not rename conversation.");
+notify("error", "Could not rename conversation.");
+renderList();
+return;
+}
+renderList();
+if (id === store.getActiveConversationId()) notifyActiveConversationChanged(result.conversation);
+}
+
+function togglePin(conv) {
+// touch:false - pinning must not change the chat's last-updated time (and
+// with it the date group it belongs to once unpinned).
+var result = store.updateConversation(conv.id, { pinned: !conv.pinned }, { touch: false });
+if (!result.ok) {
+notify("error", "Could not " + (conv.pinned ? "unpin" : "pin") + " this chat.");
+return;
+}
+renderList();
+}
+
+function closeItemMenu(returnFocus) {
+if (!openMenu) return;
+var state = openMenu;
+openMenu = null;
+state.cleanup();
+try { document.body.removeChild(state.el); } catch (err) { /* already gone */ }
+if (state.anchor) {
+state.anchor.setAttribute("aria-expanded", "false");
+if (returnFocus && typeof state.anchor.focus === "function") state.anchor.focus();
+}
+}
+
+function openItemMenu(conv, anchor) {
+closeItemMenu();
+var menu = document.createElement("div");
+menu.className = "conversation-menu";
+menu.setAttribute("role", "menu");
+menu.setAttribute("aria-label", "Actions for " + conv.title);
+
+var entries = [
+{ label: "Rename", run: function () { startRename(conv); } },
+{ label: conv.pinned ? "Unpin" : "Pin", run: function () { togglePin(conv); } },
+{ label: "Delete", danger: true, run: function () { handleDelete(conv.id, conv.title); } }
+];
+var buttons = entries.map(function (entry) {
+var btn = document.createElement("button");
+btn.type = "button";
+btn.className = "conversation-menu-item" + (entry.danger ? " conversation-menu-item-danger" : "");
+btn.setAttribute("role", "menuitem");
+btn.textContent = entry.label;
+btn.addEventListener("click", function (e) {
+e.stopPropagation();
+closeItemMenu();
+entry.run();
+});
+menu.appendChild(btn);
+return btn;
+});
+
+// Appended to <body> and positioned against the viewport: the list itself
+// scrolls and clips, which would cut a menu placed inside it.
+document.body.appendChild(menu);
+if (typeof anchor.getBoundingClientRect === "function") {
+var rect = anchor.getBoundingClientRect();
+var width = 168;
+menu.style.left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)) + "px";
+var below = rect.bottom + 4;
+var menuHeight = 3 * 40 + 12;
+menu.style.top = (below + menuHeight > window.innerHeight ? Math.max(8, rect.top - menuHeight - 4) : below) + "px";
+}
+anchor.setAttribute("aria-expanded", "true");
+
+function onDocumentPointer(e) {
+if (!menu.contains(e.target) && e.target !== anchor) closeItemMenu();
+}
+function onKeydown(e) {
+if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeItemMenu(true); return; }
+var index = buttons.indexOf(document.activeElement);
+if (e.key === "ArrowDown") { e.preventDefault(); buttons[(index + 1) % buttons.length].focus(); }
+else if (e.key === "ArrowUp") { e.preventDefault(); buttons[(index - 1 + buttons.length) % buttons.length].focus(); }
+else if (e.key === "Tab") { closeItemMenu(); }
+}
+document.addEventListener("mousedown", onDocumentPointer, true);
+document.addEventListener("keydown", onKeydown, true);
+var listScrollTarget = listEl;
+var onScroll = function () { closeItemMenu(); };
+if (listScrollTarget && typeof listScrollTarget.addEventListener === "function") listScrollTarget.addEventListener("scroll", onScroll);
+
+openMenu = {
+el: menu,
+anchor: anchor,
+cleanup: function () {
+document.removeEventListener("mousedown", onDocumentPointer, true);
+document.removeEventListener("keydown", onKeydown, true);
+if (listScrollTarget && typeof listScrollTarget.removeEventListener === "function") listScrollTarget.removeEventListener("scroll", onScroll);
+}
+};
+if (buttons[0] && typeof buttons[0].focus === "function") buttons[0].focus();
 }
 
 function selectConversation(id) {
@@ -255,26 +431,6 @@ notifyActiveConversationChanged(result.conversation);
 closeMobileDrawer();
 }
 
-async function handleRename(id, currentTitle) {
-var next = await confirmPrompt({
-title: "Rename conversation",
-defaultValue: currentTitle,
-confirmLabel: "Rename",
-maxLength: store.LIMITS.maxTitleChars
-});
-if (next === null) return; // cancelled
-var result = store.renameConversation(id, next);
-if (!result.ok) {
-var failMsg = result.reason === "empty-title" ? "Title cannot be empty." : "Could not rename conversation.";
-setHistoryStatus(failMsg);
-notify("error", failMsg);
-return;
-}
-renderList();
-if (id === store.getActiveConversationId()) notifyActiveConversationChanged(result.conversation);
-notify("success", "Renamed to “" + result.conversation.title + "”.");
-}
-
 async function handleDelete(id, title) {
 var confirmed = await confirmDialog({
 title: "Delete conversation",
@@ -287,6 +443,8 @@ if (!confirmed) return;
 var wasActive = id === store.getActiveConversationId();
 if (wasActive) abortActiveGeneration();
 
+// Kept so Undo can put the chat back exactly as it was.
+var snapshot = JSON.parse(JSON.stringify(store.getConversation(id)));
 var result = store.deleteConversation(id);
 if (!result.ok) {
 setHistoryStatus("Could not delete conversation.");
@@ -298,7 +456,31 @@ if (wasActive) {
 var nextActive = result.activeConversationId ? store.getConversation(result.activeConversationId) : null;
 notifyActiveConversationChanged(nextActive);
 }
-notify("success", "Conversation deleted.");
+showUndoToast(snapshot, wasActive);
+}
+
+var UNDO_WINDOW_MS = 5000;
+
+function showUndoToast(snapshot, wasActive) {
+if (!window.LinguaHubToast) return;
+window.LinguaHubToast.show({
+type: "info",
+message: "Deleted \u201C" + snapshot.title + "\u201D.",
+duration: UNDO_WINDOW_MS,
+action: {
+label: "Undo",
+onClick: function () {
+var restored = store.restoreConversation(snapshot);
+if (!restored.ok) {
+notify("error", "Could not restore the conversation.");
+return;
+}
+if (wasActive) store.setActiveConversationId(snapshot.id);
+renderList();
+if (wasActive) notifyActiveConversationChanged(store.getConversation(snapshot.id));
+}
+}
+});
 }
 
 async function handleClearActiveConversation() {
@@ -587,6 +769,10 @@ store: store,
 onActiveConversationChanged: function (handler) { activeConversationChangedHandler = handler; },
 registerAbortActiveGeneration: function (fn) { abortActiveGenerationFn = fn; },
 refreshList: renderList,
+selectConversation: selectConversation,
+startRename: function (id) { var c = store.getConversation(id); if (c) startRename(c); },
+togglePin: function (id) { var c = store.getConversation(id); if (c) togglePin(c); },
+deleteConversation: handleDelete,
 setUser: function (user) {
 abortActiveGeneration();
 store.setUserId(user && user.uid ? user.uid : null);

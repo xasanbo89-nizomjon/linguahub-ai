@@ -6,7 +6,10 @@
 // timing logic here depends on animation, so disabling motion in CSS never
 // breaks the dismiss timer).
 //
-// API: LinguaHubToast.show({ type: "success"|"error"|"warning"|"info", message, duration })
+// API: LinguaHubToast.show({ type: "success"|"error"|"warning"|"info", message, duration,
+//                            action: { label, onClick } })
+//      action adds one button (e.g. "Undo"); clicking it runs onClick once and
+//      dismisses the toast.
 //      returns a dismiss() function. duration omitted/0 = must be dismissed
 //      manually (used sparingly - e.g. never for routine success toasts).
 
@@ -58,6 +61,20 @@ messageEl.className = "lh-toast-message";
 messageEl.textContent = opts.message || "";
 el.appendChild(messageEl);
 
+var entry = { el: el, timer: null };
+
+if (opts.action && typeof opts.action.onClick === "function" && opts.action.label) {
+var actionBtn = document.createElement("button");
+actionBtn.type = "button";
+actionBtn.className = "lh-toast-action";
+actionBtn.textContent = String(opts.action.label);
+actionBtn.addEventListener("click", function () {
+dismiss(entry);
+opts.action.onClick();
+});
+el.appendChild(actionBtn);
+}
+
 var closeBtn = document.createElement("button");
 closeBtn.type = "button";
 closeBtn.className = "lh-toast-close";
@@ -67,7 +84,6 @@ el.appendChild(closeBtn);
 
 region.appendChild(el);
 
-var entry = { el: el, timer: null };
 closeBtn.addEventListener("click", function () { dismiss(entry); });
 
 var duration = typeof opts.duration === "number" ? opts.duration : DEFAULT_DURATION;

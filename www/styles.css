@@ -519,7 +519,8 @@ opacity: 1;
 min-width: 32px;
 min-height: 32px;
 padding: var(--space-1);
-font-size: var(--font-size-sm);
+font-size: var(--font-size-lg);
+line-height: 1;
 background: transparent;
 color: var(--color-text-muted);
 border: none;
@@ -530,6 +531,97 @@ cursor: pointer;
 .conversation-item-actions button:hover:not(:disabled){
 background: var(--surface);
 color: var(--color-text);
+}
+
+/* Date / Pinned groups: small, muted section labels. */
+.conversation-group + .conversation-group{
+margin-top: var(--space-3);
+}
+
+.conversation-group-label{
+padding: var(--space-1) var(--space-3);
+font-size: var(--font-size-xs);
+font-weight: 600;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+color: var(--text-muted);
+}
+
+.conversation-group-items{
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
+
+/* Hover / keyboard focus / open menu show the "..." button; touch always. */
+.conversation-item:hover .conversation-item-actions,
+.conversation-item:focus-within .conversation-item-actions,
+.conversation-item-menu-btn[aria-expanded="true"]{
+opacity: 1;
+}
+
+@media (hover: none){
+.conversation-item-actions{
+opacity: 1;
+}
+}
+
+.conversation-rename-input{
+width: 100%;
+min-height: 32px;
+padding: var(--space-1) var(--space-2);
+background: var(--surface);
+color: var(--text);
+border: 1px solid var(--accent);
+border-radius: var(--radius-sm);
+box-shadow: 0 0 0 3px var(--accent-soft);
+font-size: var(--font-size-sm);
+font-family: inherit;
+outline: none;
+}
+
+/* The per-chat menu (appended to <body>, positioned in the viewport). */
+.conversation-menu{
+position: fixed;
+z-index: var(--z-dialog);
+width: 168px;
+padding: var(--space-1);
+display: flex;
+flex-direction: column;
+gap: 2px;
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: var(--radius-md);
+box-shadow: var(--shadow-2);
+}
+
+.conversation-menu-item{
+width: 100%;
+min-height: var(--space-10);
+padding: var(--space-2) var(--space-3);
+background: transparent;
+color: var(--text);
+border-radius: var(--radius-sm);
+font-size: var(--font-size-sm);
+font-weight: 500;
+text-align: left;
+}
+
+.conversation-menu-item:hover:not(:disabled),
+.conversation-menu-item:focus-visible{
+background: var(--surface-2);
+color: var(--text);
+transform: none;
+}
+
+.conversation-menu-item-danger{
+color: var(--danger-text);
+}
+
+.conversation-menu-item-danger:hover:not(:disabled),
+.conversation-menu-item-danger:focus-visible{
+background: var(--danger-soft);
+color: var(--danger-text);
 }
 
 .conversation-empty-state{
@@ -2144,6 +2236,23 @@ animation: lh-toast-in var(--duration-base) var(--ease-standard);
 .lh-toast-message{
 flex: 1;
 color: var(--color-text);
+}
+
+.lh-toast-action{
+min-height: 0;
+padding: var(--space-1) var(--space-3);
+background: transparent;
+color: var(--accent-text);
+border: 1px solid var(--accent);
+border-radius: var(--radius-sm);
+font-size: var(--font-size-sm);
+font-weight: 600;
+}
+
+.lh-toast-action:hover:not(:disabled){
+background: var(--accent-soft);
+color: var(--accent-text);
+transform: none;
 }
 
 .lh-toast-close{
