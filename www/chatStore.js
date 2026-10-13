@@ -27,6 +27,9 @@ var DEFAULT_TITLE = "New Chat";
 
 var MESSAGE_ROLES = ["user", "assistant", "system"];
 var MESSAGE_STATUSES = ["complete", "streaming", "stopped", "failed"];
+// Thumbs up/down on an assistant reply. Stored locally with the message only
+// (never sent anywhere, not part of exports).
+var MESSAGE_FEEDBACK = ["up", "down"];
 
 var DEFAULT_MODE_ID = "general";
 
@@ -164,13 +167,15 @@ if (status === "streaming") status = "stopped";
 
 var id = (typeof raw.id === "string" && raw.id.trim()) ? raw.id.trim() : generateId("msg");
 
-return {
+var message = {
 id: id,
 role: raw.role,
 content: content,
 createdAt: safeIsoDate(raw.createdAt) || nowIso(),
 status: status
 };
+if (raw.role === "assistant" && MESSAGE_FEEDBACK.indexOf(raw.feedback) !== -1) message.feedback = raw.feedback;
+return message;
 }
 
 function sanitizeConversation(raw) {
@@ -630,6 +635,30 @@ if (!result.ok) return { ok: false, reason: result.reason };
 return { ok: true, conversation: conversation, message: sanitized };
 }
 
+// Sets (or, with null, clears) the thumbs up/down on one assistant message.
+// Deliberately does not touch updatedAt: rating a reply must not reorder the
+// conversation list.
+function setMessageFeedback(conversationId, messageId, value) {
+var data = currentData();
+var index = findIndex(data, conversationId);
+if (index === -1) return { ok: false, reason: "not-found" };
+if (value !== null && MESSAGE_FEEDBACK.indexOf(value) === -1) return { ok: false, reason: "invalid-feedback" };
+
+var messages = data.conversations[index].messages;
+var message = null;
+for (var i = 0; i < messages.length; i += 1) {
+if (messages[i].id === messageId) { message = messages[i]; break; }
+}
+if (!message || message.role !== "assistant") return { ok: false, reason: "not-found" };
+
+if (value === null) delete message.feedback;
+else message.feedback = value;
+
+var result = writeNamespace(namespace, data);
+if (!result.ok) return { ok: false, reason: result.reason };
+return { ok: true };
+}
+
 function replaceMessages(conversationId, messages) {
 var data = currentData();
 var index = findIndex(data, conversationId);
@@ -844,6 +873,7 @@ clearConversationMessages: clearConversationMessages,
 clearAllConversations: clearAllConversations,
 saveMessage: saveMessage,
 replaceMessages: replaceMessages,
+setMessageFeedback: setMessageFeedback,
 searchConversations: searchConversations,
 exportConversationJson: exportConversationJson,
 exportConversationMarkdown: exportConversationMarkdown,

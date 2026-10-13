@@ -181,54 +181,86 @@ wrapper.insertBefore(label, actionsEl || null);
 label.textContent = text;
 }
 
-function buildMessageActions(role, status) {
+// Inline SVG icons for the message action buttons (static markup built with
+// createElementNS - nothing from model output ever reaches this). Without
+// SVG support (the unit-test fake DOM) buttons fall back to a text label.
+const SVG_NS = "http://www.w3.org/2000/svg";
+const ACTION_ICONS = {
+copy: [["rect", { x: 9, y: 9, width: 11, height: 11, rx: 2 }], ["path", { d: "M5 15V6a2 2 0 0 1 2-2h9" }]],
+edit: [["path", { d: "M4 20h4L19 9l-4-4L4 16v4z" }], ["path", { d: "M13.5 6.5l4 4" }]],
+regenerate: [["path", { d: "M20 11a8 8 0 1 0-2.3 5.7" }], ["path", { d: "M20 5v6h-6" }]],
+speak: [["path", { d: "M4 10v4h4l5 4V6L8 10H4z" }], ["path", { d: "M16 9a4 4 0 0 1 0 6" }], ["path", { d: "M18.5 6.5a8 8 0 0 1 0 11" }]],
+stop: [["rect", { x: 7, y: 7, width: 10, height: 10, rx: 1.5 }]],
+up: [["path", { d: "M7 11v9H4v-9h3z" }], ["path", { d: "M7 11l4-7a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 17.5 20H7" }]],
+down: [["path", { d: "M7 13V4H4v9h3z" }], ["path", { d: "M7 13l4 7a2 2 0 0 0 2-2v-4h5.5a2 2 0 0 0 2-2.3l-1-6A2 2 0 0 0 17.5 4H7" }]]
+};
+
+function buildIcon(name, className) {
+if (typeof document.createElementNS !== "function") return null;
+const svg = document.createElementNS(SVG_NS, "svg");
+svg.setAttribute("viewBox", "0 0 24 24");
+svg.setAttribute("aria-hidden", "true");
+if (className) svg.setAttribute("class", className);
+ACTION_ICONS[name].forEach(([tag, attrs]) => {
+const el = document.createElementNS(SVG_NS, tag);
+Object.keys(attrs).forEach((key) => el.setAttribute(key, String(attrs[key])));
+svg.appendChild(el);
+});
+return svg;
+}
+
+function buildActionButton(action, label, icon, fallbackText) {
+const btn = document.createElement("button");
+btn.type = "button";
+btn.className = "message-action-btn";
+btn.dataset.action = action;
+btn.setAttribute("aria-label", label);
+btn.setAttribute("title", label);
+const svg = buildIcon(icon);
+if (svg) {
+btn.appendChild(svg);
+} else {
+btn.textContent = fallbackText;
+}
+return btn;
+}
+
+function buildMessageActions(role, status, feedback) {
 const actions = document.createElement("div");
 actions.className = "message-actions";
 
-const copyBtn = document.createElement("button");
-copyBtn.type = "button";
-copyBtn.className = "message-action-btn";
-copyBtn.dataset.action = "copy";
-copyBtn.setAttribute("aria-label", role === "user" ? "Copy your message" : "Copy response");
-copyBtn.textContent = "⧉";
-actions.appendChild(copyBtn);
+actions.appendChild(buildActionButton("copy", role === "user" ? "Copy your message" : "Copy response", "copy", "⧉"));
 
 if (role === "user") {
-const editBtn = document.createElement("button");
-editBtn.type = "button";
-editBtn.className = "message-action-btn";
-editBtn.dataset.action = "edit";
-editBtn.setAttribute("aria-label", "Edit message");
-editBtn.textContent = "✏️";
-actions.appendChild(editBtn);
+actions.appendChild(buildActionButton("edit", "Edit message", "edit", "✏️"));
 } else if (status === "failed") {
-const retryBtn = document.createElement("button");
-retryBtn.type = "button";
-retryBtn.className = "message-action-btn";
-retryBtn.dataset.action = "retry";
-retryBtn.setAttribute("aria-label", "Retry this response");
-retryBtn.textContent = "↻ Retry";
+const retryBtn = buildActionButton("retry", "Retry this response", "regenerate", "↻ Retry");
+retryBtn.classList.add("has-label");
+if (retryBtn.querySelector("svg")) {
+const label = document.createElement("span");
+label.textContent = "Retry";
+retryBtn.appendChild(label);
+}
 actions.appendChild(retryBtn);
 } else if (status === "complete" || status === "stopped") {
-// Read aloud (Phase 14) - handled by www/voice.js; hidden via CSS when
-// the user turns voice features off, omitted entirely without TTS.
+// Listen (Phase 14 voice.js) - hidden via CSS when voice features are
+// turned off, omitted entirely without speech synthesis.
 if (typeof window !== "undefined" && window.speechSynthesis) {
-const speakBtn = document.createElement("button");
-speakBtn.type = "button";
-speakBtn.className = "message-action-btn";
-speakBtn.dataset.action = "speak";
-speakBtn.setAttribute("aria-label", "Read aloud");
+const speakBtn = buildActionButton("speak", "Listen", "speak", "Listen");
 speakBtn.setAttribute("aria-pressed", "false");
-speakBtn.textContent = "🔊 Read aloud";
+const stopIcon = buildIcon("stop", "icon-stop");
+if (stopIcon) speakBtn.appendChild(stopIcon);
 actions.appendChild(speakBtn);
 }
-const regenBtn = document.createElement("button");
-regenBtn.type = "button";
-regenBtn.className = "message-action-btn";
-regenBtn.dataset.action = "regenerate";
-regenBtn.setAttribute("aria-label", "Regenerate response");
-regenBtn.textContent = "↻ Regenerate";
-actions.appendChild(regenBtn);
+actions.appendChild(buildActionButton("regenerate", "Regenerate response", "regenerate", "↻ Regenerate"));
+
+// Thumbs up/down: stored locally on the message only (chatStore.js).
+const up = buildActionButton("feedback-up", "Good response", "up", "👍");
+up.setAttribute("aria-pressed", String(feedback === "up"));
+const down = buildActionButton("feedback-down", "Bad response", "down", "👎");
+down.setAttribute("aria-pressed", String(feedback === "down"));
+actions.appendChild(up);
+actions.appendChild(down);
 }
 return actions;
 }
@@ -239,7 +271,7 @@ wrapper.classList.toggle("error", status === "failed");
 setMessageStatusLabel(wrapper, status);
 const old = wrapper.querySelector(".message-actions");
 if (old) old.remove();
-wrapper.appendChild(buildMessageActions(wrapper.dataset.role, status));
+wrapper.appendChild(buildMessageActions(wrapper.dataset.role, status, wrapper.dataset.feedback));
 }
 
 function addMessage(role, text, options) {
@@ -254,6 +286,7 @@ if (status === "failed") wrapper.classList.add("error");
 wrapper.dataset.role = role;
 wrapper.dataset.status = status;
 if (opts.messageId) wrapper.dataset.messageId = opts.messageId;
+wrapper.dataset.feedback = opts.feedback || "";
 
 // LH identity mark (Phase 14) - assistant messages only, never on the
 // user's own messages. Purely decorative brand presence; the message's
@@ -293,7 +326,7 @@ applyRtlIfNeeded(contentEl, text || "");
 }
 
 setMessageStatusLabel(wrapper, status);
-wrapper.appendChild(buildMessageActions(role, status));
+wrapper.appendChild(buildMessageActions(role, status, wrapper.dataset.feedback));
 
 chatBox.appendChild(wrapper);
 if (shouldStick) scrollChatToBottom();
@@ -458,7 +491,7 @@ renderEmptyStateCards();
 // each one gets its final rendering (Markdown for assistant, plain text
 // for user) immediately, with status-appropriate actions.
 conversation.messages.forEach((message) => {
-addMessage(message.role, message.content, { status: message.status, messageId: message.id });
+addMessage(message.role, message.content, { status: message.status, messageId: message.id, feedback: message.feedback });
 });
 scrollChatToBottom();
 }
@@ -655,6 +688,7 @@ async function generateAssistantReply(conversationId, requestMessages, mode, ass
 setBusy(true);
 // Regenerate/retry reuse a bubble that still holds the previous reply's source.
 aiBubble.rawText = "";
+aiBubble.dataset.feedback = "";
 
 let finalStatus = "complete";
 try {
@@ -810,6 +844,21 @@ refreshMessageActions(wrapper, "streaming");
 
 const requestMessages = buildMessagesForRequest(conversationId, userMsg.id, userMsg.content);
 await generateAssistantReply(conversationId, requestMessages, mode, assistantMessageId, wrapper);
+}
+
+// Thumbs up/down on an assistant reply - stored locally with the message,
+// clicking the active one again clears it. Updates the two buttons in place
+// (no re-render, so focus stays on the button).
+function handleFeedback(wrapper, value) {
+const next = wrapper.dataset.feedback === value ? "" : value;
+wrapper.dataset.feedback = next;
+wrapper.querySelectorAll('.message-action-btn[data-action^="feedback-"]').forEach((btn) => {
+btn.setAttribute("aria-pressed", String(btn.dataset.action === "feedback-" + next));
+});
+const conversationId = historyUI.store.getActiveConversationId();
+if (conversationId && wrapper.dataset.messageId && typeof historyUI.store.setMessageFeedback === "function") {
+historyUI.store.setMessageFeedback(conversationId, wrapper.dataset.messageId, next || null);
+}
 }
 
 async function handleCopyMessage(wrapper) {
@@ -971,6 +1020,7 @@ if (action === "copy") handleCopyMessage(wrapper);
 else if (action === "edit") handleEditUserMessage(wrapper);
 else if (action === "regenerate" || action === "retry") handleRegenerateOrRetry(wrapper);
 else if (action === "speak" && window.LinguaHubVoice) window.LinguaHubVoice.toggleReadAloud(wrapper);
+else if (action === "feedback-up" || action === "feedback-down") handleFeedback(wrapper, action === "feedback-up" ? "up" : "down");
 });
 
 // ---------------------------------------------------------------------

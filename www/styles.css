@@ -1318,29 +1318,79 @@ text-decoration: underline;
 word-break: break-all;
 }
 
+/* Actions appear on hover/focus, are always visible on the last message
+   of the conversation, and always visible where there is no hover (touch). */
 .message-actions{
 display: flex;
-gap: var(--space-1);
+gap: 2px;
 opacity: 0;
 transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
 .message:hover .message-actions,
-.message:focus-within .message-actions{
+.message:focus-within .message-actions,
+.chat-box > .message:last-child .message-actions{
 opacity: 1;
 }
 
+@media (hover: none){
+.message-actions{
+opacity: 1;
+}
+}
+
+/* No action row while a reply is still being generated. */
+.message[data-status="streaming"] .message-actions{
+display: none;
+}
+
 .message-action-btn{
-min-width: 30px;
-min-height: 30px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: var(--space-1);
+min-width: 32px;
+min-height: 32px;
 padding: 0 var(--space-2);
 font-size: var(--font-size-xs);
 background: transparent;
-border: 1px solid var(--color-border-hairline);
+border: 1px solid transparent;
 border-radius: var(--radius-sm);
-color: var(--color-text-muted);
+color: var(--text-muted);
 cursor: pointer;
 transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.message-action-btn svg{
+width: 16px;
+height: 16px;
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+flex-shrink: 0;
+}
+
+/* Listen: the stop glyph replaces the speaker while reading aloud. */
+.message-action-btn .icon-stop{
+display: none;
+}
+.message-action-btn.is-speaking > svg:first-child{
+display: none;
+}
+.message-action-btn.is-speaking .icon-stop{
+display: block;
+fill: currentColor;
+}
+
+/* Active thumb: filled, accent-colored (also exposed as aria-pressed). */
+.message-action-btn[aria-pressed="true"][data-action^="feedback-"]{
+color: var(--accent-text);
+background: var(--accent-soft);
+}
+.message-action-btn[aria-pressed="true"][data-action^="feedback-"] svg{
+fill: currentColor;
 }
 
 .message-action-btn:hover:not(:disabled){
@@ -2635,11 +2685,18 @@ color: var(--danger-text);
 
 .message-action-btn[data-action="retry"],
 .message-action-btn[data-action="regenerate"]{
-display: inline-flex;
-align-items: center;
-gap: 4px;
-padding-inline: var(--space-2);
 width: auto;
+}
+.message-action-btn.has-label{
+padding-inline: var(--space-3);
+border-color: var(--danger);
+color: var(--danger-text);
+font-weight: 600;
+}
+.message-action-btn.has-label:hover:not(:disabled){
+background: var(--danger-soft);
+color: var(--danger-text);
+border-color: var(--danger);
 }
 
 /* Typing indicator: a small animated dot trio shown only until the first

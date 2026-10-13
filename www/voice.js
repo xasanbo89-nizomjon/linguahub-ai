@@ -216,8 +216,11 @@ var btn = wrapper.querySelector('.message-action-btn[data-action="speak"]');
 if (!btn) return;
 btn.classList.toggle("is-speaking", active);
 btn.setAttribute("aria-pressed", String(active));
-btn.setAttribute("aria-label", active ? "Stop reading aloud" : "Read aloud");
-btn.textContent = active ? "■ Stop" : "🔊 Read aloud";
+btn.setAttribute("aria-label", active ? "Stop listening" : "Listen");
+btn.setAttribute("title", active ? "Stop listening" : "Listen");
+// Icon buttons (app.js) hold both a speaker and a stop glyph and CSS swaps
+// them on .is-speaking; only the text-fallback button needs its label set.
+if (!btn.querySelector("svg")) btn.textContent = active ? "■ Stop" : "Listen";
 }
 
 function stopSpeaking() {
