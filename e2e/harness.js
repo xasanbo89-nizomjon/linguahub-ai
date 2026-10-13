@@ -127,16 +127,32 @@ async function withApp(fn) {
   }
 }
 
-// Export/import have no buttons in the current UI (removed in Integration
-// Prep - tests/integration-prep.test.js pins that), so e2e drives the same
-// real code paths through window.linguahubHistory (the controller exposed by app.js).
-function exportActiveConversation(page) {
-  return page.evaluate(() => window.linguahubHistory.exportActiveConversation());
+// Export / import live in Settings > Data (the old sidebar buttons are gone).
+// These helpers drive that real UI: open Settings, switch to the Data tab, use
+// the control, then close the dialog again.
+async function openSettingsData(page) {
+  await page.click("#settings-btn");
+  await page.click("#settings-tab-data");
+}
+
+async function closeSettings(page) {
+  await page.keyboard.press("Escape");
+  await page.waitForSelector(".lh-settings-dialog", { state: "detached" }).catch(() => {});
+}
+
+// Clicking "This chat" starts the download; call it inside
+// Promise.all([page.waitForEvent("download"), exportActiveConversation(page)]).
+async function exportActiveConversation(page) {
+  await openSettingsData(page);
+  await page.click('button[aria-label="Export this chat"]');
+  await closeSettings(page);
 }
 
 async function importConversationFile(page, filePath) {
-  const text = require("node:fs").readFileSync(filePath, "utf8");
-  await page.evaluate((json) => window.linguahubHistory.importFile(new File([json], "import.json", { type: "application/json" })), text);
+  await openSettingsData(page);
+  await page.setInputFiles("#settings-import-file", filePath);
+  await page.waitForTimeout(400);
+  await closeSettings(page);
 }
 
-module.exports = { withApp, BACKEND_URL, FRONTEND_URL, exportActiveConversation, importConversationFile };
+module.exports = { withApp, BACKEND_URL, FRONTEND_URL, exportActiveConversation, importConversationFile, openSettingsData, closeSettings };

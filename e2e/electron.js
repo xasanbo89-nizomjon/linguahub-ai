@@ -125,8 +125,12 @@ async function run() {
     // waiting on a browser-style "download" event that Electron doesn't
     // reliably emit for this API even when the download itself works.
     const historyStatusBefore = await window.locator("#history-status").textContent();
-    await window.evaluate(() => window.linguahubHistory.exportActiveConversation()); // no export button in the current UI
+    // Export lives in Settings > Data now.
+    await window.click("#settings-btn");
+    await window.click("#settings-tab-data");
+    await window.click('button[aria-label="Export this chat"]');
     await window.waitForTimeout(500);
+    await window.keyboard.press("Escape");
     const historyStatusAfter = await window.locator("#history-status").textContent();
     results.check(
       "12. Export completes on the app side without error (\"Exported.\" status, real download pipeline engaged after the Phase 9 data-URL fix)",
@@ -158,8 +162,12 @@ async function run() {
     fs.writeFileSync(importFixturePath, JSON.stringify(importFixture));
 
     const convCountBefore = await window.locator(".conversation-item").count();
-    await window.evaluate((json) => window.linguahubHistory.importFile(new File([json], "import.json", { type: "application/json" })), fs.readFileSync(importFixturePath, "utf8"));
+    // Import lives in Settings > Data now (a hidden file input behind "Choose file").
+    await window.click("#settings-btn");
+    await window.click("#settings-tab-data");
+    await window.setInputFiles("#settings-import-file", importFixturePath);
     await window.waitForTimeout(400);
+    await window.keyboard.press("Escape");
     const convCountAfter = await window.locator(".conversation-item").count();
     results.check("12b. Import adds a real conversation from within Electron", convCountAfter === convCountBefore + 1, `before=${convCountBefore} after=${convCountAfter}`);
 
