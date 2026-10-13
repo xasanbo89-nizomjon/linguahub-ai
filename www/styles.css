@@ -1270,6 +1270,14 @@ border: 1px solid var(--color-danger);
 color: var(--color-text);
 }
 
+/* A failed reply renders its own error block (.chat-error, below): the
+   bubble around it must not draw a second box. */
+.message.ai.error .message-content:has(> .chat-error){
+padding: 0;
+background: none;
+border: 0;
+}
+
 .message-avatar{
 margin-top: 2px;
 }
@@ -2707,6 +2715,43 @@ font-weight: 600;
 background: var(--danger-soft);
 color: var(--danger-text);
 border-color: var(--danger);
+}
+
+/* Error inside the chat: plain-language message + Retry, in the reply bubble. */
+.chat-error{
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+gap: var(--space-2) var(--space-3);
+padding: var(--space-3) var(--space-4);
+background: var(--danger-soft);
+border: 1px solid var(--danger);
+border-radius: var(--radius-md);
+color: var(--text);
+white-space: normal;
+}
+
+.chat-error-icon{
+width: 18px;
+height: 18px;
+flex-shrink: 0;
+fill: none;
+stroke: var(--danger-text);
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+
+.chat-error-text{
+flex: 1 1 220px;
+font-size: var(--font-size-sm);
+line-height: var(--line-height-normal);
+}
+
+/* Offline: the composer explains itself instead of the usual disclaimer. */
+.composer-hint.is-offline{
+color: var(--warning);
+font-weight: 600;
 }
 
 /* Typing indicator: a small animated dot trio shown only until the first

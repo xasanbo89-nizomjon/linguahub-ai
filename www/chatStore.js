@@ -245,15 +245,40 @@ status: MESSAGE_STATUSES.indexOf(status) !== -1 ? status : "complete"
 // Auto title
 // ---------------------------------------------------------------------
 
+// A short title from the first user message: code blocks, links and Markdown
+// punctuation removed, the first sentence/line only, trailing punctuation
+// dropped (a question mark is kept), cut at a word boundary (about 48
+// characters, with an ellipsis if it was shortened). The user's own casing is
+// left alone.
+var TITLE_TARGET_CHARS = 48;
+
 function deriveTitleFromMessage(content) {
 if (typeof content !== "string" || !content.trim()) return DEFAULT_TITLE;
-var text = content
+var cleaned = content
 .replace(/```[\s\S]*?```/g, " ")
-.replace(/[`*_#>~]/g, " ")
-.replace(/\s+/g, " ")
-.trim();
-if (!text) return DEFAULT_TITLE;
-return truncateGraphemeSafe(text, LIMITS.autoTitleChars);
+.replace(/https?:\/\/\S+/g, " ")
+.replace(/[`*_#>~]/g, " ");
+var firstLine = "";
+var lines = cleaned.split(/\r?\n/);
+for (var i = 0; i < lines.length; i += 1) {
+var candidate = lines[i].replace(/\s+/g, " ").trim();
+if (candidate) { firstLine = candidate; break; }
+}
+if (!firstLine) return DEFAULT_TITLE;
+
+var sentence = firstLine;
+var match = firstLine.match(/^(.{12,}?[.!?\u061F])(?:\s|$)/);
+if (match) sentence = match[1];
+var title = sentence.replace(/[\s.,;:\u060C\u061B-]+$/, "");
+if (!title) title = firstLine;
+
+if (title.length > TITLE_TARGET_CHARS) {
+var cut = truncateGraphemeSafe(title, TITLE_TARGET_CHARS);
+var lastSpace = cut.lastIndexOf(" ");
+if (lastSpace >= TITLE_TARGET_CHARS / 2) cut = cut.slice(0, lastSpace);
+title = cut.replace(/[\s.,;:!?\u060C\u061B\u061F-]+$/, "") + "\u2026";
+}
+return truncateGraphemeSafe(title, LIMITS.autoTitleChars);
 }
 
 // ---------------------------------------------------------------------
@@ -625,8 +650,17 @@ conversation.messages.push(sanitized);
 conversation.messages[msgIndex] = sanitized;
 }
 
-if (conversation.autoTitle && conversation.title === DEFAULT_TITLE && sanitized.role === "user") {
+if (conversation.autoTitle && sanitized.role === "user") {
+// Title comes from the first user message: set while still "New Chat",
+// and refreshed if that first message is the one being (re)saved - e.g.
+// after editing it - as long as the user never renamed the chat.
+var firstUser = null;
+for (var j = 0; j < conversation.messages.length; j += 1) {
+if (conversation.messages[j].role === "user") { firstUser = conversation.messages[j]; break; }
+}
+if (conversation.title === DEFAULT_TITLE || (firstUser && firstUser.id === sanitized.id)) {
 conversation.title = deriveTitleFromMessage(sanitized.content);
+}
 }
 
 touch(conversation);

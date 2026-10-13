@@ -197,3 +197,131 @@ test("scrolling: the jump control is a labelled round arrow button, hidden by de
   assert.match(html, /id="scroll-to-bottom-btn"[^>]*aria-label="Jump to latest message"[^>]*hidden/);
   assert.match(STYLES_CSS, /\.scroll-to-bottom-btn\{[^}]*width:\s*40px;[^}]*height:\s*40px;[^}]*border-radius:\s*var\(--radius-full\)/);
 });
+
+// ---- Step 6: states ----------------------------------------------------------------
+
+const vm = require("node:vm");
+
+function loadErrorHelpers(offline) {
+  const start = APP_JS.indexOf("const GENERIC_CHAT_ERROR");
+  const end = APP_JS.indexOf("function renderErrorBlock");
+  assert.ok(start > -1 && end > start, "error helpers not found in app.js");
+  const ctx = vm.createContext({ isOffline: () => Boolean(offline) });
+  vm.runInContext(APP_JS.slice(start, end) + "\nthis.api = { describeChatError, isClientFault, storedErrorText, GENERIC_CHAT_ERROR };", ctx);
+  return ctx.api;
+}
+
+test("errors: every failure maps to one friendly sentence - never a raw status or stack text", () => {
+  const e = loadErrorHelpers(false);
+  const cases = [
+    [{ status: 429 }, /too quickly/],
+    [{ status: 401 }, /Sign in again/],
+    [{ status: 403 }, /Sign in again/],
+    [{ status: 400 }, /too long/],
+    [{ status: 413 }, /too long/],
+    [{ status: 500 }, /AI service ran into a problem/],
+    [{ status: 503 }, /AI service ran into a problem/],
+    [{ serverMessage: "❌ The request took too long and was stopped." }, /took too long and was stopped/],
+    [{ serverMessage: "❌ Model is overloaded right now." }, /^Model is overloaded right now\.$/],
+    [{ serverMessage: "x".repeat(300) }, /AI service ran into a problem/],
+    [new TypeError("Failed to fetch"), /Couldn't reach the AI service/],
+    [null, /Couldn't reach the AI service/]
+  ];
+  cases.forEach(([err, pattern]) => {
+    const text = e.describeChatError(err);
+    assert.match(text, pattern);
+    assert.doesNotMatch(text, /Server responded|TypeError|Failed to fetch|undefined|\bat \w+\(/);
+  });
+});
+
+test("errors: offline always reads as an offline message, whatever the underlying error was", () => {
+  const e = loadErrorHelpers(true);
+  assert.match(e.describeChatError({ status: 500 }), /You're offline/);
+  assert.match(e.describeChatError(new TypeError("Failed to fetch")), /You're offline/);
+});
+
+test("errors: the non-streaming fallback is skipped for request-level faults (incl. 429) but not for outages", () => {
+  const e = loadErrorHelpers(false);
+  [400, 401, 403, 404, 413, 422, 429].forEach((status) => assert.equal(e.isClientFault({ status }), true));
+  [500, 502, 503, undefined].forEach((status) => assert.equal(e.isClientFault({ status }), false));
+});
+
+test("errors: legacy stored failures show the generic message instead of the old raw string", () => {
+  const e = loadErrorHelpers(false);
+  assert.equal(e.storedErrorText("❌ Error connecting to AI: Server responded 500"), e.GENERIC_CHAT_ERROR);
+  assert.equal(e.storedErrorText(""), e.GENERIC_CHAT_ERROR);
+  assert.equal(e.storedErrorText("You're offline. Check your connection, then try again."), "You're offline. Check your connection, then try again.");
+});
+
+test("errors: failures render inside the reply bubble with an inline Retry; a reply that already started is never silently re-generated", () => {
+  assert.match(APP_JS, /renderErrorBlock\(aiBubble\.contentEl, friendly, true\)/);
+  assert.match(APP_JS, /retry\.classList\.add\("chat-error-retry", "has-label"\)/);
+  assert.match(APP_JS, /if \(!aiBubble\.rawText && !isClientFault\(err\)\)/);
+  assert.doesNotMatch(APP_JS, /Error connecting to AI: " \+/);
+  assert.match(APP_JS, /renderErrorBlock\(contentEl, storedErrorText\(text\), false\)/);
+});
+
+test("offline: the composer swaps its hint for a warning, restores it when back online, and Send/Enter/Retry are blocked", () => {
+  assert.match(APP_JS, /composerHintEl\.textContent = "You're offline\. Reconnect to send messages\.";/);
+  assert.match(APP_JS, /composerHintEl\.textContent = composerHintDefaultText;/);
+  assert.match(STYLES_CSS, /\.composer-hint\.is-offline\{[^}]*color:\s*var\(--warning\)/);
+  assert.match(APP_JS, /if \(isOffline\(\)\) \{\s*\/\/ Keep the draft/);
+  assert.match(APP_JS, /You're offline\. Reconnect to try again\./);
+});
+
+test("typing indicator: three animated dots are shown until the first token arrives", () => {
+  assert.match(APP_JS, /indicator\.className = "typing-indicator"/);
+  assert.match(STYLES_CSS, /\.typing-indicator \.dot\{[^}]*animation:\s*lh-typing-bounce/);
+});
+
+// ---- Step 6: automatic conversation titles ------------------------------------------
+
+test("titles: a short title is derived from the first message (first sentence, no code/links, word-boundary cut)", () => {
+  const T = ChatStoreModule.deriveTitleFromMessage;
+  assert.equal(T("How do I center a div in CSS?"), "How do I center a div in CSS?");
+  assert.equal(T("```js\nconst a = 1\n``` what does this do"), "what does this do");
+  assert.equal(T("https://example.com/very/long please summarize it for me"), "please summarize it for me");
+  assert.equal(T("Translate the following text to English:\n\nمرحبا كيف حالك"), "Translate the following text to English");
+  const long = T("Hello! Can you help me practice English conversation about travel and food please?");
+  assert.ok(long.length <= 49, long);
+  assert.match(long, /…$/);
+  assert.doesNotMatch(long, /\s…$/);
+  assert.equal(T("   "), ChatStoreModule.DEFAULT_TITLE);
+  assert.equal(T(""), ChatStoreModule.DEFAULT_TITLE);
+});
+
+test("titles: Arabic is cut at a word boundary too", () => {
+  const original = "اشرح لي الفرق بين الماضي البسيط والماضي المستمر في اللغة الإنجليزية مع أمثلة كثيرة";
+  const t = ChatStoreModule.deriveTitleFromMessage(original);
+  assert.match(t, /…$/);
+  assert.ok(t.length <= 49);
+  const kept = t.slice(0, -1);
+  assert.ok(original.startsWith(kept), "the title is a prefix of the message");
+  assert.equal(original.charAt(kept.length), " ", "the cut falls on a word boundary, not mid-word");
+});
+
+test("titles: editing the FIRST message re-derives an automatic title; a manual rename is never overwritten", () => {
+  const store = makeStore();
+  const conv = store.createConversation().conversation;
+  store.saveMessage(conv.id, ChatStoreModule.createMessage("user", "first draft of the question"));
+  assert.equal(store.getConversation(conv.id).title, "first draft of the question");
+  store.replaceMessages(conv.id, []);
+  store.saveMessage(conv.id, ChatStoreModule.createMessage("user", "edited question about verbs"));
+  assert.equal(store.getConversation(conv.id).title, "edited question about verbs");
+
+  const second = store.createConversation().conversation;
+  store.saveMessage(second.id, ChatStoreModule.createMessage("user", "original"));
+  store.renameConversation(second.id, "Mine");
+  store.replaceMessages(second.id, []);
+  store.saveMessage(second.id, ChatStoreModule.createMessage("user", "rewritten"));
+  assert.equal(store.getConversation(second.id).title, "Mine");
+});
+
+test("titles: later user messages never change the title", () => {
+  const store = makeStore();
+  const conv = store.createConversation().conversation;
+  store.saveMessage(conv.id, ChatStoreModule.createMessage("user", "the first one"));
+  store.saveMessage(conv.id, ChatStoreModule.createMessage("assistant", "a reply"));
+  store.saveMessage(conv.id, ChatStoreModule.createMessage("user", "a second question entirely"));
+  assert.equal(store.getConversation(conv.id).title, "the first one");
+});

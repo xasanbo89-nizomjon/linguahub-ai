@@ -12,6 +12,7 @@ const statusEl = document.getElementById("status");
 const statusDotEl = document.getElementById("status-dot");
 const statusBarEl = statusEl.parentElement;
 let isBusy = false;
+let composerHintDefaultText = null;
 const modeSelect = document.getElementById("mode-select");
 const conversationTitleEl = document.getElementById("conversation-title");
 const emptyStateEl = document.getElementById("empty-state");
@@ -200,6 +201,68 @@ wrapper.insertBefore(label, actionsEl || null);
 label.textContent = text;
 }
 
+// ---------------------------------------------------------------------
+// Friendly chat errors. Raw errors ("Server responded 429", stack-ish
+// messages) never reach the user; every failure maps to one plain sentence,
+// shown inside the reply bubble with a Retry button.
+// ---------------------------------------------------------------------
+
+const GENERIC_CHAT_ERROR = "Something went wrong with this response. Please try again.";
+
+function describeChatError(err) {
+const status = err && err.status;
+if (isOffline()) return "You're offline. Check your connection, then try again.";
+if (status === 429) return "You're sending messages too quickly. Wait a moment, then try again.";
+if (status === 401 || status === 403) return "Your session isn't authorized for this request. Sign in again, then try again.";
+if (status === 400 || status === 413 || status === 422) return "That message couldn't be processed - it may be too long. Shorten it and try again.";
+if (status >= 500) return "The AI service ran into a problem. Please try again in a moment.";
+const server = err && err.serverMessage ? String(err.serverMessage) : "";
+if (/too long|timed? ?out/i.test(server)) return "The reply took too long and was stopped. Please try again.";
+if (server) {
+const clean = server.replace(/^[^\p{L}\p{N}]+/u, "").trim();
+return clean && clean.length <= 140 ? clean : "The AI service ran into a problem. Please try again in a moment.";
+}
+return "Couldn't reach the AI service. Check your connection and try again.";
+}
+
+// The same request would fail the same way, so the non-streaming fallback is
+// skipped (for a 429 it would also just spend more of the rate limit).
+function isClientFault(err) {
+const status = err && err.status;
+return status === 400 || status === 401 || status === 403 || status === 404 || status === 413 || status === 422 || status === 429;
+}
+
+// Failed replies saved before this phase hold a raw "Error connecting to AI"
+// string; show those as the generic message instead.
+function storedErrorText(text) {
+if (!text || /^\W*Error connecting to AI/i.test(text)) return GENERIC_CHAT_ERROR;
+return text.replace(/^\u274C\s*/, "");
+}
+
+function renderErrorBlock(contentEl, text, live) {
+contentEl.textContent = "";
+contentEl.removeAttribute("dir");
+const box = document.createElement("div");
+box.className = "chat-error";
+if (live) box.setAttribute("role", "alert");
+const icon = buildIcon("warn", "chat-error-icon");
+if (icon) box.appendChild(icon);
+const message = document.createElement("span");
+message.className = "chat-error-text";
+message.textContent = text;
+applyRtlIfNeeded(message, text);
+box.appendChild(message);
+const retry = buildActionButton("retry", "Retry this response", "regenerate", "↻ Retry");
+retry.classList.add("chat-error-retry", "has-label");
+if (retry.querySelector("svg")) {
+const label = document.createElement("span");
+label.textContent = "Retry";
+retry.appendChild(label);
+}
+box.appendChild(retry);
+contentEl.appendChild(box);
+}
+
 // Inline SVG icons for the message action buttons (static markup built with
 // createElementNS - nothing from model output ever reaches this). Without
 // SVG support (the unit-test fake DOM) buttons fall back to a text label.
@@ -210,6 +273,7 @@ edit: [["path", { d: "M4 20h4L19 9l-4-4L4 16v4z" }], ["path", { d: "M13.5 6.5l4 
 regenerate: [["path", { d: "M20 11a8 8 0 1 0-2.3 5.7" }], ["path", { d: "M20 5v6h-6" }]],
 speak: [["path", { d: "M4 10v4h4l5 4V6L8 10H4z" }], ["path", { d: "M16 9a4 4 0 0 1 0 6" }], ["path", { d: "M18.5 6.5a8 8 0 0 1 0 11" }]],
 stop: [["rect", { x: 7, y: 7, width: 10, height: 10, rx: 1.5 }]],
+warn: [["path", { d: "M12 3l10 18H2L12 3z" }], ["path", { d: "M12 10v5" }], ["path", { d: "M12 18v.5" }]],
 up: [["path", { d: "M7 11v9H4v-9h3z" }], ["path", { d: "M7 11l4-7a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 17.5 20H7" }]],
 down: [["path", { d: "M7 13V4H4v9h3z" }], ["path", { d: "M7 13l4 7a2 2 0 0 0 2-2v-4h5.5a2 2 0 0 0 2-2.3l-1-6A2 2 0 0 0 17.5 4H7" }]]
 };
@@ -253,14 +317,7 @@ actions.appendChild(buildActionButton("copy", role === "user" ? "Copy your messa
 if (role === "user") {
 actions.appendChild(buildActionButton("edit", "Edit message", "edit", "✏️"));
 } else if (status === "failed") {
-const retryBtn = buildActionButton("retry", "Retry this response", "regenerate", "↻ Retry");
-retryBtn.classList.add("has-label");
-if (retryBtn.querySelector("svg")) {
-const label = document.createElement("span");
-label.textContent = "Retry";
-retryBtn.appendChild(label);
-}
-actions.appendChild(retryBtn);
+// Retry is rendered inside the error block itself (renderErrorBlock).
 } else if (status === "complete" || status === "stopped") {
 // Listen (Phase 14 voice.js) - hidden via CSS when voice features are
 // turned off, omitted entirely without speech synthesis.
@@ -335,6 +392,8 @@ applyRtlIfNeeded(contentEl, text);
 } else {
 showTypingIndicator(contentEl);
 }
+} else if (role === "assistant" && status === "failed") {
+renderErrorBlock(contentEl, storedErrorText(text), false);
 } else if (role === "assistant" && status !== "failed" && text) {
 renderAssistantContentFinal(contentEl, text);
 } else if (role === "assistant" && status === "stopped" && !text) {
@@ -363,6 +422,19 @@ if (statusBarEl && typeof statusBarEl.setAttribute === "function") {
 statusBarEl.setAttribute("data-state", offline ? "offline" : (isBusy ? "busy" : "online"));
 }
 if (statusDotEl) statusDotEl.classList.toggle("active", isBusy && !offline);
+if (composerHintEl && composerHintEl.classList) {
+// While offline the composer explains why Send is disabled, in place of
+// the usual AI-accuracy disclaimer, and restores it when back online.
+if (offline) {
+if (composerHintDefaultText === null) composerHintDefaultText = composerHintEl.textContent;
+composerHintEl.textContent = "You're offline. Reconnect to send messages.";
+composerHintEl.classList.add("is-offline");
+} else if (composerHintDefaultText !== null) {
+composerHintEl.textContent = composerHintDefaultText;
+composerHintEl.classList.remove("is-offline");
+composerHintDefaultText = null;
+}
+}
 if (typeof sendBtn !== "undefined") updateComposerState();
 }
 
@@ -657,7 +729,9 @@ signal: activeChatAbortController.signal
 });
 
 if (!response.ok || !response.body) {
-throw new Error(`Server responded ${response.status}`);
+const httpError = new Error(`Server responded ${response.status}`);
+httpError.status = response.status;
+throw httpError;
 }
 
 const reader = response.body.getReader();
@@ -683,7 +757,9 @@ if (payload === "[DONE]") continue;
 
 const parsed = JSON.parse(payload);
 if (parsed.error) {
-throw new Error(parsed.error);
+const streamError = new Error(parsed.error);
+streamError.serverMessage = parsed.error;
+throw streamError;
 }
 if (parsed.delta) {
 if (!receivedAny) {
@@ -723,7 +799,9 @@ if (!response.ok) {
 // but as a thrown error so the caller's failure handling (status:
 // "failed", Retry button) actually triggers instead of this looking
 // like a successful reply.
-throw new Error(data.reply || `Server responded ${response.status}`);
+const fallbackError = new Error(data.reply || `Server responded ${response.status}`);
+fallbackError.status = response.status;
+throw fallbackError;
 }
 const replyText = data.reply || "❌ Empty response from server.";
 aiBubble.contentEl.textContent = replyText;
@@ -781,11 +859,22 @@ if (err.name === "AbortError") {
 // this is never reported as an error toast.
 finalStatus = "stopped";
 } else {
+let failure = err;
+// The non-streaming fallback is only worth trying when nothing has been
+// received yet and the request itself was not at fault (see isClientFault).
+if (!aiBubble.rawText && !isClientFault(err)) {
 try {
 await fallbackChat(requestMessages, mode, aiBubble);
+failure = null;
 } catch (fallbackErr) {
+failure = fallbackErr.status ? fallbackErr : err;
+}
+}
+if (failure) {
+const friendly = describeChatError(failure);
 aiBubble.classList.add("error");
-aiBubble.contentEl.textContent = "❌ Error connecting to AI: " + fallbackErr.message;
+aiBubble.rawText = friendly;
+renderErrorBlock(aiBubble.contentEl, friendly, true);
 finalStatus = "failed";
 }
 }
@@ -910,6 +999,11 @@ async function handleRegenerateOrRetry(wrapper) {
 const conversationId = historyUI.store.getActiveConversationId();
 const assistantMessageId = wrapper.dataset.messageId;
 if (!conversationId || !assistantMessageId) return;
+
+if (isOffline()) {
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: "You're offline. Reconnect to try again." });
+return;
+}
 
 const userMsg = findUserPromptForAssistant(conversationId, assistantMessageId);
 if (!userMsg) {
