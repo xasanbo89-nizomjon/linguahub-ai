@@ -456,7 +456,7 @@ test("account UI: app.js starts/stops sync with the signed-in user, offers the g
   assert.match(app, /chatSync\.start\(user\);/);
   assert.match(app, /chatSync\.setGenerating\(conversationId\)/);
   assert.match(app, /chatSync\.setGenerating\(null\)/);
-  assert.match(app, /confirmLabel: "Yes, upload",\s*cancelLabel: "No"/);
+  assert.match(app, /LinguaHubChatSync\.uploadOffer\(/); // the wording (Yes, upload / No) lives in chat-sync.js, tested in guest-upload.test.js
   assert.doesNotMatch(app, /localStorage\s*[.[]\s*(setItem|getItem)/, "app.js still never touches localStorage directly");
 });
 
