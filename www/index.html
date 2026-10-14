@@ -183,6 +183,11 @@
 
 <div id="auth-status" aria-live="polite"></div>
 
+<!-- Mode workspaces (www/workspace.js): Translate, Speak, Grammar and
+     Vocabulary replace the chat and the composer while their mode is
+     selected. The screens build themselves into here on first use. -->
+<div id="workspace-root" class="workspace-root" hidden></div>
+
 <div class="chat-scroll-wrapper">
 <div class="chat-box" id="chat-box"></div>
 <div id="empty-state" class="empty-state" hidden>
@@ -299,6 +304,12 @@ Send
 <script src="vocab-store.js"></script>
 <script src="learning-memory.js"></script>
 <script src="tutor-dashboard.js"></script>
+<script src="ai-json.js"></script>
+<script src="grammar-diff.js"></script>
+<script src="workspace.js"></script>
+<script src="ws-translate.js"></script>
+<script src="ws-grammar.js"></script>
+<script src="ws-speak.js"></script>
 <script src="home-ui.js"></script>
 <script src="chat-search.js"></script>
 <script src="search-palette.js"></script>
