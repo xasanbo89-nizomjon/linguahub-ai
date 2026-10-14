@@ -106,19 +106,33 @@ var LinguaHubAI = (function () {
   }
 
   // The message formats the backend prompts (lib/aiModes.js) expect.
+  // The level chosen in onboarding (kept with the learning settings); "" when unknown.
+  function learnerLevel() {
+    try {
+      var memory = window.LinguaHubLearningMemory;
+      var level = memory && memory.get ? memory.get().level : "";
+      return level === "beginner" || level === "intermediate" || level === "advanced" ? level : "";
+    } catch (err) {
+      return "";
+    }
+  }
+
   var prompts = {
     translate: function (source, target, text) {
       return "Source language: " + (source === "auto" ? "detect it automatically" : nameOf(source)) +
         "\nTarget language: " + nameOf(target) + "\n\nText to translate:\n" + text;
     },
     grammar: function (pair, text) {
-      return "Writing language: " + nameOf(pair.to) + "\nLearner's native language: " + nameOf(pair.from) + "\n\nText:\n" + text;
+      var level = learnerLevel();
+      return "Writing language: " + nameOf(pair.to) + "\nLearner's native language: " + nameOf(pair.from) + (level ? "\nLearner level: " + level : "") + "\n\nText:\n" + text;
     },
     speak: function (pair, utterance) {
-      return "[Practice language: " + nameOf(pair.to) + " | Native language: " + nameOf(pair.from) + "]\n" + utterance;
+      var level = learnerLevel();
+      return "[Practice language: " + nameOf(pair.to) + " | Native language: " + nameOf(pair.from) + (level ? " | Level: " + level : "") + "]\n" + utterance;
     },
     vocabulary: function (pair, topic) {
-      return "Practice language: " + nameOf(pair.to) + "\nLearner's native language: " + nameOf(pair.from) + "\nTopic: " + topic;
+      var level = learnerLevel();
+      return "Practice language: " + nameOf(pair.to) + "\nLearner's native language: " + nameOf(pair.from) + (level ? "\nLearner level: " + level : "") + "\nTopic: " + topic;
     },
     lookup: function (pair, word, sentence) {
       return "Language A (the learner's native language): " + nameOf(pair.from) +

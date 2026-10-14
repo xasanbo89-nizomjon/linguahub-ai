@@ -596,6 +596,11 @@ if (window.LinguaHubWordLookup && window.linguahubPair) {
 window.LinguaHubWordLookup.init({ chatBox: chatBox, pair: window.linguahubPair, vocab: window.linguahubVocab });
 }
 
+// First launch only: native language, language to learn, level - www/onboarding.js.
+if (window.LinguaHubOnboarding && window.linguahubPair) {
+window.LinguaHubOnboarding.init({ pair: window.linguahubPair });
+}
+
 if (window.LinguaHubHome && window.linguahubPair) {
 window.LinguaHubHome.init({
 container: document.getElementById("home-root"),
