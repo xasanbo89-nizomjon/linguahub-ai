@@ -16,7 +16,8 @@
     "appId": "com.xasan.ai",
     "productName": "LinguaHub AI",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/icon.ico"
     },
     "files": [
       "main.js",
@@ -25,6 +26,8 @@
       "www/**/*",
       "lib/**/*",
       "middleware/**/*",
+      "assets/icon.ico",
+      "assets/icon.png",
       "package.json",
       "node_modules/**/*",
       "!node_modules/@capacitor/**",
@@ -36,7 +39,16 @@
       "!node_modules/playwright-core/**",
       "!node_modules/axe-core/**",
       "!node_modules/jsdom/**"
-    ]
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "mac": {
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "icon": "assets/icons"
+    }
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "8.3.0",

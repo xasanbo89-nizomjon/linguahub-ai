@@ -297,50 +297,45 @@ padding: 18px var(--space-4) var(--space-3);
 }
 
 /* ---------------------------------------------------------------------
-   LH mark (Phase 14) - the one, official, reusable brand mark. Emerald
-   background and bold white "LH" - never a robot/mascot/cartoon character
-   anywhere in this product. Used identically for the sidebar brand, the
-   header assistant identity, empty-state icon, and every assistant
-   message avatar - one logo system, sized via modifier classes only. */
-.lh-mark{
-display: flex;
-align-items: center;
-justify-content: center;
+   The logo (www/logo.js, www/logo.svg): a speech bubble with letters from
+   three scripts. Bubble = --accent, letters = --on-accent, so it follows
+   the theme. One logo system, sized via modifier classes only: sidebar,
+   title bar, home, assistant message avatars. */
+.lh-logo{
+display: block;
 flex-shrink: 0;
-border-radius: var(--radius-sm);
-background: var(--color-accent);
-color: var(--on-accent);
-font-family: var(--font-family);
-font-weight: 700;
-line-height: 1;
-letter-spacing: -0.02em;
-box-shadow: none;
 }
 
-.lh-mark-sm{
-width: 26px;
-height: 26px;
-font-size: var(--font-size-xs);
-border-radius: var(--radius-sm);
+.lh-logo-bubble{
+fill: var(--accent);
 }
 
-.lh-mark-md{
+.lh-logo-glyphs{
+fill: none;
+stroke: var(--on-accent);
+stroke-width: 7;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+
+.lh-logo-sm{
 width: 28px;
 height: 28px;
-font-size: var(--font-size-xs);
 }
 
-.lh-mark-lg{
-width: 44px;
-height: 44px;
-font-size: var(--font-size-sm);
-border-radius: var(--radius-md);
-box-shadow: var(--shadow-xs);
+.lh-logo-md{
+width: 32px;
+height: 32px;
+}
+
+.lh-logo-lg{
+width: 56px;
+height: 56px;
 }
 
 /* Inside the desktop app the title bar already shows the logo and name, so
    the sidebar's own brand row keeps only the collapse button. */
-html[data-desktop] .sidebar-brand .lh-mark,
+html[data-desktop] .sidebar-brand .lh-logo,
 html[data-desktop] .sidebar-brand .sidebar-brand-name{
 display: none;
 }
@@ -2590,18 +2585,7 @@ font-size: var(--font-size-2xl);
 }
 
 .empty-state-icon{
-display: flex;
-align-items: center;
-justify-content: center;
-width: 44px;
-height: 44px;
 margin: 0 auto;
-border-radius: var(--radius-md);
-background: var(--color-surface-elevated);
-border: 1px solid var(--color-border);
-color: var(--color-text);
-font-size: var(--font-size-sm);
-line-height: 1;
 }
 
 .empty-state-title{

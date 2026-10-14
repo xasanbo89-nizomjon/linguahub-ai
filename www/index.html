@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <title>LinguaHub AI</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <!-- Blocking, non-module, same-origin script - runs before first paint so
      the correct theme applies with no flash, and needs no inline-script
@@ -33,7 +36,7 @@
      the three buttons are no-drag and call the main process over IPC. -->
 <div class="titlebar" id="titlebar">
 <div class="titlebar-brand">
-<span class="lh-mark lh-mark-sm" aria-hidden="true">LH</span>
+<svg class="lh-logo lh-logo-sm" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><path class="lh-logo-bubble" d="M36 10H92A28 28 0 0 1 120 38V66A28 28 0 0 1 92 94H58L34 116V94H36A28 28 0 0 1 8 66V38A28 28 0 0 1 36 10Z"/><g class="lh-logo-glyphs"><path d="M22 70L34 34L46 70M27 57H41"/><path d="M74 70V34H64C55 34 55 52 64 52H74M64 52L56 70"/><path d="M101 36C95 31 86 34 88 41C89 45 94 47 97 48C89 47 83 50 83 58C83 67 93 71 102 65"/></g></svg>
 <span class="titlebar-title">LinguaHub</span>
 </div>
 <div class="titlebar-controls">
@@ -57,7 +60,7 @@
 <aside class="sidebar" id="sidebar" aria-label="Conversation history">
 
 <div class="sidebar-brand">
-<span class="lh-mark lh-mark-sm" aria-hidden="true">LH</span>
+<svg class="lh-logo lh-logo-sm" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><path class="lh-logo-bubble" d="M36 10H92A28 28 0 0 1 120 38V66A28 28 0 0 1 92 94H58L34 116V94H36A28 28 0 0 1 8 66V38A28 28 0 0 1 36 10Z"/><g class="lh-logo-glyphs"><path d="M22 70L34 34L46 70M27 57H41"/><path d="M74 70V34H64C55 34 55 52 64 52H74M64 52L56 70"/><path d="M101 36C95 31 86 34 88 41C89 45 94 47 97 48C89 47 83 50 83 58C83 67 93 71 102 65"/></g></svg>
 <span class="sidebar-brand-name">LinguaHub<span class="sidebar-brand-accent">AI</span></span>
 <button id="sidebar-collapse-btn" type="button" class="sidebar-collapse-btn" aria-label="Collapse sidebar" aria-expanded="true">⟨</button>
 </div>
@@ -195,7 +198,7 @@
      keeps the plain hero below with its own prompt suggestions. -->
 <div id="home-root" class="home-root"></div>
 <div id="hero-default" class="empty-state-default">
-<div class="lh-mark lh-mark-lg empty-state-icon" aria-hidden="true">LH</div>
+<svg class="lh-logo lh-logo-lg empty-state-icon" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><path class="lh-logo-bubble" d="M36 10H92A28 28 0 0 1 120 38V66A28 28 0 0 1 92 94H58L34 116V94H36A28 28 0 0 1 8 66V38A28 28 0 0 1 36 10Z"/><g class="lh-logo-glyphs"><path d="M22 70L34 34L46 70M27 57H41"/><path d="M74 70V34H64C55 34 55 52 64 52H74M64 52L56 70"/><path d="M101 36C95 31 86 34 88 41C89 45 94 47 97 48C89 47 83 50 83 58C83 67 93 71 102 65"/></g></svg>
 <h2 class="empty-state-title">What would you like to learn today?</h2>
 <p class="empty-state-subtitle">LinguaHub AI helps you learn languages, improve writing, translate, and study smarter.</p>
 <div class="empty-state-cards" id="empty-state-cards"></div>
@@ -297,6 +300,7 @@ Send
 <script src="markdown.js"></script>
 <script src="mode-ui.js"></script>
 <script src="chat-menu.js"></script>
+<script src="logo.js"></script>
 <script src="speech-input.js"></script>
 <script src="voice.js"></script>
 <script src="learning-stats.js"></script>

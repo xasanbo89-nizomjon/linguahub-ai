@@ -6,6 +6,8 @@ const { isThemeMode, readThemePref, writeThemePref, backgroundFor } = require(".
 
 const IS_MAC = process.platform === "darwin";
 const indexFileUrl = pathToFileURL(path.join(__dirname, "www", "index.html")).href;
+// The window / taskbar icon (generated from www/logo.svg by scripts/build-icons.js).
+const iconPath = path.join(__dirname, "assets", process.platform === "win32" ? "icon.ico" : "icon.png");
 
 // Theme: the renderer (www/theme.js) owns the choice and reports it over
 // "window:set-theme"; main mirrors it into userData/theme.json (see
@@ -84,6 +86,7 @@ function createWindow() {
     minWidth: 360,
     minHeight: 600,
     backgroundColor: windowBackground(),
+    icon: iconPath,
     // Frameless on Windows/Linux (custom title bar with its own controls);
     // macOS keeps its native traffic lights over the hidden title bar.
     ...(IS_MAC ? { titleBarStyle: "hiddenInset" } : { frame: false }),

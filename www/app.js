@@ -372,10 +372,7 @@ if (cssType === "ai") {
 const avatar = document.createElement("div");
 avatar.className = "message-avatar";
 avatar.setAttribute("aria-hidden", "true");
-const mark = document.createElement("span");
-mark.className = "lh-mark lh-mark-sm";
-mark.textContent = "LH";
-avatar.appendChild(mark);
+if (window.LinguaHubLogo) avatar.appendChild(window.LinguaHubLogo.create("lh-logo lh-logo-sm"));
 wrapper.appendChild(avatar);
 }
 

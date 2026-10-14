@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="LinguaHub">
+  <title>LinguaHub</title>
+  <!-- A speech bubble holding letters from three scripts: Latin A, Cyrillic Я, Arabic ع. -->
+  <path fill="#C2562F" d="M36 10H92A28 28 0 0 1 120 38V66A28 28 0 0 1 92 94H58L34 116V94H36A28 28 0 0 1 8 66V38A28 28 0 0 1 36 10Z"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 70L34 34L46 70M27 57H41"/>
+    <path d="M74 70V34H64C55 34 55 52 64 52H74M64 52L56 70"/>
+    <path d="M101 36C95 31 86 34 88 41C89 45 94 47 97 48C89 47 83 50 83 58C83 67 93 71 102 65"/>
+  </g>
+</svg>
