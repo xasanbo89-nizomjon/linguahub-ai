@@ -655,6 +655,18 @@ onRemoteChange: handleRemoteChats
 : null;
 window.linguahubSync = chatSync;
 
+// Saved words follow the account too (www/vocab-sync.js): same Firestore
+// collection and rules as chats, own document kind.
+const vocabSync = window.LinguaHubVocabSync && window.linguahubVocab
+? window.LinguaHubVocabSync.create({
+store: window.linguahubVocab,
+storage: window.localStorage,
+remote: window.LinguaHubVocabSync.createFirestoreRemote(firestoreOrNull),
+isOnline: () => !isOffline()
+})
+: null;
+window.linguahubVocabSync = vocabSync;
+
 const syncStatusEl = document.getElementById("sync-status");
 const syncStatusTextEl = document.getElementById("sync-status-text");
 function renderSyncStatus(status) {
@@ -664,8 +676,8 @@ if (syncStatusTextEl) syncStatusTextEl.textContent = window.LinguaHubChatSync.st
 if (chatSync) {
 chatSync.onStatusChange(renderSyncStatus);
 if (typeof window.addEventListener === "function") {
-window.addEventListener("online", () => chatSync.connectivityChanged());
-window.addEventListener("offline", () => chatSync.connectivityChanged());
+window.addEventListener("online", () => { chatSync.connectivityChanged(); if (vocabSync) vocabSync.connectivityChanged(); });
+window.addEventListener("offline", () => { chatSync.connectivityChanged(); if (vocabSync) vocabSync.connectivityChanged(); });
 }
 }
 
@@ -695,6 +707,10 @@ if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "success", message
 }
 
 async function handleSyncUser(user) {
+if (vocabSync) {
+if (user) vocabSync.start(user);
+else vocabSync.stop();
+}
 if (!chatSync) return;
 if (!user) {
 chatSync.stop();

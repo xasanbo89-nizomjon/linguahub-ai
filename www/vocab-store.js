@@ -296,6 +296,23 @@ var LinguaHubVocab = (function () {
         words.splice(index, 1);
         return { ok: write(words) };
       },
+      // undo of a delete: the same word (same id, same schedule), newer than any tombstone
+      restore: function (raw) {
+        var word = sanitizeWord(raw, clock());
+        if (!word) return { ok: false, reason: "invalid-word" };
+        word.updatedAt = clock();
+        var words = read();
+        var index = find(words, word.id);
+        if (index === -1) {
+          if (words.length >= LIMITS.maxWords) return { ok: false, reason: "word-limit-reached" };
+          words.push(word);
+        } else words[index] = word;
+        if (!write(words)) return { ok: false, reason: "storage-error" };
+        emit({ type: "changed", id: word.id });
+        return { ok: true, word: word };
+      },
+      // sync applied changes from another device: tell the screens to redraw
+      notifyRemoteChange: function () { emit({ type: "remote" }); },
       subscribe: function (cb) {
         listeners.push(cb);
         return function () { listeners = listeners.filter(function (x) { return x !== cb; }); };
