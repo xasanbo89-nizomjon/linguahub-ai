@@ -122,7 +122,7 @@ test("existing modes (general/codex/cyber/deep-thinking) are completely unchange
   assert.equal(aiModes.getModeConfig("cyber").temperature, 0.4);
   assert.equal(aiModes.getModeConfig("deep-thinking").model, "gpt-4.1");
   assert.equal(aiModes.getModeConfig("deep-thinking").maxOutputTokens, 2048);
-  assert.equal(aiModes.MODE_IDS.length, 20); // 8 original + 7 tutor modes + 5 learning-workspace modes
+  assert.equal(aiModes.MODE_IDS.length, 21); // 8 original + 7 tutor modes + 5 learning-workspace modes + the landing page's try-grammar
 });
 
 // ---------------------------------------------------------------------
