@@ -60,6 +60,10 @@ return MODE_PROMPT_SUGGESTIONS[modeId] || MODE_PROMPT_SUGGESTIONS[DEFAULT_MODE_I
 // registry as of Phase 6.
 var OFFLINE_FALLBACK_MODES = [
 { id: "general", label: "Free chat", description: "A broad, helpful assistant for everyday questions, writing, and multilingual conversation.", enabled: true, capability: "chat" },
+{ id: "translate", label: "Translate", description: "Translate text between languages, with automatic source-language detection.", enabled: true, capability: "chat" },
+{ id: "speak", label: "Speak", description: "A speaking partner: talk in the language you are learning and get gentle feedback on your last sentence.", enabled: true, capability: "chat" },
+{ id: "grammar", label: "Grammar", description: "Write in the language you are learning and get inline corrections with short explanations.", enabled: true, capability: "chat" },
+{ id: "vocabulary", label: "Vocabulary", description: "Build a personal word list: practise words, review flashcards and let the AI suggest new words for a topic.", enabled: true, capability: "chat" },
 { id: "codex", label: "Codex AI", description: "A coding assistant for debugging, architecture, review, and secure code.", enabled: true, capability: "chat" },
 { id: "cyber", label: "Cyber AI", description: "A defensive cybersecurity assistant for secure coding, vulnerability explanation, and threat modeling.", enabled: true, capability: "chat" },
 { id: "deep-thinking", label: "Deep Thinking", description: "Slower, structured analysis for complex or ambiguous questions - more reasoning, longer answers.", enabled: true, capability: "chat" },

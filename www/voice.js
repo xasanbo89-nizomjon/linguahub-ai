@@ -277,7 +277,10 @@ var text = toSpeakableText(markdown);
 if (!synth || !text) return Promise.resolve(false);
 
 var token = speakingToken;
-var lang = detectSpeechLang(text, activeLang());
+// options.lang forces the language (a word or sentence in a known
+// language, e.g. the learning-language word on the home screen); otherwise it
+// is detected from the text and the speech-language setting.
+var lang = opts.lang || detectSpeechLang(text, activeLang());
 var voice = pickVoice(lang);
 var chunks = splitIntoChunks(text);
 speakingWrapper = opts.wrapper || null;
@@ -886,6 +889,12 @@ getSettings: function () { return Object.assign({}, settings); },
 startDictation: function () { return listen("dictation"); },
 stop: stopListening,
 speak: speak,
+// Speaks plain text in a given BCP-47 language ("en-US"); false when speech
+// is switched off in Settings or the browser has no speech synthesis.
+speakText: function (text, lang) {
+if (!settings.enabled || !synth) return Promise.resolve(false);
+return speak(String(text || ""), { lang: lang });
+},
 stopSpeaking: stopSpeaking,
 toggleReadAloud: toggleReadAloud,
 openVoiceMode: openVoiceMode,

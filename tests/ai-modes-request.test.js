@@ -47,7 +47,7 @@ test("GET /api/ai/modes returns exactly the public fields, for every mode, match
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.ok(Array.isArray(body.modes));
-  assert.equal(body.modes.length, aiModes.MODE_IDS.length); // registry grew when the tutor modes were added
+  assert.equal(body.modes.length, aiModes.getPublicModes().length); // internal modes are not listed
 
   for (const mode of body.modes) {
     assert.deepEqual(Object.keys(mode).sort(), ["capability", "description", "enabled", "id", "label"]);

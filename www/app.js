@@ -578,6 +578,18 @@ emptyStateCardsEl.appendChild(card);
 renderEmptyStateCards();
 modeSelect.addEventListener("change", renderEmptyStateCards);
 
+// The learning home (language pair, word of the day, progress, mode cards)
+// replaces the plain hero while Free chat is selected - www/home-ui.js.
+if (window.LinguaHubHome && window.linguahubPair) {
+window.LinguaHubHome.init({
+container: document.getElementById("home-root"),
+modeSelect: modeSelect,
+pair: window.linguahubPair,
+vocab: window.linguahubVocab,
+focusComposer: () => input.focus()
+});
+}
+
 // ---------------------------------------------------------------------
 // Chat history (conversations sidebar) - see www/chatStore.js and
 // www/history-ui.js. history-ui.js owns conversation selection/list state
@@ -1462,6 +1474,8 @@ setAuthStatus("");
 // Single subscription drives both the profile UI above and switching the
 // chat-history namespace (guest <-> user:<uid>) - see www/history-ui.js.
 historyUI.setUser(user);
+// Saved words are per account, like chats.
+if (window.linguahubVocab) window.linguahubVocab.setUserId(user && user.uid ? user.uid : null);
 handleSyncUser(user);
 });
 } else {

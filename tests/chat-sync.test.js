@@ -451,7 +451,7 @@ test("account UI: guest card with a Sign in button, signed-in menu with sync sta
 
 test("account UI: app.js starts/stops sync with the signed-in user, offers the guest upload, and tells sync when a reply is generating", () => {
   const app = fs.readFileSync(path.join(__dirname, "..", "www", "app.js"), "utf8");
-  assert.match(app, /historyUI\.setUser\(user\);\s*handleSyncUser\(user\);/);
+  assert.match(app, /historyUI\.setUser\(user\);[\s\S]{0,260}?handleSyncUser\(user\);/);
   assert.match(app, /chatSync\.stop\(\);/);
   assert.match(app, /chatSync\.start\(user\);/);
   assert.match(app, /chatSync\.setGenerating\(conversationId\)/);

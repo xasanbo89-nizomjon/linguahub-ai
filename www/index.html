@@ -186,10 +186,15 @@
 <div class="chat-scroll-wrapper">
 <div class="chat-box" id="chat-box"></div>
 <div id="empty-state" class="empty-state" hidden>
+<!-- Learning home (www/home-ui.js): shown for Free chat. Every other mode
+     keeps the plain hero below with its own prompt suggestions. -->
+<div id="home-root" class="home-root"></div>
+<div id="hero-default" class="empty-state-default">
 <div class="lh-mark lh-mark-lg empty-state-icon" aria-hidden="true">LH</div>
 <h2 class="empty-state-title">What would you like to learn today?</h2>
 <p class="empty-state-subtitle">LinguaHub AI helps you learn languages, improve writing, translate, and study smarter.</p>
 <div class="empty-state-cards" id="empty-state-cards"></div>
+</div>
 </div>
 <button id="scroll-to-bottom-btn" type="button" class="scroll-to-bottom-btn" aria-label="Jump to latest message" title="Jump to latest" hidden>
 <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
@@ -288,8 +293,13 @@ Send
 <script src="mode-ui.js"></script>
 <script src="chat-menu.js"></script>
 <script src="voice.js"></script>
+<script src="learning-stats.js"></script>
+<script src="language-pair.js"></script>
+<script src="word-of-day.js"></script>
+<script src="vocab-store.js"></script>
 <script src="learning-memory.js"></script>
 <script src="tutor-dashboard.js"></script>
+<script src="home-ui.js"></script>
 <script src="chat-search.js"></script>
 <script src="search-palette.js"></script>
 <script src="app.js"></script>

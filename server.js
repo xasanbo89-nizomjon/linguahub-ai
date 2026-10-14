@@ -463,7 +463,10 @@ const completion = await openai.chat.completions.create(
 model: parsed.mode.model,
 messages: context.messages,
 temperature: parsed.mode.temperature,
-max_tokens: parsed.mode.maxOutputTokens
+max_tokens: parsed.mode.maxOutputTokens,
+// Learning-workspace modes (translate, grammar, ...) answer with one JSON
+// object: ask the provider for JSON mode. Every other mode is unchanged.
+...(parsed.mode.responseFormat === "json" ? { response_format: { type: "json_object" } } : {})
 },
 { timeout: parsed.mode.timeoutMs }
 );

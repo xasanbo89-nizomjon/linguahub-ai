@@ -1808,6 +1808,320 @@ position: relative;
 top: calc(-1 * min(6vh, var(--space-10)));
 }
 
+/* ---------------------------------------------------------------------
+   Learning home (www/home-ui.js)
+   --------------------------------------------------------------------- */
+.empty-state-default{
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: var(--space-3);
+}
+
+.home-root{
+width: 100%;
+max-width: var(--content-max-width);
+display: flex;
+flex-direction: column;
+align-items: stretch;
+gap: var(--space-5);
+text-align: left;
+}
+
+.home-title{
+margin: 0;
+text-align: center;
+font-family: var(--font-family-heading);
+font-size: var(--font-size-3xl);
+font-weight: 600;
+letter-spacing: -0.02em;
+}
+
+.home-pair{
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+justify-content: center;
+gap: var(--space-2) var(--space-3);
+}
+
+.home-pair-label{
+font-size: var(--font-size-sm);
+color: var(--text-muted);
+}
+
+/* Language pair control (shared by the home screen and the workspaces). */
+.lang-pair{
+display: inline-flex;
+align-items: center;
+gap: var(--space-2);
+}
+
+.lang-pair-select{
+min-height: var(--space-10);
+padding: var(--space-1) var(--space-3);
+background: var(--surface);
+color: var(--text);
+border: 1px solid var(--border);
+border-radius: var(--radius-md);
+font-size: var(--font-size-sm);
+font-weight: 600;
+font-family: inherit;
+}
+
+.lang-pair-select:focus-visible{
+border-color: var(--accent);
+outline: none;
+box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.lang-pair-swap{
+min-width: var(--space-10);
+min-height: var(--space-10);
+padding: 0;
+background: transparent;
+color: var(--text-muted);
+border: 1px solid var(--border);
+border-radius: var(--radius-full);
+font-size: var(--font-size-lg);
+}
+
+.lang-pair-swap:hover:not(:disabled){
+background: var(--accent-soft);
+color: var(--accent-text);
+border-color: var(--accent);
+transform: none;
+}
+
+.home-top{
+display: grid;
+grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+gap: var(--space-4);
+}
+
+.home-card{
+padding: var(--space-4) var(--space-5);
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow-1);
+}
+
+.home-card-label{
+margin-bottom: var(--space-2);
+font-size: var(--font-size-xs);
+font-weight: 600;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+color: var(--text-muted-strong);
+}
+
+.home-muted{
+margin: 0;
+color: var(--text-muted-strong);
+font-size: var(--font-size-sm);
+}
+
+.wod-head{
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: var(--space-3);
+}
+
+.wod-word{
+font-family: var(--font-family-heading);
+font-size: var(--font-size-2xl);
+font-weight: 600;
+line-height: var(--line-height-tight);
+overflow-wrap: anywhere;
+}
+
+.wod-icon-btn{
+flex-shrink: 0;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+min-width: var(--space-10);
+min-height: var(--space-10);
+padding: 0;
+background: transparent;
+color: var(--text-muted);
+border: 1px solid var(--border);
+border-radius: var(--radius-full);
+}
+
+.wod-icon-btn svg{
+width: 18px;
+height: 18px;
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+
+.wod-icon-btn:hover:not(:disabled){
+background: var(--accent-soft);
+color: var(--accent-text);
+border-color: var(--accent);
+transform: none;
+}
+
+.wod-translation{
+margin-top: var(--space-1);
+font-size: var(--font-size-lg);
+color: var(--accent-text);
+font-weight: 600;
+}
+
+.wod-example{
+margin: var(--space-3) 0 0;
+font-size: var(--font-size-md);
+}
+
+.wod-example-translation{
+margin: var(--space-1) 0 0;
+font-size: var(--font-size-sm);
+color: var(--text-muted-strong);
+}
+
+.wod-save{
+margin-top: var(--space-3);
+min-height: var(--space-10);
+padding: var(--space-1) var(--space-4);
+background: transparent;
+color: var(--accent-text);
+border: 1px solid var(--accent);
+border-radius: var(--radius-md);
+font-size: var(--font-size-sm);
+font-weight: 600;
+}
+
+.wod-save:hover:not(:disabled){
+background: var(--accent-soft);
+color: var(--accent-text);
+transform: none;
+}
+
+.wod-save:disabled{
+background: transparent;
+color: var(--text-muted-strong);
+border-color: var(--border-strong);
+opacity: 1;
+}
+
+.home-stats{
+list-style: none;
+margin: 0;
+padding: 0;
+display: grid;
+grid-template-columns: 1fr;
+gap: var(--space-2);
+}
+
+.home-stat-body{
+width: 100%;
+display: flex;
+align-items: baseline;
+gap: var(--space-3);
+padding: var(--space-3) var(--space-4);
+background: var(--surface);
+color: var(--text);
+border: 1px solid var(--border);
+border-radius: var(--radius-lg);
+text-align: left;
+font-weight: 400;
+}
+
+.home-stat-value{
+font-size: var(--font-size-2xl);
+font-weight: 600;
+line-height: 1;
+min-width: 2ch;
+}
+
+.home-stat-label{
+font-size: var(--font-size-sm);
+color: var(--text-muted-strong);
+}
+
+.home-stat-action:hover:not(:disabled){
+background: var(--accent-soft);
+border-color: var(--accent);
+color: var(--text);
+transform: none;
+}
+
+.home-modes{
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+gap: var(--space-3);
+}
+
+.mode-card{
+display: flex;
+align-items: flex-start;
+gap: var(--space-3);
+padding: var(--space-4);
+background: var(--surface);
+color: var(--text);
+border: 1px solid var(--border);
+border-radius: var(--radius-lg);
+text-align: left;
+font-weight: 400;
+box-shadow: var(--shadow-1);
+}
+
+.mode-card:hover:not(:disabled){
+border-color: var(--accent);
+background: var(--accent-soft);
+color: var(--text);
+transform: none;
+}
+
+.mode-card-icon{
+flex-shrink: 0;
+width: 24px;
+height: 24px;
+fill: none;
+stroke: var(--accent-text);
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+
+.mode-card-text{
+display: flex;
+flex-direction: column;
+gap: 2px;
+min-width: 0;
+}
+
+.mode-card-title{
+font-size: var(--font-size-md);
+font-weight: 600;
+}
+
+.mode-card-desc{
+font-size: var(--font-size-sm);
+color: var(--text-muted-strong);
+}
+
+/* Listen buttons follow the "Voice features" setting. */
+:root[data-voice-off] .voice-feature{
+display: none;
+}
+
+@media (max-width: 720px){
+.home-top{
+grid-template-columns: minmax(0, 1fr);
+}
+.home-title{
+font-size: var(--font-size-2xl);
+}
+}
+
 .empty-state-icon{
 display: flex;
 align-items: center;

@@ -200,10 +200,12 @@ test("restyle: sidebar on --surface-2, active chat on --accent-soft, New chat an
   assert.match(STYLES_CSS, /\.controls:focus-within\{[^}]*border-color:\s*var\(--accent\)/);
 });
 
-test("restyle: the heading font is used only for the hero title and Settings section headings", () => {
+test("restyle: the heading font is used only for hero titles, the word of the day and Settings section headings", () => {
   const uses = STYLES_CSS.match(/font-family:\s*var\(--font-family-heading\)/g) || [];
-  assert.equal(uses.length, 2);
+  assert.equal(uses.length, 4);
   assert.match(STYLES_CSS, /\.empty-state-title\{\s*font-family:\s*var\(--font-family-heading\)/);
+  assert.match(STYLES_CSS, /\.home-title\{[^}]*font-family:\s*var\(--font-family-heading\)/);
+  assert.match(STYLES_CSS, /\.wod-word\{[^}]*font-family:\s*var\(--font-family-heading\)/);
   assert.match(STYLES_CSS, /\.settings-section-title\{\s*font-family:\s*var\(--font-family-heading\)/);
 });
 
