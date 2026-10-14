@@ -13,7 +13,7 @@ process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || "sk-test-placeholder-
 
 const aiModes = require("../lib/aiModes.js");
 
-const LEARNING = ["translate", "speak", "grammar", "vocabulary", "word-lookup"];
+const LEARNING = ["translate", "speak", "grammar", "vocabulary", "word-lookup", "try-grammar"];
 
 test("registry: the five learning modes exist, are enabled, and answer in JSON mode", () => {
   LEARNING.forEach((id) => {
@@ -52,7 +52,8 @@ test("registry: each prompt names the exact JSON keys its screen reads", () => {
 
 test("registry: the internal word lookup is a valid mode but is never listed for users", () => {
   assert.equal(aiModes.isValidModeId("word-lookup"), true);
-  const listed = aiModes.getPublicModes().map((m) => m.id);
+  assert.equal(listed.indexOf("word-lookup"), -1);
+  assert.equal(listed.indexOf("try-grammar"), -1);
   assert.equal(listed.indexOf("word-lookup"), -1);
   ["translate", "speak", "grammar", "vocabulary"].forEach((id) => assert.ok(listed.indexOf(id) !== -1, id));
   assert.equal(aiModes.getPublicModes().length, aiModes.MODE_IDS.length - 1);

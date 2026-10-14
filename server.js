@@ -20,6 +20,7 @@ const { createShutdownHandler } = require("./lib/gracefulShutdown.js");
 const transcribe = require("./lib/transcribe.js");
 const { cspDirectives } = require("./lib/csp.js");
 const imageLimits = require("./lib/images.js");
+const tryCorrect = require("./lib/tryCorrect.js");
 
 // Phase 11: validated once at module load, not per-request. In production
 // a missing/malformed *required* value is a loud startup failure (see the
@@ -675,6 +676,20 @@ express.raw({ type: transcribe.RAW_BODY_TYPES, limit: transcribe.MAX_AUDIO_BYTES
 handleTranscribe
 );
 
+// The landing page's free sample correction: no sign-in, strictly limited per
+// IP address per day (see lib/tryCorrect.js).
+const tryLimiter = createMemoryLimiter({
+windowMs: 24 * 60 * 60 * 1000,
+max: envResult.tryRateLimitMaxRequests,
+keyFn: (req) => `ip:${req.ip || "unknown"}`,
+name: "try-correct"
+});
+app.post("/api/try-correct", tryLimiter, tryCorrect.createTryHandler({
+openai,
+mode: aiModes.getModeConfig("try-grammar"),
+logger
+}));
+
 app.post("/chat", authenticateOptional, chatLimiter, deepThinkingLimiter, handleChat);
 
 app.post("/api/chat", authenticateOptional, chatLimiter, deepThinkingLimiter, handleChat);
@@ -754,7 +769,7 @@ console.log(`🚀 LinguaHub AI running on http://localhost:${PORT}`);
 server.requestTimeout = envResult.requestTimeoutMs;
 server.headersTimeout = Math.min(envResult.requestTimeoutMs, 65000);
 
-const shutdown = createShutdownHandler(server, [generalLimiter, chatLimiter, deepThinkingLimiter, transcribeLimiter], {
+const shutdown = createShutdownHandler(server, [generalLimiter, chatLimiter, deepThinkingLimiter, transcribeLimiter, tryLimiter], {
 timeoutMs: GRACEFUL_SHUTDOWN_TIMEOUT_MS,
 logger
 });

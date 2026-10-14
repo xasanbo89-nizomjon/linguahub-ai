@@ -54,6 +54,7 @@ Environment variables (names only; see `.env.example` for what each one does):
 | `MAX_GENERATION_MS` | Optional - longest AI reply in ms; defaults to 55000 on Vercel (the function limit in `vercel.json` is 60 s; raise both together on a plan that allows more) |
 | `MAX_MESSAGE_LENGTH` | Optional - lowers a mode's input limit |
 | `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX_REQUESTS`, `DEEP_THINKING_RATE_LIMIT_MAX_REQUESTS`, `GENERAL_RATE_LIMIT_MAX_REQUESTS`, `TRANSCRIBE_RATE_LIMIT_MAX_REQUESTS` | Optional - rate limits (defaults are fine) |
+| `TRY_RATE_LIMIT_MAX_REQUESTS` | Optional - free sample corrections per IP per day on the landing page (default 3) |
 | `TRANSCRIBE_MODEL` | Optional - speech-to-text model (default `whisper-1`) |
 | `LOG_LEVEL` | Optional |
 | `FIREBASE_CHECK_REVOKED` | Optional - also reject revoked sign-in tokens |

@@ -7,8 +7,8 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const aiModes = require("../lib/aiModes.js");
 
-const EXPECTED_MODE_IDS = ["general", "codex", "cyber", "deep-thinking", "linguahub-tutor", "ielts-reading", "ielts-listening", "ielts-writing", "ielts-speaking", "vocabulary-coach", "grammar-coach", "platform-help", "image", "voice", "web-search", "translate", "speak", "grammar", "vocabulary", "word-lookup"];
-const EXPECTED_ENABLED = ["general", "codex", "cyber", "deep-thinking", "linguahub-tutor", "ielts-reading", "ielts-listening", "ielts-writing", "ielts-speaking", "vocabulary-coach", "grammar-coach", "platform-help", "translate", "speak", "grammar", "vocabulary", "word-lookup"];
+const EXPECTED_MODE_IDS = ["general", "codex", "cyber", "deep-thinking", "linguahub-tutor", "ielts-reading", "ielts-listening", "ielts-writing", "ielts-speaking", "vocabulary-coach", "grammar-coach", "platform-help", "image", "voice", "web-search", "translate", "speak", "grammar", "vocabulary", "word-lookup", "try-grammar"];
+const EXPECTED_ENABLED = ["general", "codex", "cyber", "deep-thinking", "linguahub-tutor", "ielts-reading", "ielts-listening", "ielts-writing", "ielts-speaking", "vocabulary-coach", "grammar-coach", "platform-help", "translate", "speak", "grammar", "vocabulary", "word-lookup", "try-grammar"];
 const EXPECTED_DISABLED = ["image", "voice", "web-search"];
 
 test("MODE_IDS contains the complete stable tutor and legacy mode registry", () => {
