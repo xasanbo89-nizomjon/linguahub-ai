@@ -9,8 +9,8 @@
 // `<uid>__<chatId>`, with userId === uid and kind === "chat". That
 // collection is already covered by firestore.rules (owner-only create /
 // read / update / delete), so no rules change is needed. Messages are stored
-// as one JSON string per chat (Firestore's 1 MiB document limit applies; a
-// chat larger than that is skipped, never truncated). Thumbs up/down ratings
+// as one JSON string per chat (Firestore's 1 MiB document limit applies, in
+// bytes; a chat larger than that is skipped, never truncated). Thumbs up/down ratings
 // are local-only and never uploaded.
 //
 // Reconciliation is three-way, per chat, against the signature recorded when
@@ -28,7 +28,9 @@ var LinguaHubChatSync = (function () {
   "use strict";
 
   var COLLECTION = "conversation_metadata";
-  var MAX_DOC_CHARS = 900000; // under Firestore's 1 MiB per-document limit
+  // Firestore's limit is 1 MiB of BYTES per document; non-Latin text (Arabic,
+  // Cyrillic...) takes 2+ bytes per character, so size is measured in bytes.
+  var MAX_DOC_BYTES = 900000;
   var FLUSH_DEBOUNCE_MS = 2000;
   var STREAMING_RECHECK_MS = 3000;
   var ERROR_RETRY_MS = 30000;
@@ -57,6 +59,11 @@ var LinguaHubChatSync = (function () {
   function isStreaming(conv) {
     var last = conv.messages && conv.messages[conv.messages.length - 1];
     return Boolean(last && last.status === "streaming");
+  }
+
+  function byteLength(text) {
+    if (typeof TextEncoder === "function") return new TextEncoder().encode(text).length;
+    return text.length * 3; // worst case for UTF-8, when no encoder exists
   }
 
   function docId(uid, convId) { return uid + "__" + convId; }
@@ -232,7 +239,7 @@ var LinguaHubChatSync = (function () {
     // ---- pushing ----
     function push(conv) {
       var data = toRemote(uid, conv);
-      if (data.messages.length > MAX_DOC_CHARS) return Promise.resolve("too-large");
+      if (byteLength(data.messages) > MAX_DOC_BYTES) return Promise.resolve("too-large");
       return remote.write(uid, conv.id, data).then(function () {
         state.synced[conv.id] = { l: data.sig, r: data.sig };
         return "pushed";
@@ -523,7 +530,7 @@ var LinguaHubChatSync = (function () {
     toRemote: toRemote,
     fromRemote: fromRemote,
     docId: docId,
-    MAX_DOC_CHARS: MAX_DOC_CHARS
+    MAX_DOC_BYTES: MAX_DOC_BYTES
   };
 })();
 

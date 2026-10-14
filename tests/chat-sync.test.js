@@ -465,3 +465,18 @@ test("account UI: the account menu opens above its button (fixed) so the clipped
   assert.match(menu, /setupMenu\(\{ root: "user-profile", button: "account-menu-btn", list: "account-menu-list", fixedAbove: true \}\)/);
   assert.match(menu, /list\.style\.bottom = /);
 });
+
+test("sync: the size limit counts bytes, so a large Arabic chat (2 bytes per character) is skipped before Firestore would reject it", async () => {
+  const server = makeServer();
+  const a = makeDevice(server);
+  const c = a.store.createConversation().conversation;
+  const arabic = "\u0645\u0631\u062D\u0628\u0627 ".repeat(2900); // ~17k characters, ~31 KB in UTF-8
+  for (let i = 0; i < 40; i += 1) a.store.saveMessage(c.id, Store.createMessage(i % 2 ? "assistant" : "user", arabic + i));
+  const json = JSON.stringify(a.store.getConversation(c.id).messages);
+  assert.ok(json.length < Sync.MAX_DOC_BYTES, "fewer characters than the limit...");
+  assert.ok(new TextEncoder().encode(json).length > Sync.MAX_DOC_BYTES, "...but more bytes than the limit");
+  a.sync.start({ uid: UID });
+  await quiesce(a);
+  assert.equal(server.docs.has(UID + "__" + c.id), false);
+  assert.notEqual(a.sync.getStatus(), "error", "skipping an oversized chat is not an error");
+});
