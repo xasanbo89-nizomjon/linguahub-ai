@@ -142,7 +142,8 @@ test("auto-update source: GitHub Releases of this repository, no token in the re
   const publish = pkg.build.publish[0];
   assert.equal(publish.provider, "github");
   assert.match(publish.owner, /^[\w-]+$/);
-  assert.equal(publish.repo, "linguahub.ai");
+  assert.equal(publish.owner, "xasanbo89-nizomjon");
+  assert.equal(publish.repo, "linguahub-ai");
   assert.deepEqual(Object.keys(publish).sort(), ["owner", "provider", "releaseType", "repo"], "no token or other secret in the config");
   assert.doesNotMatch(JSON.stringify(pkg), /GH_TOKEN|ghp_|github_pat_/);
   Object.values(pkg.scripts).forEach((s) => assert.doesNotMatch(s, /--publish (always|onTag|onTagOrDraft)/, s));

@@ -56,8 +56,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "xasanboyabdugaffarov1988-sys",
-        "repo": "linguahub.ai",
+        "owner": "xasanbo89-nizomjon",
+        "repo": "linguahub-ai",
         "releaseType": "release"
       }
     ],

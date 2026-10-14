@@ -683,8 +683,29 @@ notify: (message, type) => { if (window.LinguaHubToast) window.LinguaHubToast.sh
 }
 
 // First launch only: native language, language to learn, level - www/onboarding.js.
+function startOnboarding() {
 if (window.LinguaHubOnboarding && window.linguahubPair) {
 window.LinguaHubOnboarding.init({ pair: window.linguahubPair });
+}
+}
+
+// The very first visit while signed out starts with the welcome screen
+// (www/landing.js); "Start free" then leads into onboarding, "Sign in with
+// Google" uses the normal sign-in. Returning and signed-in people skip it.
+if (window.LinguaHubLanding) {
+window.LinguaHubLanding.init({
+auth: window.LinguaHubAuth || null,
+shell: document.getElementById("app-shell"),
+hasExistingData: () => historyUI.store.listGuestConversations().length > 0,
+onDone: ({ reason }) => {
+if (reason === "google" && loginBtn && !loginBtn.hidden) loginBtn.click();
+if (reason !== "signed-in") startOnboarding();
+}
+}).then((outcome) => {
+if (!outcome.shown) startOnboarding();
+});
+} else {
+startOnboarding();
 }
 
 if (window.LinguaHubHome && window.linguahubPair) {

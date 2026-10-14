@@ -52,11 +52,12 @@ test("registry: each prompt names the exact JSON keys its screen reads", () => {
 
 test("registry: the internal word lookup is a valid mode but is never listed for users", () => {
   assert.equal(aiModes.isValidModeId("word-lookup"), true);
+  assert.equal(aiModes.isValidModeId("try-grammar"), true);
+  const listed = aiModes.getPublicModes().map((m) => m.id);
   assert.equal(listed.indexOf("word-lookup"), -1);
   assert.equal(listed.indexOf("try-grammar"), -1);
-  assert.equal(listed.indexOf("word-lookup"), -1);
   ["translate", "speak", "grammar", "vocabulary"].forEach((id) => assert.ok(listed.indexOf(id) !== -1, id));
-  assert.equal(aiModes.getPublicModes().length, aiModes.MODE_IDS.length - 1);
+  assert.equal(aiModes.getPublicModes().length, aiModes.MODE_IDS.length - 2);
 });
 
 test("registry: public metadata of the new modes still exposes only the five public fields", () => {
