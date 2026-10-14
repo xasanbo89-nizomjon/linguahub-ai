@@ -147,14 +147,15 @@ test("composer: auto-grows to 8 lines (CSS max-height) and the JS no longer caps
 
 test("composer: stays enabled while generating (keeps focus); Send is disabled when empty or offline and is Stop while busy", () => {
   assert.doesNotMatch(APP_JS, /input\.disabled = busy/);
-  assert.match(APP_JS, /sendBtn\.disabled = isBusy \? false : \(!input\.value\.trim\(\) \|\| isOffline\(\)\)/);
+  // Send is also enabled by a picture alone (Phase: images)
+  assert.match(APP_JS, /sendBtn\.disabled = isBusy \? false : \(\(!input\.value\.trim\(\) && !hasPicture\) \|\| processing \|\| isOffline\(\)\)/);
   assert.match(APP_JS, /input\.removeAttribute\("dir"\);\s*updateComposerState\(\);\s*input\.focus\(\);/);
 });
 
 test("composer: Enter sends (per the setting), never mid-IME-composition and never while a reply is generating", () => {
   assert.match(APP_JS, /if \(e\.isComposing \|\| e\.keyCode === 229\) return;/);
   assert.match(APP_JS, /if \(!isBusy\) sendMessage\(\);/);
-  assert.match(APP_JS, /const message = input\.value\.trim\(\);\s*if \(!message \|\| isBusy\) return;/);
+  assert.match(APP_JS, /const message = input\.value\.trim\(\);\s*const pictures = attachments \? attachments\.getImages\(\) : \[\];\s*if \(\(!message && !pictures\.length\) \|\| isBusy\) return;/);
   assert.match(APP_JS, /isEnterToSendEnabled\(\)/);
 });
 

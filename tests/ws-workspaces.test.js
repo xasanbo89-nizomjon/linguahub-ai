@@ -303,7 +303,7 @@ function translateParts(t) {
     output: t.dom.byClass(p, "ws-output")[0],
     selects: t.dom.byTag(p, "select"),
     swap: t.dom.byClass(p, "lang-pair-swap")[0],
-    buttons: t.dom.byClass(p, "ws-icon-btn"),
+    buttons: t.dom.byClass(p, "ws-icon-btn").filter((b) => !b.classList.contains("ws-picture-btn")),
     detected: t.dom.byClass(p, "ws-detected")[0],
     counter: t.dom.byClass(p, "ws-counter")[0]
   };

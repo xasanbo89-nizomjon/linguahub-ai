@@ -22,6 +22,29 @@ const settingsBtn = document.getElementById("settings-btn");
 const quickThemeBtn = document.getElementById("quick-theme-btn");
 const composerHintEl = document.getElementById("composer-hint");
 
+// Pictures: the "+" button, paste and drag-and-drop - www/image-attach.js.
+// Pictures are shrunk in the browser, shown as thumbnails above the composer
+// and sent with the message; they are never stored (history keeps "[image]").
+const attachBtn = document.getElementById("attach-btn");
+const attachmentStrip = document.getElementById("attachment-strip");
+const attachmentInput = document.getElementById("attachment-input");
+const attachments = window.LinguaHubImages && attachBtn && attachmentStrip && attachmentInput
+? window.LinguaHubImages.createAttachments({
+strip: attachmentStrip,
+fileInput: attachmentInput,
+attachButton: attachBtn,
+textarea: input,
+dropZone: document.querySelector(".composer"),
+deps: window.LinguaHubImages.browserDeps(window),
+notify: (message) => { if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message }); },
+onChange: () => updateComposerState(),
+isSupported: () => window.LinguaHubImages.supportsImages(modeSelect.value),
+// a mode screen (Translate...) handles its own pictures
+isActive: () => !(window.LinguaHubWorkspace && window.LinguaHubWorkspace.getActive())
+})
+: null;
+
+
 const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const userProfile = document.getElementById("user-profile");
@@ -214,7 +237,9 @@ const status = err && err.status;
 if (isOffline()) return "You're offline. Check your connection, then try again.";
 if (status === 429) return "You're sending messages too quickly. Wait a moment, then try again.";
 if (status === 401 || status === 403) return "Your session isn't authorized for this request. Sign in again, then try again.";
-if (status === 400 || status === 413 || status === 422) return "That message couldn't be processed - it may be too long. Shorten it and try again.";
+if (status === 415) return "That picture type isn't supported. Use a PNG, JPG or WebP image.";
+if (status === 413) return "That message is too long, or the picture is too large. Shorten it or use a smaller picture, then try again.";
+if (status === 400 || status === 422) return "That message couldn't be processed - it may be too long. Shorten it and try again.";
 if (status >= 500) return "The AI service ran into a problem. Please try again in a moment.";
 const server = err && err.serverMessage ? String(err.serverMessage) : "";
 if (/too long|timed? ?out/i.test(server)) return "The reply took too long and was stopped. Please try again.";
@@ -350,6 +375,32 @@ if (old) old.remove();
 wrapper.appendChild(buildMessageActions(wrapper.dataset.role, status, wrapper.dataset.feedback));
 }
 
+// Pictures inside a sent message: click one to enlarge. After a reload only a
+// small "not saved" note is left, because pictures are never stored.
+function buildMessagePictures(urls, missing) {
+const row = document.createElement("div");
+row.className = "message-pictures";
+urls.forEach((url, index) => {
+const open = document.createElement("button");
+open.type = "button";
+open.className = "message-picture";
+open.setAttribute("aria-label", "Enlarge image " + (index + 1));
+const img = document.createElement("img");
+img.setAttribute("src", url);
+img.setAttribute("alt", "Attached image " + (index + 1));
+open.appendChild(img);
+open.addEventListener("click", () => window.LinguaHubImages.openLightbox(url, "Attached image " + (index + 1)));
+row.appendChild(open);
+});
+for (let i = 0; i < missing; i += 1) {
+const note = document.createElement("span");
+note.className = "message-picture-missing";
+note.textContent = "Image (not saved)";
+row.appendChild(note);
+}
+return row;
+}
+
 function addMessage(role, text, options) {
 const opts = options || {};
 const status = opts.status || "complete";
@@ -396,8 +447,24 @@ renderAssistantContentFinal(contentEl, text);
 } else if (role === "assistant" && status === "stopped" && !text) {
 contentEl.textContent = "(Stopped - no response received)";
 } else {
-contentEl.textContent = text || "";
-applyRtlIfNeeded(contentEl, text || "");
+let shownText = text || "";
+let pictures = opts.images || [];
+let missingPictures = 0;
+if (role === "user" && window.LinguaHubImages) {
+// History keeps only "[image]" lines for pictures; this session may still hold them.
+const parts = window.LinguaHubImages.splitStored(shownText);
+if (parts.count) {
+shownText = parts.text;
+if (!pictures.length) pictures = window.LinguaHubImages.recall(opts.messageId);
+if (!pictures.length) missingPictures = parts.count;
+}
+}
+contentEl.textContent = shownText;
+applyRtlIfNeeded(contentEl, shownText);
+if (pictures.length || missingPictures) {
+wrapper.insertBefore(buildMessagePictures(pictures, missingPictures), contentEl);
+if (!shownText) contentEl.hidden = true;
+}
 }
 
 setMessageStatusLabel(wrapper, status);
@@ -462,7 +529,9 @@ return typeof navigator !== "undefined" && navigator.onLine === false;
 // offline; while a reply is generating the same button is Stop and stays
 // enabled.
 function updateComposerState() {
-sendBtn.disabled = isBusy ? false : (!input.value.trim() || isOffline());
+const hasPicture = Boolean(attachments && attachments.count());
+const processing = Boolean(attachments && attachments.isBusy());
+sendBtn.disabled = isBusy ? false : ((!input.value.trim() && !hasPicture) || processing || isOffline());
 }
 
 sendBtn.addEventListener("click", () => {
@@ -574,6 +643,14 @@ emptyStateCardsEl.appendChild(card);
 }
 renderEmptyStateCards();
 modeSelect.addEventListener("change", renderEmptyStateCards);
+modeSelect.addEventListener("change", () => {
+if (!attachments) return;
+if (attachments.count() && !window.LinguaHubImages.supportsImages(modeSelect.value)) {
+attachments.clear();
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "info", message: "The pictures were removed: this mode can't read images." });
+}
+attachments.refresh();
+});
 
 // The learning home (language pair, word of the day, progress, mode cards)
 // replaces the plain hero while Free chat is selected - www/home-ui.js.
@@ -594,6 +671,15 @@ focusComposer: () => input.focus()
 // Tap a word in an AI message for its meaning - www/word-lookup.js.
 if (window.LinguaHubWordLookup && window.linguahubPair) {
 window.LinguaHubWordLookup.init({ chatBox: chatBox, pair: window.linguahubPair, vocab: window.linguahubVocab });
+}
+
+// "Save words" under the reply to a picture sent on its own - www/image-learning.js.
+if (window.LinguaHubImageLearning && window.linguahubPair) {
+window.LinguaHubImageLearning.init({
+vocab: window.linguahubVocab,
+pair: window.linguahubPair,
+notify: (message, type) => { if (window.LinguaHubToast) window.LinguaHubToast.show({ type: type || "success", message }); }
+});
 }
 
 // First launch only: native language, language to learn, level - www/onboarding.js.
@@ -724,6 +810,7 @@ chatSync.start(user);
 let availableModes = [];
 
 function renderConversationMessages(conversation) {
+if (attachments) attachments.clear();
 // Picking or creating a conversation always lands in the chat, even from a
 // mode workspace (Translate, Speak, ...).
 if (window.LinguaHubWorkspace) window.LinguaHubWorkspace.showChat();
@@ -973,7 +1060,13 @@ applyRtlIfNeeded(aiBubble.contentEl, replyText);
 // naturally excludes that old (being-replaced) assistant answer and
 // anything after it. Falls back to a single-message array if there's no
 // active conversation to read from (e.g. storage unavailable).
-function buildMessagesForRequest(conversationId, uptoMessageId, fallbackText) {
+// picture (optional): { text, images } for the user message uptoMessageId - the
+// text sent to the AI for it (the typed text, or the picture-lesson
+// instruction) and its pictures. Only this last message carries pictures.
+function buildMessagesForRequest(conversationId, uptoMessageId, fallbackText, picture) {
+const withPicture = (message) => (picture && picture.images && picture.images.length
+? { role: "user", content: picture.text, images: picture.images }
+: message);
 if (conversationId) {
 const conversation = historyUI.store.getConversation(conversationId);
 if (conversation) {
@@ -982,13 +1075,31 @@ for (const m of conversation.messages) {
 if (m.role !== "user" && m.role !== "assistant") continue;
 if (m.status === "failed") continue;
 if (!m.content) continue;
-messages.push({ role: m.role, content: m.content });
+const entry = { role: m.role, content: m.content };
+messages.push(m.id === uptoMessageId ? withPicture(entry) : entry);
 if (m.id === uptoMessageId) break;
 }
 if (messages.length) return messages;
 }
 }
-return [{ role: "user", content: fallbackText }];
+return [withPicture({ role: "user", content: fallbackText })];
+}
+
+// The text and pictures to send for a stored user message (Retry / Regenerate),
+// from what this session still remembers. null when the message had pictures that
+// are gone (after a reload); undefined-free for plain text messages.
+function pictureForStoredMessage(userMsg) {
+if (!window.LinguaHubImages) return { picture: undefined };
+const parts = window.LinguaHubImages.splitStored(userMsg.content);
+if (!parts.count) return { picture: undefined };
+const images = window.LinguaHubImages.recall(userMsg.id);
+if (!images.length) return null;
+return { picture: { text: pictureRequestText(parts.text, images.length), images }, lesson: !parts.text && modeSelect.value === "general" };
+}
+
+function pictureRequestText(typed, count) {
+if (!window.LinguaHubImageLearning || !window.linguahubPair) return typed || "Describe this picture.";
+return window.LinguaHubImageLearning.requestText({ typed, imageCount: count, pair: window.linguahubPair.get(), languages: window.LinguaHubLanguages });
 }
 
 // Shared by a brand-new send, regenerate, and retry - the one place that
@@ -1083,7 +1194,9 @@ detail: { text: isHardError ? "" : rawText, status: finalStatus, wrapper: aiBubb
 
 async function sendMessage() {
 const message = input.value.trim();
-if (!message || isBusy) return;
+const pictures = attachments ? attachments.getImages() : [];
+if ((!message && !pictures.length) || isBusy) return;
+if (attachments && attachments.isBusy()) return;
 if (isOffline()) {
 // Keep the draft; the composer already explains why Send is disabled.
 if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: "You're offline. Reconnect to send messages." });
@@ -1091,6 +1204,10 @@ return;
 }
 
 const mode = modeSelect.value;
+if (pictures.length && !window.LinguaHubImages.supportsImages(mode)) {
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: "This mode can't read images. Remove them or switch to Free chat." });
+return;
+}
 if (typeof CustomEvent === "function") {
 document.dispatchEvent(new CustomEvent("linguahub:tutor-message", { detail: { mode } }));
 }
@@ -1101,10 +1218,14 @@ if (emptyStateEl) emptyStateEl.hidden = true;
 // Created up front (not just at save time) so its id can be attached to
 // the DOM wrapper below - otherwise the Edit action has no message id to
 // look up in the store.
-const userMessage = window.LinguaHubChatStore.createMessage("user", message, "complete");
+// History and sync keep the text plus one "[image]" line per picture - never the pictures.
+const storedText = pictures.length ? window.LinguaHubImages.storedContent(message, pictures.length) : message;
+const userMessage = window.LinguaHubChatStore.createMessage("user", storedText, "complete");
+if (pictures.length) window.LinguaHubImages.remember(userMessage.id, pictures);
 userScrolledUp = false;
-addMessage("user", message, { status: "complete", messageId: userMessage.id });
+addMessage("user", message, { status: "complete", messageId: userMessage.id, images: pictures });
 scrollChatToBottom();
+if (attachments) attachments.take();
 input.value = "";
 input.style.height = "auto";
 input.removeAttribute("dir");
@@ -1131,8 +1252,12 @@ historyUI.refreshList();
 const assistantMessage = window.LinguaHubChatStore.createMessage("assistant", "", "streaming");
 const aiBubble = addMessage("assistant", "", { status: "streaming", messageId: assistantMessage.id });
 if (conversationId) historyUI.store.saveMessage(conversationId, assistantMessage);
+// A picture sent on its own in Free chat is a little lesson: description + 5 words
+// (www/image-learning.js adds "Save words" under the reply).
+if (pictures.length && !message && mode === "general") aiBubble.dataset.imageLesson = "1";
 
-const requestMessages = buildMessagesForRequest(conversationId, userMessage.id, message);
+const requestMessages = buildMessagesForRequest(conversationId, userMessage.id, message,
+pictures.length ? { text: pictureRequestText(message, pictures.length), images: pictures } : undefined);
 await generateAssistantReply(conversationId, requestMessages, mode, assistantMessage.id, aiBubble);
 }
 
@@ -1171,7 +1296,16 @@ window.LinguaHubToast.show({ type: "error", message: "Could not find the origina
 return;
 }
 
+// Pictures are not stored, so after a reload there is nothing to retry with.
+const stored = pictureForStoredMessage(userMsg);
+if (!stored) {
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: "That picture isn't saved. Attach it again to ask once more." });
+return;
+}
+
 abortActiveGeneration();
+if (stored.lesson) wrapper.dataset.imageLesson = "1";
+else delete wrapper.dataset.imageLesson;
 
 const conversation = historyUI.store.getConversation(conversationId);
 const mode = (conversation && conversation.metadata && conversation.metadata.mode) || modeSelect.value;
@@ -1181,7 +1315,7 @@ wrapper.contentEl.removeAttribute("dir");
 showTypingIndicator(wrapper.contentEl);
 refreshMessageActions(wrapper, "streaming");
 
-const requestMessages = buildMessagesForRequest(conversationId, userMsg.id, userMsg.content);
+const requestMessages = buildMessagesForRequest(conversationId, userMsg.id, userMsg.content, stored.picture);
 await generateAssistantReply(conversationId, requestMessages, mode, assistantMessageId, wrapper);
 }
 
@@ -1238,6 +1372,10 @@ const idx = conversation.messages.findIndex((m) => m.id === messageId);
 if (idx === -1) return;
 
 const originalText = conversation.messages[idx].content;
+if (window.LinguaHubImages && window.LinguaHubImages.splitStored(originalText).count) {
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "info", message: "Messages with pictures can't be edited. Send a new one instead." });
+return;
+}
 const contentEl = wrapper.contentEl;
 const actionsEl = wrapper.querySelector(".message-actions");
 

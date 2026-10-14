@@ -38,7 +38,9 @@ var LinguaHubAI = (function () {
     if (isOffline()) return "You're offline. Check your connection, then try again.";
     if (status === 429) return "You're sending requests too quickly. Wait a moment, then try again.";
     if (status === 401 || status === 403) return "Your session isn't authorized for this request. Sign in again, then try again.";
-    if (status === 400 || status === 413 || status === 422) return "That text couldn't be processed - it may be too long. Shorten it and try again.";
+    if (status === 415) return "That picture type isn't supported. Use a PNG, JPG or WebP image.";
+    if (status === 413) return "That is too large - try a shorter text or a smaller picture.";
+    if (status === 400 || status === 422) return "That text couldn't be processed - it may be too long. Shorten it and try again.";
     if (status >= 500) return "The AI service ran into a problem. Please try again in a moment.";
     return "Couldn't reach the AI service. Check your connection and try again.";
   }
@@ -58,7 +60,15 @@ var LinguaHubAI = (function () {
     }
   }
 
-  // options: { mode, messages: [{role, content}], signal, normalize(obj) -> obj|null }
+  // Pictures (data URLs, see www/image-attach.js) ride on the final message only.
+  function withImages(messages, images) {
+    if (!images || !images.length) return messages;
+    return messages.map(function (message, index) {
+      return index === messages.length - 1 ? { role: message.role, content: message.content, images: images } : message;
+    });
+  }
+
+  // options: { mode, messages: [{role, content}], images?: [dataUrl], signal, normalize(obj) -> obj|null }
   // resolves { data: normalized object | null, text: raw reply }
   // rejects  Error with .userMessage (friendly), .status, .aborted
   async function request(options) {
@@ -67,7 +77,7 @@ var LinguaHubAI = (function () {
       response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: Object.assign({ "Content-Type": "application/json" }, await authHeaders()),
-        body: JSON.stringify({ mode: options.mode, messages: options.messages }),
+        body: JSON.stringify({ mode: options.mode, messages: withImages(options.messages, options.images) }),
         signal: options.signal
       });
     } catch (err) {
@@ -118,6 +128,11 @@ var LinguaHubAI = (function () {
   }
 
   var prompts = {
+    // The text to translate is in an attached picture.
+    translatePicture: function (source, target) {
+      return "Source language: " + (source === "auto" ? "detect it automatically" : nameOf(source)) +
+        "\nTarget language: " + nameOf(target) + "\n\nThe text to translate is in the attached picture: read all the text visible in it.";
+    },
     translate: function (source, target, text) {
       return "Source language: " + (source === "auto" ? "detect it automatically" : nameOf(source)) +
         "\nTarget language: " + nameOf(target) + "\n\nText to translate:\n" + text;

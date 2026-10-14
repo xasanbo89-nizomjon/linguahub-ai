@@ -255,6 +255,9 @@ var TITLE_TARGET_CHARS = 48;
 
 function deriveTitleFromMessage(content) {
 if (typeof content !== "string" || !content.trim()) return DEFAULT_TITLE;
+// a message that was only pictures is stored as "[image]" lines (see www/image-attach.js)
+content = content.replace(/^[ \t]*\[image\][ \t]*$/gm, "");
+if (!content.trim()) return "Picture";
 var cleaned = content
 .replace(/```[\s\S]*?```/g, " ")
 .replace(/https?:\/\/\S+/g, " ")

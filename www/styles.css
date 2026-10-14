@@ -4669,3 +4669,208 @@ color: var(--text-muted-strong);
 .workspace-loading[hidden]{
 display: none;
 }
+
+/* Pictures in the composer and in messages (www/image-attach.js) */
+.attachment-strip{
+display: flex;
+flex-wrap: wrap;
+gap: var(--space-2);
+max-width: var(--composer-max-width);
+margin: 0 auto var(--space-2);
+}
+
+.attachment-strip[hidden]{
+display: none;
+}
+
+.attach-thumb{
+position: relative;
+width: 64px;
+height: 64px;
+background: var(--surface-2);
+border: 1px solid var(--border-strong);
+border-radius: var(--radius-md);
+overflow: hidden;
+}
+
+.attach-thumb.is-pending{
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--text-muted-strong);
+animation: lh-pulse 1.4s ease-in-out infinite;
+}
+
+.attach-thumb-open{
+display: block;
+width: 100%;
+height: 100%;
+min-height: 0;
+padding: 0;
+background: transparent;
+border-radius: 0;
+}
+
+.attach-thumb-open:hover:not(:disabled){
+background: transparent;
+transform: none;
+}
+
+.attach-thumb img{
+display: block;
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+
+.attach-remove{
+position: absolute;
+top: var(--space-1);
+right: var(--space-1);
+display: flex;
+align-items: center;
+justify-content: center;
+width: var(--space-5);
+height: var(--space-5);
+min-height: 0;
+padding: 0;
+background: var(--overlay);
+color: var(--on-accent);
+border-radius: var(--radius-full);
+font-size: var(--font-size-xs);
+line-height: 1;
+}
+
+.attach-remove:hover:not(:disabled){
+background: var(--danger);
+transform: none;
+}
+
+.composer.is-drop-target .controls{
+border-color: var(--accent);
+box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.message-pictures{
+display: flex;
+flex-wrap: wrap;
+justify-content: flex-end;
+gap: var(--space-2);
+margin-bottom: var(--space-1);
+}
+
+.message-picture{
+width: 120px;
+height: 120px;
+min-height: 0;
+padding: 0;
+background: var(--surface-2);
+border: 1px solid var(--border-strong);
+border-radius: var(--radius-md);
+overflow: hidden;
+}
+
+.message-picture:hover:not(:disabled){
+background: var(--surface-2);
+border-color: var(--accent);
+transform: none;
+}
+
+.message-picture img{
+display: block;
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+
+.message-picture-missing{
+padding: var(--space-2) var(--space-3);
+background: var(--surface-2);
+color: var(--text-muted-strong);
+border: 1px dashed var(--border-strong);
+border-radius: var(--radius-md);
+font-size: var(--font-size-sm);
+}
+
+.lightbox-backdrop{
+cursor: zoom-out;
+}
+
+.lightbox{
+position: relative;
+max-width: 100%;
+max-height: 100%;
+}
+
+.lightbox-image{
+display: block;
+max-width: 100%;
+max-height: calc(100vh - var(--titlebar-height) - var(--space-8));
+border-radius: var(--radius-md);
+box-shadow: var(--shadow-lg);
+}
+
+.lightbox-close{
+position: absolute;
+top: var(--space-2);
+right: var(--space-2);
+width: var(--space-8);
+height: var(--space-8);
+min-height: 0;
+padding: 0;
+background: var(--overlay);
+color: var(--on-accent);
+border-radius: var(--radius-full);
+}
+
+.image-lesson-actions{
+margin-top: var(--space-3);
+}
+
+/* Translate: a picture as the source */
+.ws-picture{
+display: flex;
+align-items: center;
+gap: var(--space-3);
+padding: var(--space-3) var(--space-4);
+border-bottom: 1px solid var(--border);
+background: var(--surface-2);
+}
+
+.ws-picture[hidden]{
+display: none;
+}
+
+.ws-picture-open{
+width: 56px;
+height: 56px;
+min-height: 0;
+padding: 0;
+background: transparent;
+border: 1px solid var(--border-strong);
+border-radius: var(--radius-md);
+overflow: hidden;
+}
+
+.ws-picture-open:hover:not(:disabled){
+background: transparent;
+transform: none;
+}
+
+.ws-picture-thumb{
+display: block;
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+
+.ws-picture-note{
+flex: 1;
+font-size: var(--font-size-sm);
+color: var(--text-muted-strong);
+}
+
+.ws-pane.is-drop-target{
+border-color: var(--accent);
+box-shadow: 0 0 0 3px var(--accent-soft);
+}

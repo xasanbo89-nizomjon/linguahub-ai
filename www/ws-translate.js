@@ -41,6 +41,9 @@
     var runId = 0;
     var lastKey = "";
     var recorded = false;
+    var Images = window.LinguaHubImages || null;
+    var picture = null; // { dataUrl, id } - the text to translate is in this picture
+    var pictureCount = 0;
 
     // ---- layout ----
     var root = el("div", "ws ws-translate");
@@ -75,17 +78,28 @@
     source.setAttribute("dir", "auto");
     source.setAttribute("maxlength", String(MAX_CHARS));
     source.setAttribute("rows", "8");
+    var pictureChip = el("div", "ws-picture");
+    pictureChip.hidden = true;
+    var pictureInput = el("input");
+    pictureInput.type = "file";
+    pictureInput.setAttribute("accept", "image/png,image/jpeg,image/webp");
+    pictureInput.hidden = true;
     var sourceFoot = el("div", "ws-pane-foot");
+    var pictureBtn = iconButton("Translate the text in a picture", "🖼", "ws-picture-btn");
+    pictureBtn.hidden = !Images;
     var detectedLabel = el("span", "ws-detected");
     detectedLabel.setAttribute("aria-live", "polite");
     var sourceListen = iconButton("Listen to the original text", "🔊", "voice-feature");
     var sourceCopy = iconButton("Copy the original text", "⧉");
     var counter = el("span", "ws-counter", "0 / " + MAX_CHARS);
+    sourceFoot.appendChild(pictureBtn);
     sourceFoot.appendChild(detectedLabel);
     sourceFoot.appendChild(sourceListen);
     sourceFoot.appendChild(sourceCopy);
     sourceFoot.appendChild(counter);
+    sourcePane.appendChild(pictureChip);
     sourcePane.appendChild(source);
+    sourcePane.appendChild(pictureInput);
     sourcePane.appendChild(sourceFoot);
 
     var targetPane = el("section", "ws-pane ws-pane-target");
@@ -116,7 +130,7 @@
     }
 
     function refreshButtons() {
-      var hasSource = source.value.trim().length > 0;
+      var hasSource = source.value.trim().length > 0 && !picture;
       sourceListen.disabled = !hasSource;
       sourceCopy.disabled = !hasSource;
       targetListen.disabled = !translation;
@@ -164,9 +178,9 @@
     async function run() {
       cancel();
       var text = source.value.trim();
-      if (!text) { lastKey = ""; detected = ""; showPlaceholder(); render(); return; }
+      if (!text && !picture) { lastKey = ""; detected = ""; showPlaceholder(); render(); return; }
       var p = pair.get();
-      var key = [auto ? "auto" : p.from, p.to, text].join("\u0001");
+      var key = [auto ? "auto" : p.from, p.to, picture ? "picture:" + picture.id : text].join("\u0001");
       if (key === lastKey) return;
 
       controller = typeof AbortController === "function" ? new AbortController() : null;
@@ -177,7 +191,8 @@
       try {
         var result = await AI.request({
           mode: "translate",
-          messages: [{ role: "user", content: AI.prompts.translate(auto ? "auto" : p.from, p.to, text) }],
+          messages: [{ role: "user", content: picture ? AI.prompts.translatePicture(auto ? "auto" : p.from, p.to) : AI.prompts.translate(auto ? "auto" : p.from, p.to, text) }],
+          images: picture ? [picture.dataUrl] : undefined,
           signal: controller ? controller.signal : undefined,
           normalize: AI.normalizeTranslate
         });
@@ -275,6 +290,87 @@
     sourceListen.addEventListener("click", function () { listen(source.value.trim(), sourceLang()); });
     targetListen.addEventListener("click", function () { listen(translation, pair.get().to); });
 
+    // ---- a picture as the source (Translate reads the text in it) ----
+    function notify(message) {
+      if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: message });
+    }
+
+    function renderPicture() {
+      pictureChip.textContent = "";
+      pictureChip.hidden = !picture;
+      source.disabled = Boolean(picture);
+      source.setAttribute("placeholder", picture ? "Translating the text in the picture" : "Type or paste text to translate");
+      if (!picture) return;
+      var img = el("img", "ws-picture-thumb");
+      img.setAttribute("src", picture.dataUrl);
+      img.setAttribute("alt", "Picture to translate");
+      var open = el("button", "ws-picture-open");
+      open.type = "button";
+      open.setAttribute("aria-label", "Enlarge the picture");
+      open.appendChild(img);
+      open.addEventListener("click", function () { if (Images) Images.openLightbox(picture.dataUrl, "Picture to translate"); });
+      var remove = iconButton("Remove the picture", "✕", "ws-picture-remove");
+      remove.addEventListener("click", function () { setPicture(null); source.focus(); });
+      pictureChip.appendChild(open);
+      pictureChip.appendChild(el("span", "ws-picture-note", "Text in the picture will be translated"));
+      pictureChip.appendChild(remove);
+    }
+
+    function setPicture(next) {
+      cancel();
+      picture = next;
+      lastKey = "";
+      detected = "";
+      renderPicture();
+      if (picture) { output.className = "ws-output is-busy"; output.textContent = "Reading the picture…"; translation = ""; refreshButtons(); run(); }
+      else { showPlaceholder(); }
+      render();
+    }
+
+    async function attachFile(file) {
+      if (!Images) return;
+      if (!file || !Images.isAcceptedType(file.type)) { notify("Only PNG, JPG and WebP images are supported."); return; }
+      try {
+        var prepared = await Images.prepareImage(file, Images.browserDeps(window), Images.MAX_IMAGE_BYTES);
+        pictureCount += 1;
+        setPicture({ dataUrl: prepared.dataUrl, id: pictureCount });
+      } catch (err) {
+        notify(err && err.message === "too-large" ? "That image is too large to use, even after shrinking it." : "Couldn't read that image.");
+      }
+    }
+
+    pictureBtn.addEventListener("click", function () { pictureInput.click(); });
+    pictureInput.addEventListener("change", function () {
+      var file = pictureInput.files && pictureInput.files[0];
+      pictureInput.value = "";
+      attachFile(file);
+    });
+    source.addEventListener("paste", function (event) {
+      var data = event.clipboardData;
+      if (!data || !Images) return;
+      var file = null;
+      Array.prototype.forEach.call(data.items || [], function (item) {
+        if (!file && item.kind === "file" && /^image\//.test(item.type) && item.getAsFile) file = item.getAsFile();
+      });
+      if (!file) return;
+      if (data.getData && data.getData("text/plain")) return; // text wins over a picture of it
+      event.preventDefault();
+      attachFile(file);
+    });
+    function dragHasFiles(event) {
+      var types = event.dataTransfer && event.dataTransfer.types ? Array.prototype.slice.call(event.dataTransfer.types) : [];
+      return types.indexOf("Files") !== -1;
+    }
+    panel.addEventListener("dragover", function (event) { if (dragHasFiles(event)) { event.preventDefault(); sourcePane.classList.add("is-drop-target"); } });
+    panel.addEventListener("dragleave", function (event) { if (dragHasFiles(event) && !panel.contains(event.relatedTarget)) sourcePane.classList.remove("is-drop-target"); });
+    panel.addEventListener("drop", function (event) {
+      if (!dragHasFiles(event)) return;
+      event.preventDefault();
+      sourcePane.classList.remove("is-drop-target");
+      var files = Array.prototype.slice.call(event.dataTransfer.files || []);
+      if (files.length) attachFile(files[0]);
+    });
+
     showPlaceholder();
     render();
 
@@ -283,7 +379,8 @@
       deactivate: function () { cancel(); if (window.LinguaHubVoice) window.LinguaHubVoice.stopSpeaking(); },
       // exposed for tests
       _run: run,
-      _state: function () { return { auto: auto, detected: detected, translation: translation, sourceLang: sourceLang() }; }
+      _attachFile: attachFile,
+      _state: function () { return { auto: auto, detected: detected, translation: translation, sourceLang: sourceLang(), hasPicture: Boolean(picture) }; }
     };
   }
 
