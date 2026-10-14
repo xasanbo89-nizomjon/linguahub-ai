@@ -4355,3 +4355,159 @@ color: var(--text-muted-strong);
 grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 }
+
+/* ---------------------------------------------------------------------
+   Micro-animations (Phase 5). CSS only, compositor-friendly (opacity and
+   transform), 120-200ms. Everything here is switched off by the
+   prefers-reduced-motion block at the end of this section (and by the
+   global one above, which collapses every duration).
+   --------------------------------------------------------------------- */
+
+@keyframes lh-slide-in-left{
+from{ opacity: 0; transform: translateX(-8px); }
+to{ opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lh-slide-in-right{
+from{ opacity: 0; transform: translateX(8px); }
+to{ opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lh-pop-in{
+from{ opacity: 0; transform: translateY(4px) scale(0.96); }
+to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes lh-panel-in{
+from{ opacity: 0; transform: translateY(6px); }
+to{ opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lh-card-in{
+from{ opacity: 0; transform: translateX(16px); }
+to{ opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lh-card-flip{
+from{ opacity: 0.4; transform: perspective(900px) rotateX(-70deg); }
+to{ opacity: 1; transform: perspective(900px) rotateX(0); }
+}
+
+/* A message appears with a short fade and slide: yours from the right, the
+   assistant's from the left. Only the message's first appearance animates;
+   streamed text never does (see the note on .message above). */
+.message.user{
+animation: lh-slide-in-right var(--duration-medium) var(--ease-standard);
+}
+
+.message.ai{
+animation: lh-slide-in-left var(--duration-medium) var(--ease-standard);
+}
+
+/* Press feedback for the round / icon buttons that do not use the base
+   button rule's own press scale. */
+.ws-icon-btn:active:not(:disabled),
+.header-icon-btn:active:not(:disabled),
+.titlebar-btn:active{
+transform: scale(0.92);
+}
+
+.ws-icon-btn,
+.header-icon-btn{
+transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+/* Hover states: a small lift for cards and rows, a colour shift elsewhere. */
+.mode-card,
+.vocab-item,
+.vocab-suggestion,
+.flashcard,
+.conversation-item,
+.chat-menu-item,
+.flashcard-grade{
+transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
+}
+
+.mode-card:hover:not(:disabled){
+transform: translateY(-2px);
+box-shadow: var(--shadow-2);
+}
+
+.mode-card:active:not(:disabled){
+transform: translateY(0) scale(0.99);
+}
+
+.vocab-item:hover,
+.vocab-suggestion:hover{
+border-color: var(--border-strong);
+box-shadow: var(--shadow-1);
+}
+
+.flashcard:hover{
+border-color: var(--accent);
+}
+
+.flashcard-grade:active{
+transform: scale(0.96);
+}
+
+/* Menus, popovers and tooltips grow in when they open (they are toggled
+   with [hidden] / display, so the animation restarts every time). */
+.chat-menu-list:not([hidden]),
+.word-pop:not([hidden]),
+.lh-palette{
+animation: lh-pop-in var(--duration-medium) var(--ease-standard);
+transform-origin: top center;
+}
+
+.gr-edit:hover .gr-tip,
+.gr-edit:focus-within .gr-tip,
+.gr-edit.is-open .gr-tip{
+animation: lh-pop-in var(--duration-fast) var(--ease-standard);
+}
+
+/* Switching mode: the incoming screen (a workspace, the home, or the chat)
+   fades up instead of snapping in. */
+.workspace-panel,
+.home-root:not(:empty),
+.container:not([data-workspace]) > .chat-scroll-wrapper{
+animation: lh-panel-in var(--duration-medium) var(--ease-standard);
+}
+
+/* Flashcards: a new card slides in; turning one over tips it forward. The
+   card is re-created for each state, so these play once per change. */
+.flashcard{
+animation: lh-card-in var(--duration-base) var(--ease-standard);
+transform-origin: center top;
+}
+
+.flashcard.is-flipped{
+animation: lh-card-flip var(--duration-base) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce){
+.message,
+.message.user,
+.message.ai,
+.chat-menu-list,
+.word-pop,
+.lh-palette,
+.gr-tip,
+.workspace-panel,
+.home-root,
+.chat-scroll-wrapper,
+.flashcard,
+.flashcard.is-flipped{
+animation: none !important;
+}
+.message:hover,
+.mode-card:hover:not(:disabled),
+.mode-card:active:not(:disabled),
+button:hover:not(:disabled),
+button:active:not(:disabled),
+.ws-icon-btn:active:not(:disabled),
+.header-icon-btn:active:not(:disabled),
+.flashcard-grade:active{
+transform: none !important;
+}
+}
