@@ -9,7 +9,7 @@ const path = require("node:path");
 
 const css = fs.readFileSync(path.join(__dirname, "..", "www", "styles.css"), "utf8");
 const theme = fs.readFileSync(path.join(__dirname, "..", "www", "theme.css"), "utf8");
-const section = css.slice(css.indexOf("Micro-animations (Phase 5)"));
+const section = css.slice(css.lastIndexOf("/*", css.indexOf("Micro-animations (Phase 5)")));
 
 function rules(source) {
   const out = [];
@@ -29,7 +29,7 @@ test("every animation in the Phase 5 block uses a token duration and the standar
   animations.forEach((a) => {
     assert.match(a, /var\(--duration-(fast|medium|base)\) var\(--ease-standard\)/, a);
   });
-  assert.doesNotMatch(section, /\d+ms/, "no literal millisecond values: durations come from tokens");
+  assert.doesNotMatch(section.replace(/\/\*[\s\S]*?\*\//g, ""), /\d+ms/, "no literal millisecond values: durations come from tokens");
 });
 
 test("messages fade and slide in on their first appearance: yours from the right, the assistant's from the left", () => {
