@@ -34,6 +34,37 @@ Open `www/index.html` via any static file server (e.g. VS Code's "Live Server" o
 npm start   # runs the backend and Electron together (concurrently)
 ```
 
+## Deploy to Vercel
+
+The web version runs on Vercel with no changes: `www/` is served as static files and the Express app (`server.js`) runs as one serverless function (`api/index.js`) that answers `/api/*`, `/health`, `/live`, `/ready` and `/chat`. Streaming chat (`/api/chat/stream`) and speech transcription (`/api/transcribe`) both work there; nothing writes to the local disk. Everything Vercel needs is already in `vercel.json`, `api/index.js` and `.vercelignore`.
+
+1. Push the repository to GitHub and import it in Vercel (**Add New → Project**). Leave the framework as **Other**; the build settings come from `vercel.json` (`npm ci --omit=dev`, no build step, output folder `www`).
+2. Add the environment variables below under **Settings → Environment Variables**, then deploy.
+3. For Google sign-in, add the Vercel domain under **Firebase console → Authentication → Settings → Authorized domains**. (`www/firebase-config.js` holds the public web config of your Firebase project; it is not a secret and is not an environment variable.)
+
+Environment variables (names only; see `.env.example` for what each one does):
+
+| Variable | Needed? |
+| --- | --- |
+| `OPENAI_API_KEY` | **Required** - chat, translation, word lookup and speech-to-text |
+| `FIREBASE_PROJECT_ID` | Needed for sign-in and sync (set all three or none) |
+| `FIREBASE_CLIENT_EMAIL` | Needed for sign-in and sync (set all three or none) |
+| `FIREBASE_PRIVATE_KEY` | Needed for sign-in and sync (paste the key with its `\n` sequences) |
+| `FRONTEND_ORIGINS` | Only if another site calls this API (same-origin needs nothing) |
+| `MAX_GENERATION_MS` | Optional - longest AI reply in ms; defaults to 55000 on Vercel (the function limit in `vercel.json` is 60 s; raise both together on a plan that allows more) |
+| `MAX_MESSAGE_LENGTH` | Optional - lowers a mode's input limit |
+| `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX_REQUESTS`, `DEEP_THINKING_RATE_LIMIT_MAX_REQUESTS`, `GENERAL_RATE_LIMIT_MAX_REQUESTS`, `TRANSCRIBE_RATE_LIMIT_MAX_REQUESTS` | Optional - rate limits (defaults are fine) |
+| `TRANSCRIBE_MODEL` | Optional - speech-to-text model (default `whisper-1`) |
+| `LOG_LEVEL` | Optional |
+| `FIREBASE_CHECK_REVOKED` | Optional - also reject revoked sign-in tokens |
+| `LINGUAHUB_INTERNAL_TOKEN` | Optional - only for trusted internal callers |
+| `TRUST_PROXY` | Not needed - defaults to `1` on Vercel (set it only to override) |
+| `NODE_ENV` | Not needed - Vercel sets `production` |
+
+Not used on Vercel: `PORT`, `GOOGLE_APPLICATION_CREDENTIALS` (a file path - use the three `FIREBASE_*` variables), `SHUTDOWN_TIMEOUT_MS`, `REQUEST_TIMEOUT_MS`, `DATABASE_URL`, `RATE_LIMIT_STORE_URL`.
+
+Good to know: rate limits are counted per function instance (the in-memory limiter), so they are a per-instance safety net, not a global quota; the request body limit on Vercel is 4.5 MB (recordings are capped at 4 MB); the microphone needs HTTPS, which Vercel provides. The desktop-only code (custom title bar, window controls, auto-update) only runs when the page is opened inside the Electron app and is skipped in a browser.
+
 ## Running tests
 
 ```bash

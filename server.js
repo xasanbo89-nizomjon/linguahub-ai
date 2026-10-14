@@ -18,6 +18,7 @@ const { requestIdMiddleware } = require("./lib/requestId.js");
 const { createMemoryLimiter, defaultKeyFn } = require("./lib/rateLimiter.js");
 const { createShutdownHandler } = require("./lib/gracefulShutdown.js");
 const transcribe = require("./lib/transcribe.js");
+const { cspDirectives } = require("./lib/csp.js");
 
 // Phase 11: validated once at module load, not per-request. In production
 // a missing/malformed *required* value is a loud startup failure (see the
@@ -83,30 +84,7 @@ app.use(
 helmet({
 contentSecurityPolicy: {
 useDefaults: false,
-directives: {
-defaultSrc: ["'self'"],
-scriptSrc: ["'self'", "https://www.gstatic.com"],
-scriptSrcAttr: ["'none'"],
-// As of Phase 4 all CSS lives in same-origin external files
-// (theme.css, styles.css) - no more inline <style> block or style=
-// attributes anywhere, so 'unsafe-inline' is no longer needed here.
-// Individual CSSOM property assignments (element.style.foo = ...,
-// used for the composer's auto-resize height) are NOT governed by
-// style-src and are unaffected by this restriction.
-styleSrc: ["'self'"],
-imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
-connectSrc: [
-"'self'",
-"https://identitytoolkit.googleapis.com",
-"https://securetoken.googleapis.com"
-],
-frameSrc: ["https://*.firebaseapp.com", "https://accounts.google.com"],
-fontSrc: ["'self'"],
-objectSrc: ["'none'"],
-baseUri: ["'self'"],
-formAction: ["'self'"],
-frameAncestors: ["'self'"]
-}
+directives: cspDirectives
 },
 // Firebase's signInWithPopup relies on window.opener communication with
 // the popup; the stricter default same-origin COOP breaks that handshake.
@@ -450,6 +428,14 @@ name: "deep-thinking",
 skip: (req) => !(req.body && req.body.mode === "deep-thinking")
 });
 
+// A mode's own generation budget, capped by MAX_GENERATION_MS when set. On
+// Vercel the cap defaults to just under the function's maxDuration (see
+// vercel.json), so a slow reply ends with the app's own "took too long"
+// message instead of the platform cutting the connection.
+function generationTimeoutMs(mode) {
+return envResult.maxGenerationMs ? Math.min(mode.timeoutMs, envResult.maxGenerationMs) : mode.timeoutMs;
+}
+
 async function handleChat(req, res) {
 
 const parsed = validateChatBody(req, res);
@@ -469,7 +455,7 @@ max_tokens: parsed.mode.maxOutputTokens,
 // object: ask the provider for JSON mode. Every other mode is unchanged.
 ...(parsed.mode.responseFormat === "json" ? { response_format: { type: "json_object" } } : {})
 },
-{ timeout: parsed.mode.timeoutMs }
+{ timeout: generationTimeoutMs(parsed.mode) }
 );
 
 // Authoritative usage metadata (Task: usage accounting integration prep).
@@ -545,7 +531,7 @@ abortController.abort();
 // call can't hold the connection and rate-limit slot open indefinitely.
 const timeoutHandle = setTimeout(() => {
 abortController.abort();
-}, parsed.mode.timeoutMs);
+}, generationTimeoutMs(parsed.mode));
 
 try {
 

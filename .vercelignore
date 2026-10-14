@@ -1,0 +1,20 @@
+# Not part of the web deployment (the Electron app, Android shell, tests and
+# build tooling). Secrets never get here: .env and service-account files are
+# git-ignored and are configured as Vercel environment variables instead.
+.env
+.env.*
+!.env.example
+*serviceAccount*.json
+*-admin*.json
+node_modules
+android
+dist
+e2e
+tests
+docs
+assets
+scripts
+Dockerfile
+capacitor.config.json
+main.js
+preload.js

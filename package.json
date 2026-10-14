@@ -110,5 +110,8 @@
     "jsdom": "^30.0.1",
     "playwright": "^1.62.1"
   },
-  "author": "LinguaHub"
+  "author": "LinguaHub",
+  "engines": {
+    "node": ">=22"
+  }
 }
