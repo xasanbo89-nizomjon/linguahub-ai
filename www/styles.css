@@ -4511,3 +4511,56 @@ button:active:not(:disabled),
 transform: none !important;
 }
 }
+
+/* Keyboard shortcuts dialog (www/shortcuts.js) */
+.shortcuts-dialog{
+max-width: 520px;
+}
+
+.shortcuts-section{
+margin: var(--space-4) 0 var(--space-2);
+font-size: var(--font-size-sm);
+font-weight: 600;
+color: var(--text-muted-strong);
+}
+
+.shortcuts-list{
+margin: 0;
+display: flex;
+flex-direction: column;
+}
+
+.shortcuts-row{
+display: flex;
+align-items: baseline;
+justify-content: space-between;
+gap: var(--space-4);
+padding: var(--space-2) 0;
+border-bottom: 1px solid var(--border);
+font-size: var(--font-size-md);
+}
+
+.shortcuts-row dt{
+min-width: 0;
+}
+
+.shortcuts-row dd{
+margin: 0;
+flex-shrink: 0;
+text-align: right;
+color: var(--text-muted-strong);
+font-size: var(--font-size-sm);
+}
+
+.shortcuts-combo kbd{
+display: inline-block;
+min-width: var(--space-5);
+padding: 0 var(--space-2);
+background: var(--surface-2);
+color: var(--text);
+border: 1px solid var(--border-strong);
+border-radius: var(--radius-sm);
+font-family: inherit;
+font-size: var(--font-size-xs);
+text-align: center;
+}
