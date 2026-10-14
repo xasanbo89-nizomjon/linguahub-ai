@@ -18,3 +18,24 @@ serviceAccountKey.json
 # it's still project-specific and excluded by default rather than shared
 # unintentionally. See docs/android-network-configuration.md.
 android/app/google-services.json
+
+# ---- Secrets and credentials: never commit (this repository is public) ----
+.env
+.env.*
+!.env.example
+*.env
+# Firebase Admin / Google Cloud service-account keys, any naming
+*serviceAccount*.json
+*serviceaccount*.json
+*service-account*.json
+*-admin*.json
+*adminsdk*.json
+*.pem
+*.p12
+*.pfx
+
+# Build output
+out/
+build/
+release/
+*.log
