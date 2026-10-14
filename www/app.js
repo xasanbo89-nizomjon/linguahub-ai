@@ -594,6 +594,11 @@ focusComposer: () => input.focus()
 });
 }
 
+// Tap a word in an AI message for its meaning - www/word-lookup.js.
+if (window.LinguaHubWordLookup && window.linguahubPair) {
+window.LinguaHubWordLookup.init({ chatBox: chatBox, pair: window.linguahubPair, vocab: window.linguahubVocab });
+}
+
 if (window.LinguaHubHome && window.linguahubPair) {
 window.LinguaHubHome.init({
 container: document.getElementById("home-root"),

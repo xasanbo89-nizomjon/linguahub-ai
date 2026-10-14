@@ -87,9 +87,26 @@ function createDom() {
     set textContent(v) { this._text = String(v); this.children = []; }
     get textContent() { return this.children.length ? this.children.map((c) => c.textContent).join("") : this._text; }
     remove() { if (this.parentNode) this.parentNode.removeChild(this); }
+    // supports "a, b" lists, compound ".x.y" / "tag.x", and "ancestor descendant" chains
     matches(sel) {
-      if (sel.startsWith(".")) return String(this.className).split(/\s+/).indexOf(sel.slice(1)) !== -1;
-      return this.tag === sel;
+      return String(sel).split(",").some((part) => {
+        const tokens = part.trim().split(/\s+/).filter(Boolean);
+        if (!tokens.length) return false;
+        const simple = (node, token) => {
+          const bits = token.split(".");
+          if (bits[0] && node.tag !== bits[0]) return false;
+          const have = String(node.className).split(/\s+/);
+          return bits.slice(1).every((c) => have.indexOf(c) !== -1);
+        };
+        if (!simple(this, tokens[tokens.length - 1])) return false;
+        let node = this.parentNode;
+        for (let i = tokens.length - 2; i >= 0; i -= 1) {
+          while (node && !(node.nodeType === 1 && simple(node, tokens[i]))) node = node.parentNode;
+          if (!node) return false;
+          node = node.parentNode;
+        }
+        return true;
+      });
     }
     closest(sel) { let n = this; while (n) { if (n.matches && n.matches(sel)) return n; n = n.parentNode; } return null; }
     querySelectorAll(sel) {

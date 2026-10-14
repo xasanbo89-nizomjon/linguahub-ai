@@ -4020,3 +4020,77 @@ display: none;
 [data-app-mode="embedded"]:not([data-show-mode-selector="true"]) .mode-picker{
 display: none;
 }
+
+/* Tap-a-word popover (www/word-lookup.js) */
+.message.ai .message-content{
+cursor: text;
+}
+
+.word-pop{
+position: fixed;
+z-index: var(--z-dialog);
+max-width: calc(100vw - var(--space-6));
+padding: var(--space-3) var(--space-4);
+background: var(--surface);
+color: var(--text);
+border: 1px solid var(--border-strong);
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow-lg);
+}
+
+.word-pop[hidden]{
+display: none;
+}
+
+.word-pop-head{
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: var(--space-2);
+}
+
+.word-pop-word{
+font-size: var(--font-size-lg);
+overflow-wrap: anywhere;
+}
+
+.word-pop-translation{
+margin: var(--space-2) 0 0;
+font-size: var(--font-size-md);
+color: var(--accent-text);
+font-weight: 600;
+}
+
+.word-pop-pos{
+margin: var(--space-1) 0 0;
+font-size: var(--font-size-xs);
+color: var(--text-muted-strong);
+font-style: italic;
+}
+
+.word-pop-example{
+margin: var(--space-3) 0 0;
+font-size: var(--font-size-sm);
+}
+
+.word-pop-example-tr,
+.word-pop-status{
+margin: var(--space-1) 0 0;
+font-size: var(--font-size-sm);
+color: var(--text-muted-strong);
+}
+
+.word-pop-error{
+color: var(--danger-text);
+}
+
+.word-pop-actions{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+margin-top: var(--space-3);
+}
+
+.word-pop-save{
+flex: 1;
+}
