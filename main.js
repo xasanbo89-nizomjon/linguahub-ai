@@ -1,7 +1,7 @@
-const { app, BrowserWindow, Menu, ipcMain, nativeTheme } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, nativeTheme, session } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
-const { isTrustedGoogleAuthUrl, isTrustedSenderUrl } = require("./lib/electronSecurity");
+const { isTrustedGoogleAuthUrl, isTrustedSenderUrl, isPermissionAllowed } = require("./lib/electronSecurity");
 const { isThemeMode, readThemePref, writeThemePref, backgroundFor } = require("./lib/themePref");
 
 const IS_MAC = process.platform === "darwin";
@@ -146,7 +146,31 @@ function createWindow() {
   win.loadFile(path.join(__dirname, "www", "index.html"));
 }
 
+// Permissions: the microphone (audio only, for speech input - see
+// www/speech-input.js) and clipboard writes for the app's own page; every
+// other permission request is denied. See lib/electronSecurity.js.
+function installPermissionHandlers() {
+  const ses = session.defaultSession;
+  ses.setPermissionRequestHandler((webContents, permission, callback, details) => {
+    callback(isPermissionAllowed({
+      permission,
+      mediaTypes: details && details.mediaTypes,
+      url: (details && details.requestingUrl) || webContents.getURL(),
+      indexFileUrl
+    }));
+  });
+  ses.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+    return isPermissionAllowed({
+      permission,
+      mediaTypes: details && (details.mediaType ? [details.mediaType] : details.mediaTypes),
+      url: (details && details.requestingUrl) || (webContents && webContents.getURL()),
+      indexFileUrl
+    });
+  });
+}
+
 app.whenReady().then(() => {
+  installPermissionHandlers();
   themeFile = path.join(app.getPath("userData"), "theme.json");
   nativeTheme.themeSource = readThemePref(themeFile);
   Menu.setApplicationMenu(buildMenu());

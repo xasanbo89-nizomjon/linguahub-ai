@@ -522,7 +522,33 @@ var LinguaHubChatSync = (function () {
     return Object.prototype.hasOwnProperty.call(STATUS_TEXT, status) ? STATUS_TEXT[status] : "";
   }
 
+  // The wording of the one-time "upload what is on this device?" dialog,
+  // for the chats and/or saved words made while signed out.
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+  function uploadOffer(chatCount, wordCount) {
+    var parts = [];
+    if (chatCount > 0) parts.push(plural(chatCount, "chat", "chats"));
+    if (wordCount > 0) parts.push(plural(wordCount, "saved word", "saved words"));
+    var total = chatCount + wordCount;
+    var title = chatCount > 0 && wordCount > 0 ? "Upload your chats and words?" : chatCount > 0 ? "Upload your chats?" : "Upload your words?";
+    return {
+      title: title,
+      message: "You have " + parts.join(" and ") + " on this device from before you signed in. Upload " + (total === 1 ? "it" : "them") + " to your account so " + (total === 1 ? "it appears" : "they appear") + " on your other devices too?",
+      confirmLabel: "Yes, upload",
+      cancelLabel: "No"
+    };
+  }
+
+  function uploadedToast(chatsAdded, wordsAdded) {
+    var parts = [];
+    if (chatsAdded > 0) parts.push(plural(chatsAdded, "chat", "chats"));
+    if (wordsAdded > 0) parts.push(plural(wordsAdded, "word", "words"));
+    return parts.length ? "Uploaded " + parts.join(" and ") + " to your account." : "";
+  }
+
   return {
+    uploadOffer: uploadOffer,
+    uploadedToast: uploadedToast,
     statusText: statusText,
     create: create,
     createFirestoreRemote: createFirestoreRemote,

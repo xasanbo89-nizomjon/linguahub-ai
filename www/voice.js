@@ -158,6 +158,8 @@ case "audio-capture":
 return s.noMicrophone;
 case "network":
 return s.network;
+case "service-busy":
+return s.serviceBusy || s.generic;
 case "language-not-supported":
 return s.languageUnsupported;
 case "unsupported":
@@ -189,7 +191,9 @@ if (typeof window === "undefined" || typeof document === "undefined") return;
 // Browser runtime
 // ---------------------------------------------------------------------
 
-var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+// Native recognition in browsers; a MediaRecorder + /api/transcribe recognizer
+// in Electron (where the Web Speech API does not work) - www/speech-input.js.
+var Recognition = window.LinguaHubSpeechInput ? window.LinguaHubSpeechInput.get() : (window.SpeechRecognition || window.webkitSpeechRecognition);
 var synth = window.speechSynthesis || null;
 var root = document.documentElement;
 

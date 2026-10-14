@@ -17,6 +17,7 @@ const { createLogger } = require("./lib/logger.js");
 const { requestIdMiddleware } = require("./lib/requestId.js");
 const { createMemoryLimiter, defaultKeyFn } = require("./lib/rateLimiter.js");
 const { createShutdownHandler } = require("./lib/gracefulShutdown.js");
+const transcribe = require("./lib/transcribe.js");
 
 // Phase 11: validated once at module load, not per-request. In production
 // a missing/malformed *required* value is a loud startup failure (see the
@@ -646,6 +647,29 @@ clearTimeout(timeoutHandle);
 // to run after), because chatLimiter/deepThinkingLimiter key by req.user.uid
 // when present - keying by uid was impossible under the old order, since
 // req.user didn't exist yet when the limiter ran.
+// Speech-to-text for places without a working browser speech recognition
+// (Electron, Firefox). The clip arrives as a raw audio body (no multipart
+// parser needed), is limited in size and rate, and is held in memory only.
+const transcribeLimiter = createMemoryLimiter({
+windowMs: envResult.rateLimitWindowMs,
+max: envResult.transcribeRateLimitMaxRequests,
+keyFn: defaultKeyFn,
+name: "transcribe"
+});
+const handleTranscribe = transcribe.createTranscribeHandler({
+openai,
+toFile: OpenAI.toFile,
+logger,
+model: process.env.TRANSCRIBE_MODEL || undefined
+});
+app.post(
+"/api/transcribe",
+authenticateOptional,
+transcribeLimiter,
+express.raw({ type: transcribe.RAW_BODY_TYPES, limit: transcribe.MAX_AUDIO_BYTES }),
+handleTranscribe
+);
+
 app.post("/chat", authenticateOptional, chatLimiter, deepThinkingLimiter, handleChat);
 
 app.post("/api/chat", authenticateOptional, chatLimiter, deepThinkingLimiter, handleChat);
@@ -725,7 +749,7 @@ console.log(`🚀 LinguaHub AI running on http://localhost:${PORT}`);
 server.requestTimeout = envResult.requestTimeoutMs;
 server.headersTimeout = Math.min(envResult.requestTimeoutMs, 65000);
 
-const shutdown = createShutdownHandler(server, [generalLimiter, chatLimiter, deepThinkingLimiter], {
+const shutdown = createShutdownHandler(server, [generalLimiter, chatLimiter, deepThinkingLimiter, transcribeLimiter], {
 timeoutMs: GRACEFUL_SHUTDOWN_TIMEOUT_MS,
 logger
 });

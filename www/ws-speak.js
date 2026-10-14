@@ -19,6 +19,7 @@
     "no-speech": "I didn't hear anything. Tap the microphone and try again.",
     "audio-capture": "No microphone was found. Connect one, or type your sentence below.",
     "network": "Speech recognition needs an internet connection and isn't available here. You can type your sentence below.",
+    "service-busy": "Speech recognition is busy right now. Try again in a moment, or type your sentence below.",
     "language-not-supported": "Speech input isn't available for this language here. You can type your sentence below."
   };
 
@@ -35,7 +36,7 @@
     var pair = api.pair;
     var Lang = window.LinguaHubLanguages;
     var AI = window.LinguaHubAI;
-    var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var Recognition = window.LinguaHubSpeechInput ? window.LinguaHubSpeechInput.get() : (window.SpeechRecognition || window.webkitSpeechRecognition);
 
     var state = "idle"; // idle | listening | thinking | speaking
     var history = [];   // what is sent to the model (user lines carry the language header)

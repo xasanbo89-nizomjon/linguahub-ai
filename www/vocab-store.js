@@ -142,9 +142,11 @@ var LinguaHubVocab = (function () {
 
     function key() { return "linguahub-ai:vocab:" + namespace; }
 
-    function read() {
+    function read() { return readNamespace(namespace); }
+
+    function readNamespace(ns) {
       try {
-        var parsed = JSON.parse(storage.getItem(key()) || "null");
+        var parsed = JSON.parse(storage.getItem("linguahub-ai:vocab:" + ns) || "null");
         var list = parsed && Array.isArray(parsed.words) ? parsed.words : [];
         var out = [];
         var seen = {};
@@ -295,6 +297,31 @@ var LinguaHubVocab = (function () {
         if (index === -1) return { ok: false };
         words.splice(index, 1);
         return { ok: write(words) };
+      },
+      // The words saved while signed out (the guest list). Read-only: signing
+      // in switches to the account's own list and leaves these alone.
+      listGuestWords: function () { return readNamespace("guest"); },
+      // Adds words (e.g. the guest ones) to the CURRENT list as they are,
+      // schedule included. Words already there (same id, or same language and
+      // spelling) are skipped; stops at the word limit. Never removes anything.
+      mergeWords: function (list) {
+        var words = read();
+        var added = 0;
+        var skipped = 0;
+        (Array.isArray(list) ? list : []).forEach(function (raw) {
+          var word = sanitizeWord(raw, clock());
+          if (!word || find(words, word.id) !== -1 || words.some(function (w) { return sameWord(w, word.lang, normalizeWord(word.word)); }) || words.length >= LIMITS.maxWords) {
+            skipped += 1;
+            return;
+          }
+          word.updatedAt = clock(); // newer than anything an older copy elsewhere may hold
+          words.push(word);
+          added += 1;
+        });
+        if (!added) return { ok: true, added: 0, skipped: skipped };
+        if (!write(words)) return { ok: false, reason: "storage-error" };
+        emit({ type: "changed" });
+        return { ok: true, added: added, skipped: skipped };
       },
       // undo of a delete: the same word (same id, same schedule), newer than any tombstone
       restore: function (raw) {

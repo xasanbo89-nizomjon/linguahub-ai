@@ -687,23 +687,18 @@ window.addEventListener("offline", () => { chatSync.connectivityChanged(); if (v
 async function offerGuestUpload(user) {
 if (!chatSync.shouldOfferUpload(user.uid)) return;
 const guestChats = historyUI.store.listGuestConversations();
-if (!guestChats.length) return;
-const count = guestChats.length;
+const guestWords = window.linguahubVocab ? window.linguahubVocab.listGuestWords() : [];
+if (!guestChats.length && !guestWords.length) return;
 const upload = window.LinguaHubDialog
-? await window.LinguaHubDialog.confirm({
-title: "Upload your chats?",
-message: "You have " + count + (count === 1 ? " chat" : " chats") + " on this device from before you signed in. Upload " + (count === 1 ? "it" : "them") + " to your account so " + (count === 1 ? "it appears" : "they appear") + " on your other devices too?",
-confirmLabel: "Yes, upload",
-cancelLabel: "No"
-})
+? await window.LinguaHubDialog.confirm(window.LinguaHubChatSync.uploadOffer(guestChats.length, guestWords.length))
 : false;
 chatSync.recordUploadDecision(user.uid, upload);
 if (!upload) return;
-const result = historyUI.store.mergeConversations(guestChats);
-if (result.ok) {
-historyUI.refreshList();
-if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "success", message: "Uploaded " + result.added + (result.added === 1 ? " chat" : " chats") + " to your account." });
-}
+const chatResult = guestChats.length ? historyUI.store.mergeConversations(guestChats) : { ok: true, added: 0 };
+const wordResult = guestWords.length ? window.linguahubVocab.mergeWords(guestWords) : { ok: true, added: 0 };
+if (chatResult.ok && chatResult.added) historyUI.refreshList();
+const message = window.LinguaHubChatSync.uploadedToast(chatResult.ok ? chatResult.added : 0, wordResult.ok ? wordResult.added : 0);
+if (message && window.LinguaHubToast) window.LinguaHubToast.show({ type: "success", message: message });
 }
 
 async function handleSyncUser(user) {
