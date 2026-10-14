@@ -9,7 +9,8 @@ const path = require("node:path");
 
 const css = fs.readFileSync(path.join(__dirname, "..", "www", "styles.css"), "utf8");
 const theme = fs.readFileSync(path.join(__dirname, "..", "www", "theme.css"), "utf8");
-const section = css.slice(css.lastIndexOf("/*", css.indexOf("Micro-animations (Phase 5)")));
+const motionStart = css.lastIndexOf("/*", css.indexOf("Micro-animations (Phase 5)"));
+const section = css.slice(motionStart, css.indexOf("/* Keyboard shortcuts dialog", motionStart));
 
 function rules(source) {
   const out = [];

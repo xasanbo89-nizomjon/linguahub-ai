@@ -1,7 +1,7 @@
 {
   "name": "xasan-ai",
   "version": "1.0.0-rc.1",
-  "description": "LinguaHub AI Desktop App",
+  "description": "LinguaHub AI - language learning with an AI tutor",
   "main": "main.js",
   "scripts": {
     "start": "concurrently \"node server.js\" \"electron .\"",
@@ -10,15 +10,56 @@
     "test:e2e": "node e2e/run-all.js",
     "test:e2e:electron": "node e2e/electron.js",
     "test:e2e:electron:packaged": "node e2e/electron-packaged.js",
-    "package:dry": "electron-builder --dir --publish never"
+    "package:dry": "electron-builder --dir --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "icons": "node scripts/build-icons.js"
   },
   "build": {
     "appId": "com.xasan.ai",
-    "productName": "LinguaHub AI",
+    "productName": "LinguaHub",
+    "copyright": "Copyright © LinguaHub",
+    "artifactName": "LinguaHub-Setup-${version}.${ext}",
+    "directories": {
+      "buildResources": "assets"
+    },
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "assets/icon.ico"
     },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "LinguaHub",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
+    },
+    "mac": {
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "icon": "assets/icons"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "xasanboyabdugaffarov1988-sys",
+        "repo": "linguahub.ai",
+        "releaseType": "release"
+      }
+    ],
     "files": [
       "main.js",
       "preload.js",
@@ -39,16 +80,7 @@
       "!node_modules/playwright-core/**",
       "!node_modules/axe-core/**",
       "!node_modules/jsdom/**"
-    ],
-    "directories": {
-      "buildResources": "assets"
-    },
-    "mac": {
-      "icon": "assets/icon.icns"
-    },
-    "linux": {
-      "icon": "assets/icons"
-    }
+    ]
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "8.3.0",
@@ -61,6 +93,7 @@
     "cors": "^2.8.5",
     "dompurify": "^3.4.13",
     "dotenv": "^17.2.0",
+    "electron-updater": "^6.8.9",
     "express": "^5.1.0",
     "firebase-admin": "^14.2.0",
     "helmet": "^8.3.0",
@@ -76,5 +109,6 @@
     "electron-builder": "^26.0.12",
     "jsdom": "^30.0.1",
     "playwright": "^1.62.1"
-  }
+  },
+  "author": "LinguaHub"
 }

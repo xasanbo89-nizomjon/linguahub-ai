@@ -21,12 +21,67 @@ var LinguaHubWorkspace = (function () {
   var ctx = null;
   var titleBefore = null;
 
+  // Screens that are not part of the startup page: the first time a mode is
+  // chosen its script(s) are fetched (same origin, in this order), then the
+  // screen builds itself. Nothing for them runs until then. Each script
+  // registers its factory with register(), exactly as when preloaded - so a
+  // page that already included them (or a test) works the same, synchronously.
+  var LAZY_SCRIPTS = {
+    translate: ["ws-translate.js"],
+    speak: ["ws-speak.js"],
+    grammar: ["grammar-diff.js", "ws-grammar.js"],
+    vocabulary: ["ws-vocab.js"]
+  };
+  var scriptLoads = {}; // src -> Promise, so a script is requested once
+  var loadingEl = null;
+
   function register(id, factory) {
     factories[id] = factory;
   }
 
+  function has(map, id) {
+    return Object.prototype.hasOwnProperty.call(map, id);
+  }
+
   function isWorkspaceMode(id) {
-    return Object.prototype.hasOwnProperty.call(factories, id);
+    return has(factories, id) || has(LAZY_SCRIPTS, id);
+  }
+
+  function loadScript(src) {
+    if (!has(scriptLoads, src)) {
+      scriptLoads[src] = new Promise(function (resolve, reject) {
+        var script = document.createElement("script");
+        script.src = src;
+        script.onload = function () { resolve(); };
+        script.onerror = function () { delete scriptLoads[src]; reject(new Error("Could not load " + src)); };
+        (document.head || document.body).appendChild(script);
+      });
+    }
+    return scriptLoads[src];
+  }
+
+  function loadFactory(id) {
+    var sources = has(LAZY_SCRIPTS, id) ? LAZY_SCRIPTS[id] : [];
+    var index = 0;
+    // one after the other (a screen may need the one before it); the first request starts right away
+    function next() {
+      if (index >= sources.length) return Promise.resolve();
+      return loadScript(sources[index++]).then(next);
+    }
+    return next().then(function () {
+      if (!has(factories, id)) throw new Error("Screen did not register: " + id);
+    });
+  }
+
+  function showLoading(on) {
+    if (on && !loadingEl) {
+      loadingEl = document.createElement("p");
+      loadingEl.className = "workspace-loading";
+      loadingEl.setAttribute("role", "status");
+      loadingEl.textContent = "Loading…";
+      ctx.root.appendChild(loadingEl);
+    }
+    if (loadingEl) loadingEl.hidden = !on;
   }
 
   function modeLabel(id) {
@@ -68,6 +123,24 @@ var LinguaHubWorkspace = (function () {
     if (activeId && activeId !== id) leave();
 
     var entry = instances[id];
+    if (!entry && !has(factories, id)) {
+      // first use of a lazily loaded screen: show the frame now, build when its script is in
+      ctx.root.hidden = false;
+      ctx.container.setAttribute("data-workspace", id);
+      setTitle(modeLabel(id));
+      activeId = id;
+      showLoading(true);
+      loadFactory(id).then(function () {
+        showLoading(false);
+        if (ctx.modeSelect.value === id) apply(); // still wanted (the learner may have moved on meanwhile)
+      }, function () {
+        showLoading(false);
+        if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "error", message: "Couldn't load this screen. Check your connection and try again." });
+        if (ctx.modeSelect.value === id) showChat();
+      });
+      return;
+    }
+    showLoading(false);
     if (!entry) {
       var panel = document.createElement("div");
       panel.className = "workspace-panel";

@@ -313,5 +313,6 @@ test("wiring: voice.js and the Speak screen ask speech-input.js for their recogn
   const html = read("index.html");
   const at = (n) => html.indexOf('<script src="' + n + '"></script>');
   assert.ok(at("config.js") > -1 && at("config.js") < at("speech-input.js"));
-  assert.ok(at("speech-input.js") < at("voice.js") && at("speech-input.js") < at("ws-speak.js"));
+  assert.ok(at("speech-input.js") < at("voice.js"));
+  assert.equal(at("ws-speak.js"), -1, "the Speak screen loads on first use (workspace.js), after speech-input.js is already there");
 });

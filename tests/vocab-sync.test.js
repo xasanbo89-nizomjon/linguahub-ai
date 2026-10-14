@@ -355,7 +355,8 @@ test("wiring: scripts load in order, sync is started and stopped with the accoun
   const html = fs.readFileSync(path.join(__dirname, "..", "www", "index.html"), "utf8");
   const at = (n) => html.indexOf('<script src="' + n + '"></script>');
   assert.ok(at("vocab-store.js") > -1 && at("vocab-store.js") < at("vocab-sync.js"));
-  assert.ok(at("ws-speak.js") < at("ws-vocab.js") && at("ws-vocab.js") < at("home-ui.js"));
+  assert.equal(at("ws-vocab.js"), -1, "the Vocabulary screen is loaded on first use, not at startup");
+  assert.ok(at("vocab-store.js") < at("home-ui.js"));
   const app = fs.readFileSync(path.join(__dirname, "..", "www", "app.js"), "utf8");
   assert.match(app, /LinguaHubVocabSync\.create\(\{\s*store: window\.linguahubVocab,/);
   assert.match(app, /async function handleSyncUser\(user\) \{\s*if \(vocabSync\) \{\s*if \(user\) vocabSync\.start\(user\);\s*else vocabSync\.stop\(\);/);

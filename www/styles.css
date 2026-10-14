@@ -4581,7 +4581,7 @@ width: var(--space-2);
 height: var(--space-2);
 background: var(--border-strong);
 border-radius: var(--radius-full);
-transition: background-color var(--duration-fast) var(--ease-standard), width var(--duration-base) var(--ease-standard);
+transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .onboarding-dot.is-active{
@@ -4657,4 +4657,15 @@ margin-top: var(--space-5);
 
 .onboarding-skip{
 margin-inline-end: auto;
+}
+
+/* A lazily loaded screen while its script is fetched (www/workspace.js) */
+.workspace-loading{
+margin: var(--space-8) 0;
+text-align: center;
+color: var(--text-muted-strong);
+}
+
+.workspace-loading[hidden]{
+display: none;
 }

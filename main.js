@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, ipcMain, nativeTheme, session } = require("ele
 const path = require("path");
 const { pathToFileURL } = require("url");
 const { isTrustedGoogleAuthUrl, isTrustedSenderUrl, isPermissionAllowed } = require("./lib/electronSecurity");
+const { setupAutoUpdates } = require("./lib/updater");
 const { isThemeMode, readThemePref, writeThemePref, backgroundFor } = require("./lib/themePref");
 
 const IS_MAC = process.platform === "darwin";
@@ -172,12 +173,26 @@ function installPermissionHandlers() {
   });
 }
 
+// Auto-update from GitHub Releases (packaged builds only; see lib/updater.js).
+// electron-updater is required lazily so development never loads it.
+function startAutoUpdates() {
+  let autoUpdater = null;
+  if (app.isPackaged) {
+    try { ({ autoUpdater } = require("electron-updater")); } catch (err) { autoUpdater = null; }
+  }
+  setupAutoUpdates({ autoUpdater, isPackaged: app.isPackaged, env: process.env, logger: console });
+}
+
 app.whenReady().then(() => {
+  // Windows groups the taskbar button, notifications and the installed
+  // shortcut by this id: it must match the installer's appId.
+  if (process.platform === "win32") app.setAppUserModelId(require("./package.json").build.appId);
   installPermissionHandlers();
   themeFile = path.join(app.getPath("userData"), "theme.json");
   nativeTheme.themeSource = readThemePref(themeFile);
   Menu.setApplicationMenu(buildMenu());
   createWindow();
+  startAutoUpdates();
 });
 
 app.on("window-all-closed", () => {

@@ -823,7 +823,7 @@ test("speak: text in the conversation is only ever shown as text", async () => {
 
 test("wiring: scripts load in dependency order, the workspace root exists and the chat is hidden while a screen is open", () => {
   const html = WWW("index.html");
-  const names = ["language-pair.js", "ai-json.js", "grammar-diff.js", "workspace.js", "ws-translate.js", "ws-grammar.js", "ws-speak.js", "home-ui.js", "app.js"];
+  const names = ["language-pair.js", "ai-json.js", "workspace.js", "home-ui.js", "app.js"];
   const positions = names.map((n) => html.indexOf('<script src="' + n + '"></script>'));
   assert.ok(positions.every((p) => p > -1), "every script is included: " + positions.join(","));
   assert.deepEqual(positions.slice().sort((a, b) => a - b), positions, "dependency order");
