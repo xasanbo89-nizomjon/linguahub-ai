@@ -19,6 +19,7 @@ const { createMemoryLimiter, defaultKeyFn } = require("./lib/rateLimiter.js");
 const { createShutdownHandler } = require("./lib/gracefulShutdown.js");
 const transcribe = require("./lib/transcribe.js");
 const { cspDirectives } = require("./lib/csp.js");
+const imageLimits = require("./lib/images.js");
 
 // Phase 11: validated once at module load, not per-request. In production
 // a missing/malformed *required* value is a loud startup failure (see the
@@ -366,7 +367,8 @@ if (rawMessages.length === 0) {
 return badRequest("❌ Message is required.");
 }
 
-for (const entry of rawMessages) {
+for (let index = 0; index < rawMessages.length; index += 1) {
+const entry = rawMessages[index];
 if (!entry || typeof entry !== "object") {
 return badRequest("❌ Invalid message format.");
 }
@@ -376,7 +378,24 @@ return badRequest("❌ Invalid message format.");
 if (entry.role !== "user" && entry.role !== "assistant") {
 return badRequest("❌ Invalid message role.");
 }
-if (typeof entry.content !== "string" || !entry.content.trim()) {
+// Pictures (see lib/images.js): only on the final user message, only for
+// modes that can read them, and checked here before any provider call.
+const hasImagesField = entry.images !== undefined && entry.images !== null;
+if (hasImagesField) {
+if (entry.role !== "user" || index !== rawMessages.length - 1) {
+return badRequest("❌ Images can only be attached to your latest message.");
+}
+const checked = imageLimits.validateImages(entry.images);
+if (!checked.ok) {
+res.status(checked.status).json({ reply: checked.message, requestId: req.id });
+return null;
+}
+if (checked.images.length > 0 && !mode.vision) {
+return badRequest(`❌ "${mode.label}" can't read images.`);
+}
+}
+const attachedImages = hasImagesField && Array.isArray(entry.images) ? entry.images.length : 0;
+if (typeof entry.content !== "string" || (!entry.content.trim() && !attachedImages)) {
 return badRequest("❌ Message content is required.");
 }
 }
