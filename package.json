@@ -12,7 +12,8 @@
     "test:e2e:electron:packaged": "node e2e/electron-packaged.js",
     "package:dry": "electron-builder --dir --publish never",
     "dist:win": "electron-builder --win --publish never",
-    "icons": "node scripts/build-icons.js"
+    "icons": "node scripts/build-icons.js",
+    "vercel-build": "echo web"
   },
   "build": {
     "appId": "com.xasan.ai",
