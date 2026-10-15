@@ -42,6 +42,9 @@ The web version runs on Vercel with no changes: `www/` is served as static files
 2. Add the environment variables below under **Settings → Environment Variables**, then deploy.
 3. For Google sign-in, add the Vercel domain under **Firebase console → Authentication → Settings → Authorized domains**. (`www/firebase-config.js` holds the public web config of your Firebase project; it is not a secret and is not an environment variable.)
 
+4. **Deploy the Firestore rules** (needed once, and again whenever `firestore.rules` changes - they stop people writing their own plan or usage count). Either paste the whole file into **Firebase console → Firestore Database → Rules** and press **Publish**, or from this folder run `npx firebase-tools login` and then `npx firebase-tools deploy --only firestore:rules --project <your-project-id>` (`firebase.json` already points at `firestore.rules`).
+5. Give someone Premium with `node scripts/set-premium.js <email> <days>` (`0` removes it); it uses the same Firebase variables as the server, from `.env`.
+
 Environment variables (names only; see `.env.example` for what each one does):
 
 | Variable | Needed? |

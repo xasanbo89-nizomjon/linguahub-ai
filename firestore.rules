@@ -1,7 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // The plan and the daily usage live on users/{uid}. A client may READ them (the
+    // page shows "7 / 10 free today") but may never write them: only the server (the
+    // Firebase Admin SDK, which is not subject to these rules) sets them.
+    function protectedKeys() {
+      return ['plan', 'premiumUntil', 'usageDate', 'usageCount'];
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      // a new profile document must not carry any plan / usage field
+      allow create: if isOwner(userId) && !request.resource.data.keys().hasAny(protectedKeys());
+      // an update must leave every plan / usage field exactly as it was (neither
+      // changed, nor added, nor removed)
+      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedKeys());
+      // no delete: removing the document would reset the day's usage count (and the plan)
+      allow delete: if false;
+    }
+
     match /user_preferences/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
     match /learning_memory/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
     match /conversation_metadata/{conversationId} {
