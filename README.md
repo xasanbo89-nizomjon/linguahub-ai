@@ -47,9 +47,12 @@ Environment variables (names only; see `.env.example` for what each one does):
 | Variable | Needed? |
 | --- | --- |
 | `OPENAI_API_KEY` | **Required** - chat, translation, word lookup and speech-to-text |
-| `FIREBASE_PROJECT_ID` | Needed for sign-in and sync (set all three or none) |
-| `FIREBASE_CLIENT_EMAIL` | Needed for sign-in and sync (set all three or none) |
-| `FIREBASE_PRIVATE_KEY` | Needed for sign-in and sync (paste the key with its `\n` sequences) |
+| `FIREBASE_PROJECT_ID` | **Required** since the daily limit: every AI request needs a verified sign-in, and usage is stored in Firestore (set all three) |
+| `FIREBASE_CLIENT_EMAIL` | **Required** (same three) |
+| `FIREBASE_PRIVATE_KEY` | **Required** (paste the key with its `\n` sequences) |
+| `FREE_DAILY_LIMIT` | Optional - free AI requests per day per user (default 10; the day ends at midnight Asia/Tashkent) |
+| `PREMIUM_PRICE_LABEL` | Optional - the price text in the paywall (default "Coming soon") |
+| `PREMIUM_CONTACT_URL` | Optional - an https link (e.g. a Telegram link) the "Get Premium" dialog opens |
 | `FRONTEND_ORIGINS` | Only if another site calls this API (same-origin needs nothing) |
 | `MAX_GENERATION_MS` | Optional - longest AI reply in ms; defaults to 55000 on Vercel (the function limit in `vercel.json` is 60 s; raise both together on a plan that allows more) |
 | `MAX_MESSAGE_LENGTH` | Optional - lowers a mode's input limit |

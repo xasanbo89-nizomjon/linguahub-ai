@@ -21,6 +21,7 @@ const transcribe = require("./lib/transcribe.js");
 const { cspDirectives } = require("./lib/csp.js");
 const imageLimits = require("./lib/images.js");
 const tryCorrect = require("./lib/tryCorrect.js");
+const { createAiGate, EXPOSED_HEADERS } = require("./lib/aiGate.js");
 
 // Phase 11: validated once at module load, not per-request. In production
 // a missing/malformed *required* value is a loud startup failure (see the
@@ -149,7 +150,10 @@ logger.warn("cors origin rejected", { origin });
 callback(new Error("Not allowed by CORS"));
 }
 },
-allowedHeaders: ["Content-Type", "Authorization"]
+allowedHeaders: ["Content-Type", "Authorization"],
+// the page (also when it is not served from this origin, e.g. the desktop app) reads
+// how many free requests are left from these headers on every AI response
+exposedHeaders: EXPOSED_HEADERS
 }));
 app.use(express.json({ limit: "10mb" }));
 
@@ -456,10 +460,23 @@ function generationTimeoutMs(mode) {
 return envResult.maxGenerationMs ? Math.min(mode.timeoutMs, envResult.maxGenerationMs) : mode.timeoutMs;
 }
 
+// The daily free limit (lib/aiGate.js): every AI route is built with aiChain().
+const aiGate = createAiGate({
+limit: envResult.freeDailyLimit,
+logger,
+priceLabel: envResult.premiumPriceLabel,
+contactUrl: envResult.premiumContactUrl
+});
+// verified sign-in -> speed limits -> the daily limit. In this order so that a
+// request refused for coming too fast is never counted against the day.
+function aiChain(...limiters) {
+return [authenticateRequired, ...limiters, aiGate.usageGate];
+}
+
 async function handleChat(req, res) {
 
 const parsed = validateChatBody(req, res);
-if (!parsed) return;
+if (!parsed) { await aiGate.refund(req); return; }
 
 const context = buildContext(parsed.mode, parsed.rawMessages, { trustedContext: parsed.trustedContext });
 
@@ -494,6 +511,7 @@ const usage = completion.usage
 : null;
 
 res.json({
+quota: aiGate.quotaFor(req),
 reply: completion.choices[0].message.content,
 model: completion.model,
 usage
@@ -508,6 +526,7 @@ error?.status === 401
 ? "❌ Invalid OpenAI API key. Check your .env file."
 : "❌ Error connecting to AI";
 
+await aiGate.refund(req); // the AI never answered: the request is given back
 res.status(500).json({ reply: message, requestId: req.id });
 
 }
@@ -517,7 +536,7 @@ res.status(500).json({ reply: message, requestId: req.id });
 async function handleChatStream(req, res) {
 
 const parsed = validateChatBody(req, res);
-if (!parsed) return;
+if (!parsed) { await aiGate.refund(req); return; }
 
 const context = buildContext(parsed.mode, parsed.rawMessages, { trustedContext: parsed.trustedContext });
 
@@ -541,6 +560,8 @@ res.flushHeaders?.();
 // disconnects, which would abort every request instantly.
 const abortController = new AbortController();
 let clientDisconnected = false;
+// nothing has reached the client yet: a failure then gives the request back
+let wroteDelta = false;
 res.on("close", () => {
 clientDisconnected = true;
 abortController.abort();
@@ -590,6 +611,7 @@ for await (const chunk of stream) {
 if (chunk.model) finalModel = chunk.model;
 const delta = chunk.choices[0]?.delta?.content;
 if (delta) {
+wroteDelta = true;
 res.write(`data: ${JSON.stringify({ delta })}\n\n`);
 }
 if (chunk.usage) {
@@ -605,7 +627,7 @@ if (!res.writableEnded) {
 // completion text, no internal provider fields, nothing beyond what
 // the existing delta events and this response already establish is
 // safe to send a client.
-res.write(`data: ${JSON.stringify({ type: "done", model: finalModel || parsed.mode.model, usage: finalUsage })}\n\n`);
+res.write(`data: ${JSON.stringify({ type: "done", model: finalModel || parsed.mode.model, usage: finalUsage, quota: aiGate.quotaFor(req) })}\n\n`);
 res.write("data: [DONE]\n\n");
 res.end();
 }
@@ -618,6 +640,7 @@ return;
 }
 
 if (abortController.signal.aborted) {
+if (!wroteDelta) await aiGate.refund(req);
 // The mode's own timeout elapsed while the connection was still open -
 // tell the client honestly instead of leaving the request hanging.
 if (!res.writableEnded) {
@@ -627,6 +650,7 @@ res.end();
 return;
 }
 
+if (!wroteDelta) await aiGate.refund(req);
 logger.error("provider error", { requestId: req.id, mode: parsed.mode.id, category: "openai-stream", status: error?.status });
 
 const message =
@@ -670,8 +694,9 @@ model: process.env.TRANSCRIBE_MODEL || undefined
 });
 app.post(
 "/api/transcribe",
-authenticateOptional,
-transcribeLimiter,
+// needs a signed-in user like every AI route, but a recording does not use up the
+// day's allowance (the Speak turn that follows it does)
+aiChain(transcribeLimiter),
 express.raw({ type: transcribe.RAW_BODY_TYPES, limit: transcribe.MAX_AUDIO_BYTES }),
 handleTranscribe
 );
@@ -690,10 +715,32 @@ mode: aiModes.getModeConfig("try-grammar"),
 logger
 }));
 
-app.post("/chat", authenticateOptional, chatLimiter, deepThinkingLimiter, handleChat);
+app.post("/chat", aiChain(chatLimiter, deepThinkingLimiter), handleChat);
 
-app.post("/api/chat", authenticateOptional, chatLimiter, deepThinkingLimiter, handleChat);
-app.post("/api/chat/stream", authenticateOptional, chatLimiter, deepThinkingLimiter, handleChatStream);
+app.post("/api/chat", aiChain(chatLimiter, deepThinkingLimiter), handleChat);
+app.post("/api/chat/stream", aiChain(chatLimiter, deepThinkingLimiter), handleChatStream);
+
+// The signed-in user's plan and today's usage (counts nothing). The page shows
+// the "7 / 10 free today" counter from this and from the headers of every reply.
+app.get("/api/usage", authenticateRequired, async (req, res) => {
+try {
+const snapshot = await aiGate.current(req.user.uid);
+res.json({
+plan: snapshot.plan,
+premium: snapshot.premium,
+premiumUntil: snapshot.premiumUntil,
+limit: snapshot.limit,
+used: snapshot.used,
+remaining: snapshot.remaining,
+resetAt: snapshot.resetAt,
+priceLabel: envResult.premiumPriceLabel,
+contactUrl: envResult.premiumContactUrl
+});
+} catch (error) {
+logger.error("usage read failed", { requestId: req.id, code: error && error.code });
+res.status(503).json({ reply: "❌ Couldn't load your plan right now.", code: "USAGE_UNAVAILABLE", requestId: req.id });
+}
+});
 
 // Unmatched /api/* requests get a safe JSON 404 instead of Express's
 // default HTML page (registered after the real routes above so it only

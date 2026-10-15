@@ -15,6 +15,7 @@ process.env.RATE_LIMIT_MAX_REQUESTS = process.env.RATE_LIMIT_MAX_REQUESTS || "10
 const firebaseAdminPath = require.resolve("../lib/firebaseAdmin.js");
 const authMiddlewarePath = require.resolve("../middleware/auth.js");
 const serverPath = require.resolve("../server.js");
+const { createFakeFirestore } = require("./helpers/aiAuth.js");
 
 const VALID_TOKEN = "mock-valid-token";
 const RAW_ERROR_FRAGMENT = "internal-firebase-detail-should-never-reach-the-client";
@@ -26,6 +27,8 @@ const MOCK_CLAIMS = {
   email_verified: true
 };
 
+const mockFirestore = createFakeFirestore();
+
 function installMockFirebaseAdmin() {
   require.cache[firebaseAdminPath] = {
     id: firebaseAdminPath,
@@ -33,6 +36,8 @@ function installMockFirebaseAdmin() {
     loaded: true,
     exports: {
       isConfigured: () => true,
+      // AI routes keep each user's daily count here (lib/aiGate.js)
+      getFirestore: () => mockFirestore,
       async verifyIdToken(idToken) {
         if (idToken === VALID_TOKEN) {
           return Object.assign({}, MOCK_CLAIMS);
@@ -106,7 +111,7 @@ test("frontend-supplied identity (query params) is ignored - uid always comes fr
   assert.notEqual(body.user.uid, "attacker-controlled-uid");
 });
 
-test("chat route (optional auth) accepts a request carrying a valid token without changing the existing validation contract", async () => {
+test("chat route (sign-in required) accepts a request carrying a valid token and keeps its validation contract", async () => {
   const res = await fetch(`${baseUrl}/api/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${VALID_TOKEN}` },
@@ -115,13 +120,15 @@ test("chat route (optional auth) accepts a request carrying a valid token withou
   assert.equal(res.status, 400);
 });
 
-test("chat route (optional auth) still works as a guest even with a garbage token (fails open, not 401)", async () => {
+test("chat route no longer works as a guest: a garbage token or no token is a 401 (since Phase 6A every AI request needs a verified sign-in)", async () => {
   const res = await fetch(`${baseUrl}/api/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: "Bearer garbage-token" },
     body: JSON.stringify({ message: "" })
   });
-  assert.equal(res.status, 400);
+  assert.equal(res.status, 401);
+  const anonymous = await fetch(`${baseUrl}/api/chat/stream`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "hi" }) });
+  assert.equal(anonymous.status, 401);
 });
 
 test("SPA/static fallback does not intercept /api/auth/me", async () => {
@@ -155,7 +162,7 @@ test("health endpoint remains public and unauthenticated", async () => {
   assert.equal(res.status, 200);
 });
 
-test("required auth route fails clearly with 503 when Firebase Admin is not configured, without crashing guest routes", async () => {
+test("required auth route fails clearly with 503 when Firebase Admin is not configured, without crashing the rest of the app", async () => {
   // Isolated app instance simulating a deployment with no Firebase Admin
   // credentials set (this project's actual current state - see docs).
   require.cache[firebaseAdminPath] = {
@@ -185,13 +192,13 @@ test("required auth route fails clearly with 503 when Firebase Admin is not conf
     });
     assert.equal(meRes.status, 503);
 
-    // Guest chat must still work even though Admin isn't configured.
+    // AI chat needs a verified sign-in: with no way to verify one it refuses (503), it never lets anyone in.
     const chatRes = await fetch(`${unconfiguredBaseUrl}/api/chat/stream`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: "" })
+      headers: { "Content-Type": "application/json", Authorization: "Bearer anything" },
+      body: JSON.stringify({ message: "hi" })
     });
-    assert.equal(chatRes.status, 400);
+    assert.equal(chatRes.status, 503);
 
     const healthRes = await fetch(`${unconfiguredBaseUrl}/health`);
     assert.equal(healthRes.status, 200);

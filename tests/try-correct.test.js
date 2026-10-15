@@ -4,6 +4,7 @@
 
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+require("./helpers/aiAuth.js").installLegacy(); // /api/chat (used once below) needs a signed-in user
 
 const OpenAI = require("openai");
 const Try = require("../lib/tryCorrect.js");

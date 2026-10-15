@@ -9,6 +9,9 @@
 
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
+// Since Phase 6A every AI route needs a verified sign-in (lib/aiGate.js). This file is about
+// other things, so it runs as a signed-in premium user: see tests/helpers/aiAuth.js.
+require("./helpers/aiAuth.js").installLegacy();
 const http = require("node:http");
 const aiModes = require("../lib/aiModes.js");
 
@@ -306,7 +309,7 @@ test("no secret, raw provider field, or system-prompt fragment ever appears in a
     body: JSON.stringify({ message: "hi", mode: "linguahub-tutor" })
   });
   const body = await res.json();
-  assert.deepEqual(Object.keys(body).sort(), ["model", "reply", "usage"]);
+  assert.deepEqual(Object.keys(body).sort(), ["model", "quota", "reply", "usage"]); // quota: what is left of the day's free requests
   const asString = JSON.stringify(body);
   assert.doesNotMatch(asString, /sk-/);
   assert.doesNotMatch(asString, /fp_internal|chatcmpl-internal-should-not-leak/);

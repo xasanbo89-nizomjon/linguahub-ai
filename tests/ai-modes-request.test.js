@@ -11,6 +11,9 @@
 
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
+// Since Phase 6A every AI route needs a verified sign-in (lib/aiGate.js). This file is about
+// other things, so it runs as a signed-in premium user: see tests/helpers/aiAuth.js.
+require("./helpers/aiAuth.js").installLegacy();
 const http = require("node:http");
 const aiModes = require("../lib/aiModes.js");
 
