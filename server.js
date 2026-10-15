@@ -462,15 +462,24 @@ return envResult.maxGenerationMs ? Math.min(mode.timeoutMs, envResult.maxGenerat
 
 // The daily free limit (lib/aiGate.js): every AI route is built with aiChain().
 const aiGate = createAiGate({
+requireSignIn: envResult.requireSignIn,
+guestLimit: envResult.guestDailyLimit,
+guestImageLimit: envResult.guestImageDailyLimit,
+guestGlobalCap: envResult.guestGlobalDailyCap,
+salt: envResult.guestSalt,
 limit: envResult.freeDailyLimit,
 logger,
 priceLabel: envResult.premiumPriceLabel,
 contactUrl: envResult.premiumContactUrl
 });
-// verified sign-in -> speed limits -> the daily limit. In this order so that a
-// request refused for coming too fast is never counted against the day.
+// sign-in -> speed limits -> the daily limit. In this order so that a request refused for
+// coming too fast is never counted against the day. A sign-in is required when
+// REQUIRE_SIGN_IN=true; otherwise a valid token is used when there is one and everyone else
+// is a guest with their own, smaller allowance (lib/aiGate.js). A request WITH a bad token is
+// a guest too - it never gets more than a guest gets.
+const authenticateAi = envResult.requireSignIn ? authenticateRequired : authenticateOptional;
 function aiChain(...limiters) {
-return [authenticateRequired, ...limiters, aiGate.usageGate];
+return [authenticateAi, ...limiters, aiGate.usageGate];
 }
 
 async function handleChat(req, res) {
@@ -722,10 +731,18 @@ app.post("/api/chat/stream", aiChain(chatLimiter, deepThinkingLimiter), handleCh
 
 // The signed-in user's plan and today's usage (counts nothing). The page shows
 // the "7 / 10 free today" counter from this and from the headers of every reply.
-app.get("/api/usage", authenticateRequired, async (req, res) => {
+app.get("/api/usage", authenticateOptional, async (req, res) => {
+if (!req.user && envResult.requireSignIn) {
+return res.status(401).json({ reply: "❌ Authentication required.", code: "AUTH_REQUIRED", requireSignIn: true, requestId: req.id });
+}
 try {
-const snapshot = await aiGate.current(req.user.uid);
+const snapshot = req.user ? await aiGate.current(req.user.uid) : await aiGate.currentGuest(req);
 res.json({
+requireSignIn: envResult.requireSignIn,
+guest: !req.user,
+imageLimit: snapshot.imageLimit === undefined ? null : snapshot.imageLimit,
+imagesRemaining: snapshot.imagesRemaining === undefined ? null : snapshot.imagesRemaining,
+capReached: Boolean(snapshot.capReached),
 plan: snapshot.plan,
 premium: snapshot.premium,
 premiumUntil: snapshot.premiumUntil,

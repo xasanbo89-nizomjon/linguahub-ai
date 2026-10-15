@@ -1,5 +1,6 @@
 "use strict";
 
+// (These tests run the strict mode, REQUIRE_SIGN_IN=true; the optional-sign-in mode is in tests/guest-limit.test.js.)
 // The ONE gate in front of every AI endpoint: verified sign-in, the daily free limit,
 // premium, what counts, what does not, and what the responses carry.
 
@@ -38,7 +39,8 @@ function patchProvider(handlers) {
 async function withServer(fn, options) {
   const o = options || {};
   const saved = {};
-  Object.keys(o.env || {}).forEach((k) => { saved[k] = process.env[k]; process.env[k] = o.env[k]; });
+  const env = Object.assign({ REQUIRE_SIGN_IN: "true" }, o.env || {});
+  Object.keys(env).forEach((k) => { saved[k] = process.env[k]; process.env[k] = env[k]; });
   const admin = installFirebaseAdmin({ db: o.db || createFakeFirestore(o.documents), users: USERS, configured: o.configured });
   const provider = patchProvider(o.provider);
   const app = require("../server.js");
@@ -340,12 +342,12 @@ test("structure: every route that reaches the AI provider is built with aiChain,
   const ai = routes.filter((r) => /handleChat|handleChatStream|handleTranscribe/.test(r.rest));
   assert.deepEqual(ai.map((r) => r.route).sort(), ["/api/chat", "/api/chat/stream", "/api/transcribe", "/chat"]);
   ai.forEach((r) => assert.match(r.rest, /aiChain\(/, r.route + " uses the shared gate"));
-  assert.match(code, /function aiChain\(\.\.\.limiters\) \{\s*return \[authenticateRequired, \.\.\.limiters, aiGate\.usageGate\];/, "sign-in first, then the speed limits, then the day's allowance");
+  assert.match(code, /const authenticateAi = envResult\.requireSignIn \? authenticateRequired : authenticateOptional;\s*function aiChain\(\.\.\.limiters\) \{\s*return \[authenticateAi, \.\.\.limiters, aiGate\.usageGate\];/, "sign-in (or guest identification), then the speed limits, then the day's allowance");
   const providerCalls = code.match(/openai\.(chat|audio)\.[a-z.]+\.create\(/g) || [];
   assert.equal(providerCalls.length, 2, "server.js calls the provider only in handleChat and handleChatStream");
   const transcribeSource = fs.readFileSync(path.join(__dirname, "..", "lib", "transcribe.js"), "utf8");
   assert.equal((transcribeSource.match(/openai\.audio\.transcriptions\.create\(/g) || []).length, 1, "and transcription's single call sits behind /api/transcribe (aiChain)");
-  assert.doesNotMatch(code, /authenticateOptional,[^)]*handleChat/, "no AI route is guest-accessible any more");
+  assert.doesNotMatch(code, /authenticateOptional,[^)]*handleChat/, "the choice between required and optional sign-in is made in one place (authenticateAi)");
   const tryRoute = routes.find((r) => r.route === "/api/try-correct");
   assert.ok(tryRoute && /tryLimiter/.test(tryRoute.rest) && !/aiChain/.test(tryRoute.rest), "the landing demo stays IP-limited and sign-in free");
   assert.ok(fs.readFileSync(path.join(__dirname, "..", "lib", "tryCorrect.js"), "utf8").includes("openai.chat.completions.create"), "it is the one other provider call, and it is the IP-limited demo");

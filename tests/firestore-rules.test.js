@@ -21,9 +21,9 @@ const can = (options) => check(Object.assign({ rules }, options));
 
 // ---- the interpreter itself understands this rules file -----------------------------------------------------------
 
-test("the rules file parses into the five collections this app uses, each with allow statements", () => {
+test("the rules file parses into the collections this app uses, each with allow statements", () => {
   const patterns = rules.matches.map((m) => m.pattern.join("/")).sort();
-  assert.deepEqual(patterns, ["conversation_metadata/{conversationId}", "learning_memory/{userId}", "user_preferences/{userId}", "users/{userId}"]);
+  assert.deepEqual(patterns, ["conversation_metadata/{conversationId}", "guestUsage/{id}", "learning_memory/{userId}", "user_preferences/{userId}", "users/{userId}"]);
   rules.matches.forEach((m) => assert.ok(m.allows.length > 0, m.pattern.join("/")));
   assert.ok(rules.functions.isOwner && rules.functions.protectedKeys, "helper functions are read");
 });
@@ -107,6 +107,15 @@ test("there is no other place a client could keep a plan: sub-collections and un
   for (const p of ["users/alice/plan/current", "users/alice/usage/today", "plans/alice", "usage/alice", "admin/config", "premium/alice"]) {
     for (const operation of ["get", "create", "update", "delete"]) {
       assert.equal(can({ path: p, operation, auth: alice, existing: {}, incoming: { plan: "premium" } }), false, p + " " + operation);
+    }
+  }
+});
+
+test("guest usage (hashed IPs and the global count) is closed to every client: signed in, signed out, read or write", () => {
+  for (const auth of [alice, null]) {
+    for (const operation of ["get", "list", "create", "update", "delete"]) {
+      assert.equal(can({ path: "guestUsage/abc123", operation, auth, existing: { usageCount: 1 }, incoming: { usageCount: 0 } }), false, operation + " " + (auth ? "signed in" : "anonymous"));
+      assert.equal(can({ path: "guestUsage/global-2026-03-10", operation, auth, existing: { count: 5 }, incoming: { count: 0 } }), false, "global " + operation);
     }
   }
 });

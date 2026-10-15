@@ -28,6 +28,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Guests' daily counts (hashed IP addresses, never raw ones) are kept by the server only.
+    match /guestUsage/{id} {
+      allow read, write: if false;
+    }
+
     match /user_preferences/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
     match /learning_memory/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
     match /conversation_metadata/{conversationId} {

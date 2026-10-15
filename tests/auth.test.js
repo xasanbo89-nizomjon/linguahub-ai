@@ -12,6 +12,8 @@ const http = require("node:http");
 process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || "sk-test-placeholder-not-a-real-key";
 process.env.RATE_LIMIT_MAX_REQUESTS = process.env.RATE_LIMIT_MAX_REQUESTS || "1000";
 
+// this file tests the strict mode: every AI request needs a verified sign-in (REQUIRE_SIGN_IN=true)
+process.env.REQUIRE_SIGN_IN = "true";
 const firebaseAdminPath = require.resolve("../lib/firebaseAdmin.js");
 const authMiddlewarePath = require.resolve("../middleware/auth.js");
 const serverPath = require.resolve("../server.js");

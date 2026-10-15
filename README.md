@@ -53,6 +53,11 @@ Environment variables (names only; see `.env.example` for what each one does):
 | `FIREBASE_PROJECT_ID` | **Required** since the daily limit: every AI request needs a verified sign-in, and usage is stored in Firestore (set all three) |
 | `FIREBASE_CLIENT_EMAIL` | **Required** (same three) |
 | `FIREBASE_PRIVATE_KEY` | **Required** (paste the key with its `\n` sequences) |
+| `REQUIRE_SIGN_IN` | Optional - `false` (default): guests can use the app with a smaller daily allowance; `true`: every AI request needs a sign-in |
+| `GUEST_DAILY_LIMIT` | Optional - guest AI requests per day per IP address (default 10) |
+| `GUEST_IMAGE_DAILY_LIMIT` | Optional - guest picture messages per day (default 2) |
+| `GUEST_GLOBAL_DAILY_CAP` | Optional - requests per day across ALL guests together (default 2000); then guests are asked to sign in |
+| `GUEST_SALT` | Optional but recommended - a secret mixed into the guest IP hash (raw IPs are never stored) |
 | `FREE_DAILY_LIMIT` | Optional - free AI requests per day per user (default 10; the day ends at midnight Asia/Tashkent) |
 | `PREMIUM_PRICE_LABEL` | Optional - the price text in the paywall (default "Coming soon") |
 | `PREMIUM_CONTACT_URL` | Optional - an https link (e.g. a Telegram link) the "Get Premium" dialog opens |
