@@ -8,7 +8,11 @@
 //     the price text from the server), the "Get Premium" dialog with the contact
 //     link and "Remind me tomorrow",
 //   - a friendly "Sign in to continue, it's free" dialog for anyone who tries an
-//     AI feature while signed out.
+//     AI feature while signed out - but only when the server requires a sign-in
+//     (REQUIRE_SIGN_IN=true). By default guests use the app with their own, smaller
+//     daily allowance (the same counter, the same paywall plus a "Sign in for more"
+//     note) and are asked to sign in only when the guests' global cap is reached or
+//     for more pictures. The page learns which mode it is in from GET /api/usage.
 // The numbers come from GET /api/usage and from the X-Usage-* headers (and the
 // "quota" field) of every AI reply, so the counter is always what the server says.
 
@@ -17,6 +21,7 @@ var LinguaHubUsage = (function () {
 
   var REMINDER_KEY = "linguahub-ai:premium-reminder";
   var LOW = 2;
+  var LIMIT_CODES = ["DAILY_LIMIT_REACHED", "GUEST_CAP_REACHED", "GUEST_IMAGE_LIMIT_REACHED"];
   var MAX_TIMER_MS = 2147483000;
 
   function isHttpsUrl(value) {
@@ -49,7 +54,7 @@ var LinguaHubUsage = (function () {
     var notify = opts.notify || function () {};
     var counterEl = opts.counterEl || null;
     var badges = opts.premiumEls || {};
-    var state = { plan: null, premium: false, limit: null, remaining: null, resetAt: null, premiumUntil: null, priceLabel: "Coming soon", contactUrl: null };
+    var state = { plan: null, premium: false, guest: false, requireSignIn: false, limit: null, remaining: null, resetAt: null, premiumUntil: null, priceLabel: "Coming soon", contactUrl: null };
     var modal = null;
     var reminderTimer = null;
 
@@ -86,12 +91,14 @@ var LinguaHubUsage = (function () {
     }
 
     function clear() {
-      state.plan = null; state.premium = false; state.limit = null; state.remaining = null; state.resetAt = null; state.premiumUntil = null;
+      state.plan = null; state.premium = false; state.guest = false; state.limit = null; state.remaining = null; state.resetAt = null; state.premiumUntil = null;
       render();
     }
 
     function setFromServer(info) {
       if (!info) return;
+      if (typeof info.requireSignIn === "boolean") state.requireSignIn = info.requireSignIn;
+      if (typeof info.guest === "boolean") state.guest = info.guest;
       if (info.plan === "premium" || info.premium === true) {
         state.plan = "premium"; state.premium = true; state.limit = null; state.remaining = null;
       } else if (info.plan === "free" || info.premium === false) {
@@ -127,12 +134,18 @@ var LinguaHubUsage = (function () {
       });
     }
 
+    // Reads plan, numbers and the sign-in mode from the server. Signed in: the account's own numbers;
+    // otherwise the guest's (unless the server requires a sign-in, which it says with a 401).
     async function refresh() {
-      if (!opts.isSignedIn || !opts.isSignedIn()) { clear(); return null; }
       try {
         var headers = Object.assign({}, await opts.getAuthHeaders());
-        if (!headers.Authorization) return null;
         var response = await opts.fetch(opts.apiUrl("/api/usage"), { headers: headers });
+        if (response.status === 401) {
+          var denied = null;
+          try { denied = await response.json(); } catch (err) { denied = null; }
+          if (denied && denied.requireSignIn === true) { clear(); state.requireSignIn = true; }
+          return null;
+        }
         if (!response.ok) return null;
         var body = await response.json();
         setFromServer(body);
@@ -143,7 +156,8 @@ var LinguaHubUsage = (function () {
     }
 
     function setUser(user) {
-      if (user) refresh(); else clear();
+      if (!user) clear(); // the signed-out numbers are the guest's: read them afresh
+      refresh();
     }
 
     // ---- dialogs ----
@@ -223,10 +237,16 @@ var LinguaHubUsage = (function () {
         plans.appendChild(premium);
         dialog.appendChild(plans);
         dialog.appendChild(el("p", "paywall-note", "Flashcards and your vocabulary keep working all day."));
-        dialog.appendChild(actionsRow([
-          button("Maybe later", "lh-btn-secondary", close),
-          button("Get Premium", "lh-btn-primary paywall-get", function () { showGetPremium(); })
-        ]));
+        var buttons = [button("Maybe later", "lh-btn-secondary", close)];
+        if (state.guest) {
+          // no account yet: signing in is the way to more (every account has its own daily allowance)
+          dialog.appendChild(el("p", "paywall-note paywall-signin", "Sign in for more: every account gets its own free requests each day."));
+          if (typeof opts.isSignInAvailable !== "function" || opts.isSignInAvailable()) {
+            buttons.push(button("Sign in for more", "lh-btn-secondary paywall-signin-btn", function () { close(); if (opts.signIn) opts.signIn(); }));
+          }
+        }
+        buttons.push(button("Get Premium", "lh-btn-primary paywall-get", function () { showGetPremium(); }));
+        dialog.appendChild(actionsRow(buttons));
       }, "paywall");
     }
 
@@ -250,11 +270,11 @@ var LinguaHubUsage = (function () {
       }, "get-premium");
     }
 
-    function showSignIn() {
+    function showSignIn(message) {
       var available = typeof opts.isSignInAvailable === "function" ? opts.isSignInAvailable() : true;
       return openModal("Sign in to continue", function (dialog, close) {
         dialog.appendChild(el("p", "lh-dialog-message", available
-          ? "It's free. Sign in to use the AI tutor - your chats, words and progress stay with your account."
+          ? (message || "It's free. Sign in to use the AI tutor - your chats, words and progress stay with your account.")
           : "Signing in isn't available in this version of the app, so the AI tutor can't be used here yet."));
         var buttons = [button(available ? "Not now" : "Close", "lh-btn-secondary", close)];
         if (available) buttons.push(button("Sign in with Google", "lh-btn-primary signin-go", function () { close(); if (opts.signIn) opts.signIn(); }));
@@ -262,22 +282,57 @@ var LinguaHubUsage = (function () {
       }, "signin-required");
     }
 
-    // The page's gate before any AI feature: signed in -> true; otherwise the friendly dialog and false.
+    // The page's gate before any AI feature. Signed in: yes. Signed out: yes as a guest - unless the
+    // server requires a sign-in, then the friendly dialog and no.
     function canUseAi() {
       if (opts.isSignedIn && opts.isSignedIn()) return true;
+      if (!state.requireSignIn) return true;
       showSignIn();
       return false;
     }
 
-    // the server said "daily limit reached" (429 DAILY_LIMIT_REACHED)
+    // the server answered 401 AUTH_REQUIRED: it requires a sign-in
+    function handleAuthRequired() {
+      state.requireSignIn = true;
+      showSignIn();
+    }
+
+    // the server refused for a limit (429): the daily limit opens the paywall; the guests' global cap and
+    // the guests' picture limit ask for a sign-in
     function handleLimit(body) {
       var info = body && typeof body === "object" ? body : {};
-      setFromServer({ plan: "free", premium: false, limit: typeof info.limit === "number" ? info.limit : state.limit, remaining: 0, resetAt: info.resetAt, priceLabel: info.priceLabel, contactUrl: info.contactUrl });
+      if (info.code === "GUEST_CAP_REACHED" || info.code === "GUEST_IMAGE_LIMIT_REACHED") {
+        showSignIn(messageFor(info.code));
+        return;
+      }
+      setFromServer({ plan: "free", premium: false, guest: info.guest === true ? true : undefined, limit: typeof info.limit === "number" ? info.limit : state.limit, remaining: 0, resetAt: info.resetAt, priceLabel: info.priceLabel, contactUrl: info.contactUrl });
       showPaywall();
     }
 
     function limitMessage() {
-      return "You've used all your free requests for today. " + renewText(state.resetAt, formatLocal);
+      return "You've used all your free requests for today. " + renewText(state.resetAt, formatLocal) + (state.guest ? " Sign in for more." : "");
+    }
+
+    function messageFor(code) {
+      if (code === "GUEST_CAP_REACHED") return "Free use without an account is busy right now. Sign in to continue - it's free.";
+      if (code === "GUEST_IMAGE_LIMIT_REACHED") return "You've used today's free pictures. Sign in to send more - it's free.";
+      if (code === "AUTH_REQUIRED") return "Sign in to continue - it's free.";
+      return limitMessage();
+    }
+
+    // The one place the page hands a failed AI response to: a limit or a required sign-in is shown
+    // (paywall / sign-in dialog) and described in one friendly sentence. -> { code, message } or null.
+    function handleErrorBody(status, body) {
+      if (!body || typeof body !== "object") return null;
+      if (status === 429 && LIMIT_CODES.indexOf(body.code) !== -1) {
+        handleLimit(body);
+        return { code: body.code, message: messageFor(body.code) };
+      }
+      if (status === 401 && body.code === "AUTH_REQUIRED") {
+        handleAuthRequired();
+        return { code: "AUTH_REQUIRED", message: messageFor("AUTH_REQUIRED") };
+      }
+      return null;
     }
 
     // ---- "Remind me tomorrow" ----
@@ -328,6 +383,9 @@ var LinguaHubUsage = (function () {
       fromHeaders: fromHeaders,
       fromQuota: fromQuota,
       handleLimit: handleLimit,
+      handleAuthRequired: handleAuthRequired,
+      handleErrorBody: handleErrorBody,
+      messageFor: messageFor,
       canUseAi: canUseAi,
       showPaywall: showPaywall,
       showGetPremium: showGetPremium,
@@ -340,7 +398,7 @@ var LinguaHubUsage = (function () {
     };
   }
 
-  return { create: create, renewText: renewText, isHttpsUrl: isHttpsUrl, REMINDER_KEY: REMINDER_KEY, LOW: LOW };
+  return { create: create, LIMIT_CODES: LIMIT_CODES, renewText: renewText, isHttpsUrl: isHttpsUrl, REMINDER_KEY: REMINDER_KEY, LOW: LOW };
 })();
 
 if (typeof module !== "undefined" && module.exports) {

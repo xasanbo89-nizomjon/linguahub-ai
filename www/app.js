@@ -234,9 +234,9 @@ const GENERIC_CHAT_ERROR = "Something went wrong with this response. Please try 
 
 function describeChatError(err) {
 const status = err && err.status;
-if (err && err.code === "DAILY_LIMIT_REACHED") {
+if (err && (err.code === "DAILY_LIMIT_REACHED" || err.code === "GUEST_CAP_REACHED" || err.code === "GUEST_IMAGE_LIMIT_REACHED" || err.code === "AUTH_REQUIRED")) {
 const counter = typeof window !== "undefined" ? window.linguahubUsage : null;
-return counter ? counter.limitMessage() : "You've used all your free requests for today.";
+return counter ? counter.messageFor(err.code) : "You've used all your free requests for today.";
 }
 if (isOffline()) return "You're offline. Check your connection, then try again.";
 if (status === 429) return "You're sending messages too quickly. Wait a moment, then try again.";
@@ -570,6 +570,8 @@ notify: (message, type) => { if (window.LinguaHubToast) window.LinguaHubToast.sh
 window.linguahubUsage = usage;
 // "Remind me tomorrow" from the paywall: say so when the free requests are back.
 if (usage) usage.checkReminder();
+// Without a sign-in system the counter is the guest's: read it now (with one, the sign-in state does it).
+if (usage && !(window.LinguaHubAuth && LinguaHubAuth.isAvailable())) usage.refresh();
 
 // Auto-grow while typing. The textarea's CSS max-height is 8 lines, so the
 // height set here is clamped there and the field scrolls beyond that.
@@ -1025,13 +1027,12 @@ if (usage) usage.fromHeaders(response.headers);
 if (!response.ok || !response.body) {
 const httpError = new Error(`Server responded ${response.status}`);
 httpError.status = response.status;
-if (response.status === 429) {
-let limitBody = null;
-try { limitBody = await response.json(); } catch (err) { limitBody = null; }
-if (limitBody && limitBody.code === "DAILY_LIMIT_REACHED") {
-httpError.code = "DAILY_LIMIT_REACHED";
-if (usage) usage.handleLimit(limitBody); // the paywall
-}
+if ((response.status === 429 || response.status === 401) && usage) {
+let errorBody = null;
+try { errorBody = await response.json(); } catch (err) { errorBody = null; }
+// a daily limit opens the paywall, a required sign-in the sign-in dialog
+const handled = usage.handleErrorBody(response.status, errorBody);
+if (handled) httpError.code = handled.code;
 }
 throw httpError;
 }
@@ -1105,9 +1106,9 @@ if (!response.ok) {
 // like a successful reply.
 const fallbackError = new Error(data.reply || `Server responded ${response.status}`);
 fallbackError.status = response.status;
-if (response.status === 429 && data.code === "DAILY_LIMIT_REACHED") {
-fallbackError.code = "DAILY_LIMIT_REACHED";
-if (usage) usage.handleLimit(data);
+if (usage) {
+const handled = usage.handleErrorBody(response.status, data);
+if (handled) fallbackError.code = handled.code;
 }
 throw fallbackError;
 }

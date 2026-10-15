@@ -150,9 +150,12 @@ test("refresh(): premium shows the badge with the end date; a failing request or
     assert.equal(await t.usage.refresh(), null);
     assert.equal(t.counterEl.hidden, true);
   }
-  const out = setup({ signedIn: false });
-  assert.equal(await out.usage.refresh(), null);
-  assert.equal(out.fetches.length, 0, "no request without a sign-in");
+  // signed out is not an error any more: the numbers are the guest's (tests/guest-ui.test.js); the server can say it requires a sign-in
+  const strict = setup({ signedIn: false, respond: async () => ({ ok: false, status: 401, json: async () => ({ code: "AUTH_REQUIRED", requireSignIn: true }) }) });
+  assert.equal(await strict.usage.refresh(), null);
+  assert.equal(strict.fetches[0].init.headers.Authorization, undefined, "no token to send");
+  assert.equal(strict.counterEl.hidden, true);
+  assert.equal(strict.usage.state().requireSignIn, true);
 });
 
 test("the contact link must be https: anything else (javascript:, http:, junk) is dropped", () => {
@@ -298,8 +301,9 @@ test("reminder: broken or blocked storage never throws", () => {
 
 // ---- signed out ---------------------------------------------------------------------------------------------------------------------
 
-test("signed out: any AI feature shows the friendly 'Sign in to continue' dialog instead of failing", () => {
+test("signed out where the server REQUIRES a sign-in: any AI feature shows the friendly 'Sign in to continue' dialog instead of failing", () => {
   const t = setup({ signedIn: false });
+  t.usage.fromQuota({ requireSignIn: true });
   assert.equal(t.usage.canUseAi(), false);
   const dialog = t.q("signin-required")[0];
   assert.ok(dialog);
@@ -316,6 +320,7 @@ test("signed in: nothing interrupts; and 'Not now' just closes the sign-in dialo
   assert.equal(t.usage.canUseAi(), true);
   assert.equal(t.q("usage-dialog").length, 0);
   const out = setup({ signedIn: false });
+  out.usage.fromQuota({ requireSignIn: true });
   out.usage.canUseAi();
   out.dom.byClass(out.doc.body, "lh-btn").find((b) => b.textContent === "Not now").click();
   assert.equal(out.q("usage-dialog").length, 0);
@@ -324,6 +329,7 @@ test("signed in: nothing interrupts; and 'Not now' just closes the sign-in dialo
 
 test("where signing in is not possible the dialog is honest about it and offers no dead button", () => {
   const t = setup({ signedIn: false, available: false });
+  t.usage.fromQuota({ requireSignIn: true });
   t.usage.canUseAi();
   assert.equal(t.q("signin-go").length, 0);
   assert.match(t.q("signin-required")[0].textContent, /isn't available in this version/);
@@ -370,7 +376,7 @@ test("ai-json: the numbers of every reply (headers and quota) go to the counter"
 
 test("ai-json: the daily limit (429 DAILY_LIMIT_REACHED) opens the paywall and becomes a clear message, never 'too quickly'", async () => {
   const handled = [];
-  const usage = { canUseAi: () => true, fromHeaders() {}, fromQuota() {}, handleLimit: (b) => handled.push(b), limitMessage: () => "You've used all your free requests for today. Free requests renew at 00:00." };
+  const usage = { canUseAi: () => true, fromHeaders() {}, fromQuota() {}, handleErrorBody: (status, b) => { handled.push(b); return { code: b.code, message: "You've used all your free requests for today. Free requests renew at 00:00." }; } };
   const AI = loadAi(usage, async () => ({ ok: false, status: 429, headers: { get: () => null }, json: async () => ({ code: "DAILY_LIMIT_REACHED", remaining: 0, limit: 10 }) }));
   await assert.rejects(AI.request({ mode: "grammar", messages: [{ role: "user", content: "x" }] }), (err) => err.code === "DAILY_LIMIT_REACHED" && err.status === 429 && /free requests for today/.test(err.userMessage) && !/too quickly/.test(err.userMessage));
   assert.equal(handled.length, 1);
@@ -379,10 +385,11 @@ test("ai-json: the daily limit (429 DAILY_LIMIT_REACHED) opens the paywall and b
 
 test("ai-json: an ordinary 429 (sending too fast) keeps its own message and does not open the paywall", async () => {
   const handled = [];
-  const usage = { canUseAi: () => true, fromHeaders() {}, fromQuota() {}, handleLimit: (b) => handled.push(b), limitMessage: () => "x" };
+  const usage = { canUseAi: () => true, fromHeaders() {}, fromQuota() {}, handleErrorBody: (status, b) => { handled.push(b); return null; } };
   const AI = loadAi(usage, async () => ({ ok: false, status: 429, headers: { get: () => null }, json: async () => ({ reply: "❌ Too many requests." }) }));
   await assert.rejects(AI.request({ mode: "grammar", messages: [{ role: "user", content: "x" }] }), (err) => /too quickly/.test(err.userMessage) && err.code === undefined);
-  assert.equal(handled.length, 0);
+  assert.equal(handled.length, 1, "the usage module is asked, and declines (no code)");
+  assert.equal(handled[0].code, undefined);
 });
 
 test("ai-json: without the usage module (tests, older pages) it behaves exactly as before", async () => {
@@ -427,10 +434,10 @@ test("app.js: sending and Retry need a sign-in; the 429 body opens the paywall; 
   assert.doesNotMatch(app, /localStorage\./, "app.js never touches storage directly");
   assert.match(app, /if \(usage && !usage\.canUseAi\(\)\) return;/);
   assert.equal((app.match(/if \(usage && !usage\.canUseAi\(\)\) return;/g) || []).length, 2, "sendMessage and Retry/Regenerate");
-  assert.match(app, /httpError\.code = "DAILY_LIMIT_REACHED";\s*if \(usage\) usage\.handleLimit\(limitBody\);/);
+  assert.match(app, /const handled = usage\.handleErrorBody\(response\.status, errorBody\);\s*if \(handled\) httpError\.code = handled\.code;/);
   assert.match(app, /if \(parsed\.type === "done" && usage\) usage\.fromQuota\(parsed\.quota\);/);
-  assert.match(app, /fallbackError\.code = "DAILY_LIMIT_REACHED";/);
-  assert.match(app, /if \(err && err\.code === "DAILY_LIMIT_REACHED"\) \{/);
+  assert.match(app, /const handled = usage\.handleErrorBody\(response\.status, data\);\s*if \(handled\) fallbackError\.code = handled\.code;/);
+  assert.match(app, /if \(err && \(err\.code === "DAILY_LIMIT_REACHED" \|\| err\.code === "GUEST_CAP_REACHED"/);
   assert.match(app, /if \(usage\) usage\.setUser\(user\);/);
   assert.match(app, /window\.linguahubUsage = usage;\s*(\/\/[^\n]*\n)?if \(usage\) usage\.checkReminder\(\);/, "a due reminder is shown at launch");
   assert.match(app, /window\.linguahubUsage = usage;/);

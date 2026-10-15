@@ -101,14 +101,12 @@ var LinguaHubAI = (function () {
       var httpError = new Error("http " + response.status);
       httpError.status = response.status;
       httpError.userMessage = describeError(httpError);
-      if (response.status === 429) {
-        var limitBody = null;
-        try { limitBody = await response.json(); } catch (err) { limitBody = null; }
-        if (limitBody && limitBody.code === "DAILY_LIMIT_REACHED") {
-          httpError.code = "DAILY_LIMIT_REACHED";
-          if (usage) { usage.handleLimit(limitBody); httpError.userMessage = usage.limitMessage(); }
-          else httpError.userMessage = "You've used all your free requests for today.";
-        }
+      if ((response.status === 429 || response.status === 401) && usage) {
+        // a daily limit opens the paywall, a required sign-in the sign-in dialog (www/usage.js)
+        var errorBody = null;
+        try { errorBody = await response.json(); } catch (err) { errorBody = null; }
+        var handled = usage.handleErrorBody(response.status, errorBody);
+        if (handled) { httpError.code = handled.code; httpError.userMessage = handled.message; }
       }
       throw httpError;
     }
