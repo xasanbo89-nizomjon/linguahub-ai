@@ -105,6 +105,12 @@
     CloudRecognition.prototype.start = function () {
       var self = this;
       if (this._state !== "idle") throw new Error("already started");
+      // recording is only for signed-in people (the server insists): ask nicely before the microphone opens
+      if (deps.canStart && !deps.canStart()) {
+        this._state = "starting";
+        Promise.resolve().then(function () { self._finish("sign-in-required"); });
+        return;
+      }
       if (!deps.mediaDevices || typeof deps.mediaDevices.getUserMedia !== "function" || !deps.MediaRecorder) {
         this._state = "starting";
         Promise.resolve().then(function () { self._finish("audio-capture"); });
@@ -278,7 +284,8 @@
         if (!auth || !auth.isAvailable || !auth.isAvailable() || !auth.getCurrentUser()) return Promise.resolve({});
         return Promise.resolve(auth.getIdToken()).then(function (token) { return token ? { Authorization: "Bearer " + token } : {}; }, function () { return {}; });
       },
-      Blob: win.Blob
+      Blob: win.Blob,
+      canStart: function () { return !win.linguahubUsage || win.linguahubUsage.canUseAi(); }
     }) : null;
     return {
       get: function () { return getRecognition(win, cloud); },

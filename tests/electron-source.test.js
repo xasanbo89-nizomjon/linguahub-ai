@@ -141,7 +141,8 @@ test("main.js: window.open() popups are gated by the shared allowlist function, 
   assert.match(MAIN_SRC, /setWindowOpenHandler/);
   // Early-deny shape (Phase 1): untrusted URLs return deny before the allow
   // branch is ever reached.
-  assert.match(MAIN_SRC, /if\s*\(!isTrustedGoogleAuthUrl\(url\)\)\s*return\s*\{\s*action:\s*["']deny["']\s*\}/);
+  // (an ordinary https link - the Premium "Contact us" - first goes to the system browser; everything else is denied)
+  assert.match(MAIN_SRC, /if\s*\(!isTrustedGoogleAuthUrl\(url\)\)\s*\{[\s\S]*?return\s*\{\s*action:\s*["']deny["']\s*\};\s*\}/);
   assert.match(MAIN_SRC, /action:\s*["']allow["']/);
   assert.ok(
     MAIN_SRC.indexOf('action: "deny"') < MAIN_SRC.indexOf('action: "allow"'),

@@ -1,7 +1,7 @@
-const { app, BrowserWindow, Menu, ipcMain, nativeTheme, session } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, nativeTheme, session, shell } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
-const { isTrustedGoogleAuthUrl, isTrustedSenderUrl, isPermissionAllowed } = require("./lib/electronSecurity");
+const { isTrustedGoogleAuthUrl, isTrustedSenderUrl, isPermissionAllowed, isSafeExternalUrl } = require("./lib/electronSecurity");
 const { setupAutoUpdates } = require("./lib/updater");
 const { isThemeMode, readThemePref, writeThemePref, backgroundFor } = require("./lib/themePref");
 
@@ -116,7 +116,11 @@ function createWindow() {
   // normal frame (a frameless Google sign-in window could not be moved or
   // closed) and no preload (the title-bar API is for the app's own page only).
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (!isTrustedGoogleAuthUrl(url)) return { action: "deny" };
+    if (!isTrustedGoogleAuthUrl(url)) {
+      // an ordinary https link (e.g. the Premium "Contact us"): the system browser, never an app window
+      if (isSafeExternalUrl(url)) shell.openExternal(url);
+      return { action: "deny" };
+    }
     return {
       action: "allow",
       overrideBrowserWindowOptions: {

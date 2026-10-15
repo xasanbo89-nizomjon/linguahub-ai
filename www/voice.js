@@ -160,6 +160,8 @@ case "network":
 return s.network;
 case "service-busy":
 return s.serviceBusy || s.generic;
+case "sign-in-required":
+return s.signInRequired || s.generic;
 case "language-not-supported":
 return s.languageUnsupported;
 case "unsupported":

@@ -5190,3 +5190,119 @@ transition: none !important;
 animation: none !important;
 }
 }
+
+/* The daily free limit (www/usage.js) */
+.usage-counter{
+max-width: var(--composer-max-width);
+margin: var(--space-1) auto 0;
+padding: 0 var(--space-2);
+text-align: end;
+font-size: var(--font-size-xs);
+color: var(--text-muted-strong);
+}
+
+.usage-counter[hidden]{
+display: none;
+}
+
+.usage-counter.is-warning{
+color: var(--warning);
+font-weight: 600;
+}
+
+.premium-badge{
+display: inline-block;
+padding: 0 var(--space-2);
+background: var(--accent-soft);
+color: var(--accent-text);
+border: 1px solid var(--accent);
+border-radius: var(--radius-full);
+font-size: var(--font-size-xs);
+font-weight: 600;
+line-height: var(--line-height-normal);
+}
+
+.premium-badge[hidden]{
+display: none;
+}
+
+.account-menu-plan{
+display: flex;
+align-items: center;
+gap: var(--space-2);
+padding: var(--space-2) var(--space-3);
+border-bottom: 1px solid var(--border);
+}
+
+.account-menu-plan[hidden]{
+display: none;
+}
+
+.account-plan-until{
+font-size: var(--font-size-xs);
+color: var(--text-muted-strong);
+}
+
+.usage-dialog{
+max-width: 520px;
+}
+
+.plan-compare{
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: var(--space-3);
+margin: var(--space-4) 0;
+}
+
+.plan-column{
+padding: var(--space-3) var(--space-4);
+background: var(--surface);
+border: 1px solid var(--border-strong);
+border-radius: var(--radius-md);
+}
+
+.plan-column.is-premium{
+background: var(--accent-soft);
+border-color: var(--accent);
+}
+
+.plan-name{
+margin: 0 0 var(--space-2);
+font-size: var(--font-size-md);
+font-weight: 600;
+}
+
+.plan-list{
+margin: 0;
+padding-inline-start: var(--space-4);
+font-size: var(--font-size-sm);
+}
+
+.plan-price{
+margin: var(--space-3) 0 0;
+font-weight: 600;
+color: var(--accent-text);
+}
+
+.paywall-renew{
+font-weight: 600;
+}
+
+.paywall-note{
+margin: 0 0 var(--space-3);
+font-size: var(--font-size-sm);
+color: var(--text-muted-strong);
+}
+
+.usage-dialog a.lh-btn{
+display: inline-flex;
+align-items: center;
+justify-content: center;
+text-decoration: none;
+}
+
+@media (max-width: 480px){
+.plan-compare{
+grid-template-columns: minmax(0, 1fr);
+}
+}

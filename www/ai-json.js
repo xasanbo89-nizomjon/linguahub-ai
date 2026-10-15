@@ -72,6 +72,14 @@ var LinguaHubAI = (function () {
   // resolves { data: normalized object | null, text: raw reply }
   // rejects  Error with .userMessage (friendly), .status, .aborted
   async function request(options) {
+    var usage = window.linguahubUsage || null;
+    // Every AI feature needs a signed-in user (the server insists): ask nicely first.
+    if (usage && !usage.canUseAi()) {
+      var blocked = new Error("sign-in required");
+      blocked.code = "SIGN_IN_REQUIRED";
+      blocked.userMessage = "Sign in to continue - it's free.";
+      throw blocked;
+    }
     var response;
     try {
       response = await fetch(apiUrl("/api/chat"), {
@@ -87,10 +95,21 @@ var LinguaHubAI = (function () {
       throw failure;
     }
 
+    if (usage) usage.fromHeaders(response.headers);
+
     if (!response.ok) {
       var httpError = new Error("http " + response.status);
       httpError.status = response.status;
       httpError.userMessage = describeError(httpError);
+      if (response.status === 429) {
+        var limitBody = null;
+        try { limitBody = await response.json(); } catch (err) { limitBody = null; }
+        if (limitBody && limitBody.code === "DAILY_LIMIT_REACHED") {
+          httpError.code = "DAILY_LIMIT_REACHED";
+          if (usage) { usage.handleLimit(limitBody); httpError.userMessage = usage.limitMessage(); }
+          else httpError.userMessage = "You've used all your free requests for today.";
+        }
+      }
       throw httpError;
     }
 
@@ -102,6 +121,7 @@ var LinguaHubAI = (function () {
       badBody.userMessage = describeError({ status: 502 });
       throw badBody;
     }
+    if (usage && body) usage.fromQuota(body.quota);
     var text = body && typeof body.reply === "string" ? body.reply : "";
     var parsed = parseJsonReply(text);
     var data = null;

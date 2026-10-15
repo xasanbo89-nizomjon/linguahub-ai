@@ -113,11 +113,16 @@
 <div id="user-avatar-fallback" class="user-avatar-fallback" hidden aria-hidden="true"></div>
 <div class="user-info">
 <span id="user-name" class="user-name"></span>
+<span id="premium-badge" class="premium-badge" hidden>Premium</span>
 <span id="user-email" class="user-email"></span>
 </div>
 <svg class="account-trigger-chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
 </button>
 <div id="account-menu-list" class="account-menu" role="menu" aria-label="Account" hidden>
+<div class="account-menu-plan" id="account-plan" hidden>
+<span class="premium-badge">Premium</span>
+<span class="account-plan-until" id="premium-until"></span>
+</div>
 <div class="account-menu-sync" id="sync-status" data-state="signed-out" role="status">
 <span class="sync-dot" aria-hidden="true"></span>
 <span id="sync-status-text">Synced</span>
@@ -246,6 +251,8 @@ Send
      should reach assistive-technology users, unlike the previous
      keyboard-shortcut hint this replaced (Enter/Shift+Enter behavior
      itself is unchanged, only this visible label). -->
+<!-- Free users: how many of today's free AI requests are left (www/usage.js). -->
+<div id="usage-counter" class="usage-counter" role="status" aria-live="polite" hidden></div>
 <div class="composer-hint" id="composer-hint"></div>
 </div>
 
@@ -305,6 +312,7 @@ Send
 <script src="mode-ui.js"></script>
 <script src="chat-menu.js"></script>
 <script src="logo.js"></script>
+<script src="usage.js"></script>
 <script src="image-attach.js"></script>
 <script src="image-learning.js"></script>
 <script src="shortcuts.js"></script>

@@ -19,6 +19,7 @@
     "no-speech": "I didn't hear anything. Tap the microphone and try again.",
     "audio-capture": "No microphone was found. Connect one, or type your sentence below.",
     "network": "Speech recognition needs an internet connection and isn't available here. You can type your sentence below.",
+    "sign-in-required": "Sign in to practise speaking - it's free.",
     "service-busy": "Speech recognition is busy right now. Try again in a moment, or type your sentence below.",
     "language-not-supported": "Speech input isn't available for this language here. You can type your sentence below."
   };

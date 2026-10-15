@@ -234,6 +234,10 @@ const GENERIC_CHAT_ERROR = "Something went wrong with this response. Please try 
 
 function describeChatError(err) {
 const status = err && err.status;
+if (err && err.code === "DAILY_LIMIT_REACHED") {
+const counter = typeof window !== "undefined" ? window.linguahubUsage : null;
+return counter ? counter.limitMessage() : "You've used all your free requests for today.";
+}
 if (isOffline()) return "You're offline. Check your connection, then try again.";
 if (status === 429) return "You're sending messages too quickly. Wait a moment, then try again.";
 if (status === 401 || status === 403) return "Your session isn't authorized for this request. Sign in again, then try again.";
@@ -541,6 +545,31 @@ abortActiveGeneration();
 sendMessage();
 }
 });
+
+// The daily free limit as the person sees it - www/usage.js: the "7 / 10 free today"
+// counter, the Premium badge, the paywall and the "sign in to continue" dialog.
+// The server enforces the limit; this only shows it.
+const usage = window.LinguaHubUsage
+? window.LinguaHubUsage.create({
+counterEl: document.getElementById("usage-counter"),
+premiumEls: {
+badge: document.getElementById("premium-badge"),
+row: document.getElementById("account-plan"),
+until: document.getElementById("premium-until")
+},
+storage: window.localStorage,
+apiUrl: (path) => apiUrl(path),
+getAuthHeaders: () => buildAuthHeaders(),
+fetch: (url, init) => fetch(url, init),
+isSignedIn: () => Boolean(window.LinguaHubAuth && LinguaHubAuth.isAvailable() && LinguaHubAuth.getCurrentUser()),
+isSignInAvailable: () => Boolean(window.LinguaHubAuth && LinguaHubAuth.isAvailable()),
+signIn: () => { if (!loginBtn.hidden) loginBtn.click(); },
+notify: (message, type) => { if (window.LinguaHubToast) window.LinguaHubToast.show({ type: type || "info", message }); }
+})
+: null;
+window.linguahubUsage = usage;
+// "Remind me tomorrow" from the paywall: say so when the free requests are back.
+if (usage) usage.checkReminder();
 
 // Auto-grow while typing. The textarea's CSS max-height is 8 lines, so the
 // height set here is clamped there and the field scrolls beyond that.
@@ -991,9 +1020,19 @@ body: JSON.stringify({ messages: requestMessages, mode }),
 signal: activeChatAbortController.signal
 });
 
+if (usage) usage.fromHeaders(response.headers);
+
 if (!response.ok || !response.body) {
 const httpError = new Error(`Server responded ${response.status}`);
 httpError.status = response.status;
+if (response.status === 429) {
+let limitBody = null;
+try { limitBody = await response.json(); } catch (err) { limitBody = null; }
+if (limitBody && limitBody.code === "DAILY_LIMIT_REACHED") {
+httpError.code = "DAILY_LIMIT_REACHED";
+if (usage) usage.handleLimit(limitBody); // the paywall
+}
+}
 throw httpError;
 }
 
@@ -1019,6 +1058,7 @@ const payload = line.slice(5).trim();
 if (payload === "[DONE]") continue;
 
 const parsed = JSON.parse(payload);
+if (parsed.type === "done" && usage) usage.fromQuota(parsed.quota);
 if (parsed.error) {
 const streamError = new Error(parsed.error);
 streamError.serverMessage = parsed.error;
@@ -1056,6 +1096,7 @@ headers: Object.assign({ "Content-Type": "application/json" }, authHeaders),
 body: JSON.stringify({ messages: requestMessages, mode })
 });
 const data = await response.json();
+if (usage) { usage.fromHeaders(response.headers); usage.fromQuota(data && data.quota); }
 if (!response.ok) {
 // The backend's error responses are valid JSON with a human-readable
 // `reply` (see server.js's catch blocks) - surface that same message,
@@ -1064,6 +1105,10 @@ if (!response.ok) {
 // like a successful reply.
 const fallbackError = new Error(data.reply || `Server responded ${response.status}`);
 fallbackError.status = response.status;
+if (response.status === 429 && data.code === "DAILY_LIMIT_REACHED") {
+fallbackError.code = "DAILY_LIMIT_REACHED";
+if (usage) usage.handleLimit(data);
+}
 throw fallbackError;
 }
 const replyText = data.reply || "❌ Empty response from server.";
@@ -1218,6 +1263,8 @@ const message = input.value.trim();
 const pictures = attachments ? attachments.getImages() : [];
 if ((!message && !pictures.length) || isBusy) return;
 if (attachments && attachments.isBusy()) return;
+// Signed out: the friendly "Sign in to continue" dialog (the draft stays in the box).
+if (usage && !usage.canUseAi()) return;
 if (isOffline()) {
 // Keep the draft; the composer already explains why Send is disabled.
 if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: "You're offline. Reconnect to send messages." });
@@ -1316,6 +1363,8 @@ window.LinguaHubToast.show({ type: "error", message: "Could not find the origina
 }
 return;
 }
+
+if (usage && !usage.canUseAi()) return;
 
 // Pictures are not stored, so after a reload there is nothing to retry with.
 const stored = pictureForStoredMessage(userMsg);
@@ -1668,6 +1717,8 @@ setAuthStatus("");
 // Single subscription drives both the profile UI above and switching the
 // chat-history namespace (guest <-> user:<uid>) - see www/history-ui.js.
 historyUI.setUser(user);
+// Today's allowance / plan of this account (www/usage.js).
+if (usage) usage.setUser(user);
 // Saved words are per account, like chats.
 if (window.linguahubVocab) window.linguahubVocab.setUserId(user && user.uid ? user.uid : null);
 handleSyncUser(user);
