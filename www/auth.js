@@ -65,7 +65,20 @@ return Boolean(config && config.apiKey && config.projectId && config.appId);
 
 // --- Web backend (Firebase compat SDK) - unchanged from Phase 1-9 --------
 
-var config = (window.LINGUAHUB_CONFIG && window.LINGUAHUB_CONFIG.FIREBASE) || {};
+// Where Firebase's sign-in pages come from. Desktop (file://), localhost and the Android
+// webview keep the project's own <projectId>.firebaseapp.com. On a real https web host
+// the page's own host is used instead (vercel.json forwards /__/auth/* to Firebase), so the
+// sign-in redirect returns to the same site - a different site in between breaks sign-in in
+// browsers that partition storage and in installed web apps. The host must be listed under
+// Firebase console > Authentication > Settings > Authorized domains.
+function resolveAuthDomain(config, location) {
+  var host = location && location.hostname;
+  var isWebHost = location && location.protocol === "https:" && host && host !== "localhost" && host !== "127.0.0.1" && !/^\[/.test(host);
+  return isWebHost ? location.host : config.authDomain;
+}
+
+var rawConfig = (window.LINGUAHUB_CONFIG && window.LINGUAHUB_CONFIG.FIREBASE) || {};
+var config = Object.assign({}, rawConfig, { authDomain: resolveAuthDomain(rawConfig, window.location) });
 var sdkPresent = typeof firebase !== "undefined" && !!firebase.initializeApp;
 var webAvailable = false;
 var auth = null;
@@ -263,12 +276,39 @@ function completeRedirectSignIn() {
 // Native sign-in never redirects the page - only the web backend's
 // popup-blocked fallback does.
 if (isNative || !webAvailable) return Promise.resolve(null);
+lastRedirectError = null;
 return auth.getRedirectResult().then(function (result) {
 return result && result.user ? result.user : null;
 }).catch(function (error) {
-console.warn("[LinguaHub AI] Redirect sign-in did not complete:", error.code || error.message);
+logSignInFailure("Redirect sign-in", error);
+lastRedirectError = safeError(error && error.code);
 return null;
 });
+}
+
+// The friendly error of the last redirect sign-in that failed on return (or null).
+var lastRedirectError = null;
+function getLastRedirectError() {
+return lastRedirectError;
+}
+
+// An installed web app (PWA, display-mode: standalone) runs in its own window where popups
+// are unreliable, so it signs in with a full-page redirect from the start. The desktop app
+// (Electron) is a normal window with its own popup handling and keeps using the popup.
+function isInstalledWebApp() {
+try {
+if (window.linguahubDesktop) return false;
+if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+return window.navigator && window.navigator.standalone === true; // iOS home-screen apps
+} catch (error) {
+return false;
+}
+}
+
+// The real Firebase error code goes to the console (for whoever debugs it); the person only
+// ever sees the friendly message from safeError().
+function logSignInFailure(where, error) {
+console.error("[LinguaHub AI] " + where + " failed:", (error && error.code) || "unknown", (error && error.message) || "");
 }
 
 function signInWithGoogle() {
@@ -280,15 +320,28 @@ return Promise.reject(safeError(sdkPresent ? "config-missing" : "sdk-missing"));
 
 var provider = new firebase.auth.GoogleAuthProvider();
 
+if (isInstalledWebApp()) {
+return auth.signInWithRedirect(provider).then(function () {
+return null; // the page leaves for Google; completeRedirectSignIn() finishes on return
+}).catch(function (error) {
+logSignInFailure("Google sign-in (redirect)", error);
+throw safeError(error && error.code);
+});
+}
+
 return auth.signInWithPopup(provider).then(function (result) {
 return result.user;
 }).catch(function (error) {
+logSignInFailure("Google sign-in", error);
 if (GOOGLE_POPUP_FALLBACK_CODES.indexOf(error.code) !== -1) {
 // Popup isn't viable in this runtime (e.g. blocked, or an embedded
 // webview that refuses window.open) - fall back to a full redirect.
 // The result is picked up by completeRedirectSignIn() on next load.
 return auth.signInWithRedirect(provider).then(function () {
 return null;
+}).catch(function (redirectError) {
+logSignInFailure("Google sign-in (redirect fallback)", redirectError);
+throw safeError(redirectError && redirectError.code);
 });
 }
 throw safeError(error.code);
@@ -318,6 +371,9 @@ isAvailable: isAvailable,
 getCurrentUser: getCurrentUser,
 onAuthStateChanged: onAuthStateChanged,
 completeRedirectSignIn: completeRedirectSignIn,
+getLastRedirectError: getLastRedirectError,
+isInstalledWebApp: isInstalledWebApp,
+resolveAuthDomain: resolveAuthDomain,
 signInWithGoogle: signInWithGoogle,
 signOutUser: signOutUser,
 getIdToken: getIdToken,

@@ -49,7 +49,8 @@ test("vercel.json: every route the Express app defines is rewritten to the funct
     const covered = sources.some((s) => s === route || (s === "/api/:path*" && route.startsWith("/api/")));
     assert.ok(covered, route + " is rewritten to the function");
   });
-  vercel.rewrites.forEach((r) => assert.equal(r.destination, "/api"));
+  // the one other rewrite forwards Firebase's sign-in pages (/__/auth/*) to firebaseapp.com (see tests/auth-csp.test.js)
+  vercel.rewrites.filter((r) => !r.source.startsWith("/__/auth/")).forEach((r) => assert.equal(r.destination, "/api"));
   assert.equal(sources.includes("/(.*)"), false, "no catch-all: static files stay static");
 });
 
@@ -259,7 +260,7 @@ test("every use of the desktop bridge in the page code is guarded, so a plain br
   });
   assert.ok(uses.length >= 3);
   uses.forEach(({ f, line }) => {
-    const guarded = /if \(!api\) return/.test(line) || /window\.linguahubDesktop && /.test(line) || /Boolean\(win && win\.linguahubDesktop\)/.test(line) || /var api = window\.linguahubDesktop;/.test(line) || /window\.linguahubDesktop\.setTheme\(mode\);/.test(line);
+    const guarded = /if \(!api\) return/.test(line) || /window\.linguahubDesktop && /.test(line) || /Boolean\(win && win\.linguahubDesktop\)/.test(line) || /var api = window\.linguahubDesktop;/.test(line) || /if \(window\.linguahubDesktop\) return false;/.test(line) || /window\.linguahubDesktop\.setTheme\(mode\);/.test(line);
     assert.ok(guarded, f + ": " + line);
   });
   const titlebar = read("www", "titlebar.js");

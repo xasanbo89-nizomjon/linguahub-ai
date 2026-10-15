@@ -1704,7 +1704,10 @@ if (window.LinguaHubAuth && LinguaHubAuth.isAvailable()) {
 loginBtn.disabled = true;
 loginBtn.setAttribute("aria-busy", "true");
 setAuthStatus("Restoring session...");
-LinguaHubAuth.completeRedirectSignIn();
+Promise.resolve(LinguaHubAuth.completeRedirectSignIn()).then((redirectedUser) => {
+const failure = LinguaHubAuth.getLastRedirectError && LinguaHubAuth.getLastRedirectError();
+if (!redirectedUser && failure) setAuthStatus(failure.message);
+});
 LinguaHubAuth.onAuthStateChanged((user) => {
 if (user) {
 renderSignedIn(user);
