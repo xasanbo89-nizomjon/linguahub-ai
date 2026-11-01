@@ -93,6 +93,11 @@ if (!firebase.apps.length) {
 firebase.initializeApp(config);
 }
 auth = firebase.auth();
+if (auth && typeof auth.setPersistence === "function" && firebase.auth && firebase.auth.Auth && firebase.auth.Auth.Persistence) {
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function (error) {
+console.warn("[LinguaHub AI] Could not set persistence to LOCAL:", error && error.message);
+});
+}
 webAvailable = true;
 } catch (error) {
 console.error("[LinguaHub AI] Firebase initialization failed:", error.message);
@@ -308,7 +313,10 @@ return false;
 // The real Firebase error code goes to the console (for whoever debugs it); the person only
 // ever sees the friendly message from safeError().
 function logSignInFailure(where, error) {
-console.error("[LinguaHub AI] " + where + " failed:", (error && error.code) || "unknown", (error && error.message) || "");
+var code = (error && error.code) || "unknown";
+var message = (error && error.message) || "";
+console.error("[LinguaHub AI] " + where + " failed:", code, message);
+console.error("[Google Login Debug] Auth error detail:", { where: where, code: code, message: message, error: error });
 }
 
 function signInWithGoogle() {

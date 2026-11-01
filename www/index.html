@@ -62,7 +62,7 @@
 <div class="sidebar-brand">
 <svg class="lh-logo lh-logo-sm" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><path class="lh-logo-bubble" d="M36 10H92A28 28 0 0 1 120 38V66A28 28 0 0 1 92 94H58L34 116V94H36A28 28 0 0 1 8 66V38A28 28 0 0 1 36 10Z"/><g class="lh-logo-glyphs"><path d="M22 70L34 34L46 70M27 57H41"/><path d="M74 70V34H64C55 34 55 52 64 52H74M64 52L56 70"/><path d="M101 36C95 31 86 34 88 41C89 45 94 47 97 48C89 47 83 50 83 58C83 67 93 71 102 65"/></g></svg>
 <span class="sidebar-brand-name">LinguaHub<span class="sidebar-brand-accent">AI</span></span>
-<button id="sidebar-collapse-btn" type="button" class="sidebar-collapse-btn" aria-label="Collapse sidebar" aria-expanded="true">⟨</button>
+<button id="sidebar-collapse-btn" type="button" class="sidebar-collapse-btn" aria-label="Collapse sidebar" aria-expanded="true"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9-3 3 3 3"/></svg></button>
 </div>
 
 <button id="new-chat-btn" type="button" class="new-chat-btn" aria-label="New chat">
@@ -70,9 +70,9 @@
 </button>
 
 <div class="sidebar-search">
-<span class="sidebar-search-icon" aria-hidden="true">⌕</span>
+<svg class="sidebar-search-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 <label for="chat-search-input" class="sr-only">Search conversations</label>
-<input id="chat-search-input" type="search" placeholder="Search" autocomplete="off">
+<input id="chat-search-input" type="search" placeholder="Search chats" autocomplete="off">
 <kbd class="sidebar-search-kbd" aria-hidden="true">Ctrl K</kbd>
 </div>
 
@@ -135,10 +135,12 @@
 
 <div class="sidebar-footer">
 <button id="quick-theme-btn" type="button" class="sidebar-icon-btn" title="Toggle theme">
-<span aria-hidden="true">◐</span><span class="sr-only">Toggle theme</span>
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+<span class="sr-only">Toggle theme</span>
 </button>
 <button id="settings-btn" type="button" class="sidebar-icon-btn" title="Settings">
-<span aria-hidden="true">⚙</span><span class="sr-only">Settings</span>
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+<span class="sr-only">Settings</span>
 </button>
 </div>
 
@@ -149,7 +151,7 @@
 <div class="container" role="main" aria-label="LinguaHub AI">
 
 <div class="header">
-<button id="sidebar-toggle-btn" type="button" aria-label="Toggle conversation list" aria-expanded="false" aria-controls="sidebar">☰</button>
+<button id="sidebar-toggle-btn" type="button" aria-label="Toggle conversation list" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
 <h1 class="sr-only">LinguaHub AI</h1>
 <div class="header-title-group">
 <div class="header-conversation-title" id="conversation-title">LinguaHub AI</div>
@@ -229,7 +231,8 @@ rows="1"
 ></textarea>
 
 <button id="attach-btn" type="button" class="voice-ptt-btn" title="Attach pictures (or paste or drop them)">
-<span aria-hidden="true">+</span><span class="sr-only">Attach pictures</span>
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+<span class="sr-only">Attach pictures</span>
 </button>
 <!-- Voice chat (Phase 14, www/voice.js): tap-to-dictate mic and the
      hands-free Voice Conversation Mode. Browser-native Web Speech API

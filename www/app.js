@@ -193,11 +193,26 @@ const indicator = document.createElement("span");
 indicator.className = "typing-indicator";
 indicator.setAttribute("role", "status");
 indicator.setAttribute("aria-label", "LinguaHub AI is generating a response");
+
+const statusRow = document.createElement("span");
+statusRow.className = "typing-status-text";
+statusRow.textContent = "Thinking...";
+
+const dots = document.createElement("span");
+dots.className = "typing-dots";
 for (let i = 0; i < 3; i += 1) {
 const dot = document.createElement("span");
 dot.className = "dot";
-indicator.appendChild(dot);
+dots.appendChild(dot);
 }
+statusRow.appendChild(dots);
+indicator.appendChild(statusRow);
+
+const shimmer = document.createElement("span");
+shimmer.className = "thinking-shimmer";
+shimmer.setAttribute("aria-hidden", "true");
+indicator.appendChild(shimmer);
+
 contentEl.appendChild(indicator);
 }
 
@@ -624,12 +639,12 @@ scrollToBottomBtn.hidden = true;
 // suggestion set itself is mode-specific (see www/mode-ui.js) and re-rendered
 // whenever the selected mode changes.
 const HOME_PROMPT_SUGGESTIONS = [
-{ label: "Translate text", prompt: "Translate the following text to English:\n\n" },
-{ label: "Practice English", prompt: "Help me practice English conversation. " },
-{ label: "Practice Arabic", prompt: "Help me practice Arabic conversation. " },
-{ label: "Improve writing", prompt: "Improve the clarity and tone of this text:\n\n" },
-{ label: "Explain grammar", prompt: "Explain this grammar rule with examples: " },
-{ label: "Study vocabulary", prompt: "Help me learn vocabulary for: " }
+{ label: "Translate text", hint: "Translate accurately to English", icon: "🌐", prompt: "Translate the following text to English:\n\n" },
+{ label: "Practice English", hint: "Interactive conversation & feedback", icon: "💬", prompt: "Help me practice English conversation. " },
+{ label: "Practice Arabic", hint: "Formal & conversational Arabic", icon: "🗣️", prompt: "Help me practice Arabic conversation. " },
+{ label: "Improve writing", hint: "Enhance clarity, tone & style", icon: "✍️", prompt: "Improve the clarity and tone of this text:\n\n" },
+{ label: "Explain grammar", hint: "Rules, examples & common pitfalls", icon: "📖", prompt: "Explain this grammar rule with examples: " },
+{ label: "Study vocabulary", hint: "Learn new words with context", icon: "🧠", prompt: "Help me learn vocabulary for: " }
 ];
 
 function renderEmptyStateCards() {
@@ -1641,30 +1656,49 @@ let loginInProgress = false;
 async function handleLogin() {
 if (loginInProgress) return;
 if (!window.LinguaHubAuth || !LinguaHubAuth.isAvailable()) {
-setAuthStatus("Sign-in is unavailable: Firebase is not configured for this app.");
+const msg = "Sign-in is unavailable: Firebase is not configured for this app.";
+setAuthStatus(msg);
+if (window.LinguaHubToast) window.LinguaHubToast.show({ type: "warning", message: msg });
 return;
 }
 
 loginInProgress = true;
 loginBtn.disabled = true;
 loginBtn.setAttribute("aria-busy", "true");
+loginBtn.classList.add("is-loading");
+const originalLoginBtnHtml = loginBtn.innerHTML;
+loginBtn.innerHTML = '<span class="login-spinner" aria-hidden="true"></span><span>Signing in...</span>';
 setAuthStatus("Opening Google sign-in...");
 
 try {
 const user = await LinguaHubAuth.signInWithGoogle();
 if (user) {
 setAuthStatus("Signed in.");
+if (window.LinguaHubToast) {
+window.LinguaHubToast.show({
+type: "success",
+message: "Welcome" + (user.displayName ? ", " + user.displayName : "") + "!"
+});
+}
 } else {
 // signInWithGoogle() fell back to a full-page redirect; the browser
 // is about to navigate away, so there is nothing else to render here.
 setAuthStatus("Redirecting to Google sign-in...");
 }
 } catch (error) {
-setAuthStatus(error.message || "Sign-in failed. Please try again.");
+const code = (error && error.code) || "unknown";
+const msg = (error && error.message) || "Sign-in failed. Please try again.";
+console.error("[Google Sign-In Error Code]:", code, msg, error);
+setAuthStatus(msg);
+if (window.LinguaHubToast && code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request" && code !== "native-cancelled") {
+window.LinguaHubToast.show({ type: "error", message: msg });
+}
 } finally {
 loginInProgress = false;
 loginBtn.disabled = false;
 loginBtn.removeAttribute("aria-busy");
+loginBtn.classList.remove("is-loading");
+loginBtn.innerHTML = originalLoginBtnHtml;
 }
 }
 
@@ -1707,7 +1741,19 @@ loginBtn.setAttribute("aria-busy", "true");
 setAuthStatus("Restoring session...");
 Promise.resolve(LinguaHubAuth.completeRedirectSignIn()).then((redirectedUser) => {
 const failure = LinguaHubAuth.getLastRedirectError && LinguaHubAuth.getLastRedirectError();
-if (!redirectedUser && failure) setAuthStatus(failure.message);
+if (!redirectedUser && failure) {
+setAuthStatus(failure.message);
+if (window.LinguaHubToast) {
+window.LinguaHubToast.show({ type: "error", message: failure.message });
+}
+} else if (redirectedUser) {
+if (window.LinguaHubToast) {
+window.LinguaHubToast.show({
+type: "success",
+message: "Welcome back" + (redirectedUser.displayName ? ", " + redirectedUser.displayName : "") + "!"
+});
+}
+}
 });
 LinguaHubAuth.onAuthStateChanged((user) => {
 if (user) {

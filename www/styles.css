@@ -145,9 +145,10 @@ padding-top: var(--titlebar-height);
 }
 
 .app-shell{
-width: min(100%, 1540px);
+width: 100%;
 max-width: 1540px;
 height: calc(100vh - var(--titlebar-height));
+height: calc(100dvh - var(--titlebar-height));
 display: flex;
 gap: 0;
 }
@@ -2602,39 +2603,40 @@ max-width: 440px;
 
 .empty-state-cards{
 display: grid;
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: var(--space-2);
-margin-top: var(--space-5);
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: var(--space-3);
+margin-top: var(--space-6);
 max-width: 680px;
+width: 100%;
 }
 
 .empty-state-card{
-display: inline-flex;
-align-items: center;
-justify-content: center;
-gap: 0;
-text-align: center;
-padding: 9px var(--space-3);
-border-radius: var(--radius-full);
+display: flex;
+align-items: flex-start;
+gap: var(--space-3);
+text-align: left;
+padding: var(--space-3) var(--space-4);
+border-radius: var(--radius-lg);
 border: 1px solid var(--border);
 background: var(--surface);
 color: var(--text);
 cursor: pointer;
 font-size: var(--font-size-sm);
-min-height: 36px;
-transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+min-height: 52px;
+transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+box-shadow: var(--shadow-1);
 }
 
 .empty-state-card:hover:not(:disabled){
 border-color: var(--accent);
-background: var(--accent-soft);
-color: var(--accent-text);
-box-shadow: none;
-transform: none;
+background: var(--surface-2);
+color: var(--text);
+box-shadow: var(--shadow-2);
+transform: translateY(-2px);
 }
 
 .empty-state-card:active:not(:disabled){
-transform: translateY(0) scale(0.98);
+transform: translateY(0) scale(0.99);
 }
 
 .empty-state-card:focus-visible{
@@ -2643,21 +2645,34 @@ outline-offset: 2px;
 }
 
 .empty-state-card-icon{
-display: none;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+font-size: var(--font-size-lg);
+margin-top: 2px;
+flex-shrink: 0;
 }
 
 .empty-state-card-text{
-display: block;
+display: flex;
+flex-direction: column;
+gap: 2px;
+min-width: 0;
 }
 
 .empty-state-card-label{
-display: inline;
-font-weight: 500;
+display: block;
+font-weight: 600;
+font-size: var(--font-size-sm);
+color: var(--text);
 margin: 0;
 }
 
 .empty-state-card-hint{
-display: none;
+display: block;
+font-size: var(--font-size-xs);
+color: var(--text-muted);
+line-height: var(--line-height-tight);
 }
 
 /* ---- Composer ---- */
@@ -3939,14 +3954,28 @@ font-weight: 600;
    real token arrives - not per-token animation. */
 .typing-indicator{
 display: inline-flex;
+flex-direction: column;
+align-items: flex-start;
+gap: var(--space-2);
+padding: var(--space-2) 0;
+}
+.typing-status-text{
+display: inline-flex;
+align-items: center;
+gap: var(--space-2);
+font-size: var(--font-size-xs);
+font-weight: 600;
+color: var(--text-muted);
+}
+.typing-dots{
+display: inline-flex;
 align-items: center;
 gap: 4px;
-padding: var(--space-2) 0;
 }
 .typing-indicator .dot{
 width: 6px;
 height: 6px;
-border-radius: 50%;
+border-radius: var(--radius-full);
 background: var(--color-text-muted);
 animation: lh-typing-bounce 1.2s infinite ease-in-out;
 }
@@ -3956,6 +3985,35 @@ animation: lh-typing-bounce 1.2s infinite ease-in-out;
 @keyframes lh-typing-bounce{
 0%, 80%, 100%{ transform: translateY(0); opacity: 0.5; }
 40%{ transform: translateY(-4px); opacity: 1; }
+}
+
+.thinking-shimmer{
+display: block;
+width: 140px;
+height: 8px;
+border-radius: var(--radius-sm);
+background: var(--surface-2);
+animation: lh-shimmer-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes lh-shimmer-pulse{
+0%, 100%{ opacity: 0.35; }
+50%{ opacity: 0.85; }
+}
+
+.login-spinner{
+display: inline-block;
+width: 14px;
+height: 14px;
+border: 2px solid currentColor;
+border-right-color: transparent;
+border-radius: var(--radius-full);
+animation: lh-spin 0.75s linear infinite;
+margin-right: var(--space-2);
+vertical-align: middle;
+}
+@keyframes lh-spin{
+to { transform: rotate(360deg); }
 }
 
 /* ---------------------------------------------------------------------
