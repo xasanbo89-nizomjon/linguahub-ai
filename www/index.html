@@ -206,7 +206,11 @@
      keeps the plain hero below with its own prompt suggestions. -->
 <div id="home-root" class="home-root"></div>
 <div id="hero-default" class="empty-state-default">
-<svg class="lh-logo lh-logo-lg empty-state-icon" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><path class="lh-logo-bubble" d="M36 10H92A28 28 0 0 1 120 38V66A28 28 0 0 1 92 94H58L34 116V94H36A28 28 0 0 1 8 66V38A28 28 0 0 1 36 10Z"/><g class="lh-logo-glyphs"><path d="M22 70L34 34L46 70M27 57H41"/><path d="M74 70V34H64C55 34 55 52 64 52H74M64 52L56 70"/><path d="M101 36C95 31 86 34 88 41C89 45 94 47 97 48C89 47 83 50 83 58C83 67 93 71 102 65"/></g></svg>
+<div class="neon-orb-wrapper" id="hero-neon-orb">
+<div class="neon-orb-mount" data-neon-orb data-orb-size="190"></div>
+<div class="neon-orb-badge"><span class="neon-orb-badge-dot"></span>AI Online</div>
+</div>
+<svg class="lh-logo lh-logo-lg empty-state-icon" style="display:none;" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><path class="lh-logo-bubble" d="M36 10H92A28 28 0 0 1 120 38V66A28 28 0 0 1 92 94H58L34 116V94H36A28 28 0 0 1 8 66V38A28 28 0 0 1 36 10Z"/><g class="lh-logo-glyphs"><path d="M22 70L34 34L46 70M27 57H41"/><path d="M74 70V34H64C55 34 55 52 64 52H74M64 52L56 70"/><path d="M101 36C95 31 86 34 88 41C89 45 94 47 97 48C89 47 83 50 83 58C83 67 93 71 102 65"/></g></svg>
 <h2 class="empty-state-title">What would you like to learn today?</h2>
 <p class="empty-state-subtitle">LinguaHub AI helps you learn languages, improve writing, translate, and study smarter.</p>
 <div class="empty-state-cards" id="empty-state-cards"></div>
@@ -336,6 +340,7 @@ Send
      mode is chosen. -->
 <script src="workspace.js"></script>
 <script src="word-lookup.js"></script>
+<script src="neon-orb.js"></script>
 <script src="home-ui.js"></script>
 <script src="chat-search.js"></script>
 <script src="search-palette.js"></script>

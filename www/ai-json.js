@@ -37,7 +37,8 @@ var LinguaHubAI = (function () {
     var status = err && err.status;
     if (isOffline()) return "You're offline. Check your connection, then try again.";
     if (status === 429) return "You're sending requests too quickly. Wait a moment, then try again.";
-    if (status === 401 || status === 403) return "Your session isn't authorized for this request. Sign in again, then try again.";
+    if (status === 401) return "Your session isn't authorized for this request. Sign in again, then try again.";
+    if (status === 403) return "Connection forbidden. Please check backend CORS or origin.";
     if (status === 415) return "That picture type isn't supported. Use a PNG, JPG or WebP image.";
     if (status === 413) return "That is too large - try a shorter text or a smaller picture.";
     if (status === 400 || status === 422) return "That text couldn't be processed - it may be too long. Shorten it and try again.";
@@ -73,21 +74,25 @@ var LinguaHubAI = (function () {
   // rejects  Error with .userMessage (friendly), .status, .aborted
   async function request(options) {
     var usage = window.linguahubUsage || null;
-    // Every AI feature needs a signed-in user (the server insists): ask nicely first.
-    if (usage && !usage.canUseAi()) {
-      var blocked = new Error("sign-in required");
-      blocked.code = "SIGN_IN_REQUIRED";
-      blocked.userMessage = "Sign in to continue - it's free.";
-      throw blocked;
-    }
+    var headers = Object.assign({ "Content-Type": "application/json" }, await authHeaders());
     var response;
     try {
       response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
-        headers: Object.assign({ "Content-Type": "application/json" }, await authHeaders()),
+        headers: headers,
         body: JSON.stringify({ mode: options.mode, messages: withImages(options.messages, options.images) }),
         signal: options.signal
       });
+
+      // If token expired/invalid, automatically retry once as guest without Authorization header!
+      if ((response.status === 401 || response.status === 403) && headers.Authorization) {
+        response = await fetch(apiUrl("/api/chat"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: options.mode, messages: withImages(options.messages, options.images) }),
+          signal: options.signal
+        });
+      }
     } catch (err) {
       var failure = new Error(err && err.name === "AbortError" ? "aborted" : "network");
       failure.aborted = Boolean(err && err.name === "AbortError");

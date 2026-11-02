@@ -179,6 +179,21 @@ var LinguaHubHome = (function () {
     function render() {
       shownDay = window.LinguaHubLearningStats ? window.LinguaHubLearningStats.dayKey() : null;
       container.textContent = "";
+
+      var orbHero = el("div", "neon-orb-wrapper home-neon-orb");
+      var orbMount = el("div", "neon-orb-mount");
+      orbMount.setAttribute("data-neon-orb", "");
+      orbMount.setAttribute("data-orb-size", "180");
+      var orbBadge = el("div", "neon-orb-badge");
+      orbBadge.appendChild(el("span", "neon-orb-badge-dot"));
+      orbBadge.appendChild(el("span", "neon-orb-badge-text", "LinguaHub Core"));
+      orbHero.appendChild(orbMount);
+      orbHero.appendChild(orbBadge);
+      container.appendChild(orbHero);
+      if (window.LinguaHubNeonOrb && typeof window.LinguaHubNeonOrb.create === "function") {
+        window.LinguaHubNeonOrb.create(orbMount, { size: 180 });
+      }
+
       var title = el("h2", "home-title", "What would you like to learn today?");
       container.appendChild(title);
 

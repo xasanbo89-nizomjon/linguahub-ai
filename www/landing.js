@@ -221,6 +221,20 @@ var LinguaHubLanding = (function () {
 
       // headline
       var hero = el("section", "landing-hero");
+      var orbHero = el("div", "neon-orb-wrapper landing-neon-orb");
+      var orbMount = el("div", "neon-orb-mount");
+      orbMount.setAttribute("data-neon-orb", "");
+      orbMount.setAttribute("data-orb-size", "175");
+      var orbBadge = el("div", "neon-orb-badge");
+      orbBadge.appendChild(el("span", "neon-orb-badge-dot"));
+      orbBadge.appendChild(el("span", "neon-orb-badge-text", "AI Core Active"));
+      orbHero.appendChild(orbMount);
+      orbHero.appendChild(orbBadge);
+      hero.appendChild(orbHero);
+      if (win.LinguaHubNeonOrb && typeof win.LinguaHubNeonOrb.create === "function") {
+        win.LinguaHubNeonOrb.create(orbMount, { size: 175 });
+      }
+
       var title = el("h1", "landing-headline");
       title.setAttribute("id", "landing-title");
       title.appendChild(el("span", "sr-only", "Learn English, Arabic, Russian or Uzbek"));

@@ -316,7 +316,6 @@ function logSignInFailure(where, error) {
 var code = (error && error.code) || "unknown";
 var message = (error && error.message) || "";
 console.error("[LinguaHub AI] " + where + " failed:", code, message);
-console.error("[Google Login Debug] Auth error detail:", { where: where, code: code, message: message, error: error });
 }
 
 function signInWithGoogle() {

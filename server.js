@@ -123,8 +123,14 @@ next();
 const DEFAULT_ALLOWED_ORIGINS = [
 "http://127.0.0.1:5500",
 "http://localhost:5500",
+"http://127.0.0.1:5501",
+"http://localhost:5501",
 "http://127.0.0.1:3000",
 "http://localhost:3000",
+"http://127.0.0.1:5173",
+"http://localhost:5173",
+"http://127.0.0.1:8080",
+"http://localhost:8080",
 "capacitor://localhost",
 "http://localhost"
 ];
@@ -135,6 +141,13 @@ const DEFAULT_ALLOWED_ORIGINS = [
 // FRONTEND_ORIGINS=https://app.example.com,https://example.com
 const ALLOWED_ORIGINS = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...envResult.frontendOrigins]));
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(origin)) return true;
+  return false;
+}
+
 app.use(cors({
 origin(origin, callback) {
 // no Origin header: Electron file://, curl, mobile webviews - see
@@ -142,7 +155,7 @@ origin(origin, callback) {
 // handling") for why this is safe and unavoidable (CORS is a
 // browser-enforced mechanism; a non-browser client that omits Origin
 // bypasses it regardless of what this server does).
-if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+if (isAllowedOrigin(origin)) {
 callback(null, true);
 } else {
 // Safe to log: an Origin header is just a hostname, never a secret.

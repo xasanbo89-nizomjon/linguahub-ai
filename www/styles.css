@@ -5368,3 +5368,117 @@ text-decoration: none;
 grid-template-columns: minmax(0, 1fr);
 }
 }
+
+/* =====================================================================
+   Neon Electric Orb ("Dumoloq Neon Electro Signallar Bilan")
+   ===================================================================== */
+.neon-orb-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: var(--space-4) auto var(--space-3);
+  position: relative;
+  z-index: 2;
+  user-select: none;
+}
+
+.home-neon-orb {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.landing-neon-orb {
+  margin-bottom: var(--space-4);
+}
+
+.neon-orb-container {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.neon-orb-container:hover {
+  transform: scale(1.06);
+}
+
+.neon-electro-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.neon-orb-core-glow {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.32) 0%, rgba(147, 51, 234, 0.18) 50%, transparent 75%);
+  filter: blur(14px);
+  pointer-events: none;
+  animation: neon-core-pulse 3.4s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+@keyframes neon-core-pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+    filter: blur(12px);
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 1;
+    filter: blur(18px);
+  }
+}
+
+.neon-orb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.32);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.18);
+  padding: 3px 12px;
+  border-radius: 9999px;
+  margin-top: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.neon-orb-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+  animation: neon-dot-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes neon-dot-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.65); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-orb-core-glow,
+  .neon-orb-badge-dot {
+    animation: none !important;
+  }
+}

@@ -255,7 +255,8 @@ return counter ? counter.messageFor(err.code) : "You've used all your free reque
 }
 if (isOffline()) return "You're offline. Check your connection, then try again.";
 if (status === 429) return "You're sending messages too quickly. Wait a moment, then try again.";
-if (status === 401 || status === 403) return "Your session isn't authorized for this request. Sign in again, then try again.";
+if (status === 401) return "Authentication issue. Please retry or continue as guest.";
+if (status === 403) return "Connection forbidden. Please check backend CORS or origin.";
 if (status === 415) return "That picture type isn't supported. Use a PNG, JPG or WebP image.";
 if (status === 413) return "That message is too long, or the picture is too large. Shorten it or use a smaller picture, then try again.";
 if (status === 400 || status === 422) return "That message couldn't be processed - it may be too long. Shorten it and try again.";
@@ -1030,12 +1031,21 @@ id: assistantMessageId, role: "assistant", content: text, status: "streaming"
 let streamText = "";
 const throttledRender = window.LinguaHubChatStore.throttle((text) => renderStreamingContent(aiBubble, text), 80);
 
-const response = await fetch(apiUrl("/api/chat/stream"), {
+let response = await fetch(apiUrl("/api/chat/stream"), {
 method: "POST",
 headers: Object.assign({ "Content-Type": "application/json" }, authHeaders),
 body: JSON.stringify({ messages: requestMessages, mode }),
 signal: activeChatAbortController.signal
 });
+
+if ((response.status === 401 || response.status === 403) && authHeaders.Authorization) {
+response = await fetch(apiUrl("/api/chat/stream"), {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ messages: requestMessages, mode }),
+signal: activeChatAbortController.signal
+});
+}
 
 if (usage) usage.fromHeaders(response.headers);
 
@@ -1106,11 +1116,18 @@ return receivedAny;
 
 async function fallbackChat(requestMessages, mode, aiBubble) {
 const authHeaders = await buildAuthHeaders();
-const response = await fetch(apiUrl("/api/chat"), {
+let response = await fetch(apiUrl("/api/chat"), {
 method: "POST",
 headers: Object.assign({ "Content-Type": "application/json" }, authHeaders),
 body: JSON.stringify({ messages: requestMessages, mode })
 });
+if ((response.status === 401 || response.status === 403) && authHeaders.Authorization) {
+response = await fetch(apiUrl("/api/chat"), {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ messages: requestMessages, mode })
+});
+}
 const data = await response.json();
 if (usage) { usage.fromHeaders(response.headers); usage.fromQuota(data && data.quota); }
 if (!response.ok) {
