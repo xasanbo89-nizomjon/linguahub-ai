@@ -1136,8 +1136,10 @@ if (!response.ok) {
 // but as a thrown error so the caller's failure handling (status:
 // "failed", Retry button) actually triggers instead of this looking
 // like a successful reply.
-const fallbackError = new Error(data.reply || `Server responded ${response.status}`);
+const serverMsg = (data && (data.reply || data.error)) || `Server responded ${response.status}`;
+const fallbackError = new Error(serverMsg);
 fallbackError.status = response.status;
+fallbackError.serverMessage = serverMsg;
 if (usage) {
 const handled = usage.handleErrorBody(response.status, data);
 if (handled) fallbackError.code = handled.code;

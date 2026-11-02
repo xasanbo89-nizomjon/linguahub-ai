@@ -50,6 +50,7 @@ Environment variables (names only; see `.env.example` for what each one does):
 | Variable | Needed? |
 | --- | --- |
 | `OPENAI_API_KEY` | **Required** - chat, translation, word lookup and speech-to-text |
+| `OPENAI_MODEL` | Optional - chat model override (e.g. `gpt-4o-mini`) |
 | `FIREBASE_PROJECT_ID` | **Required** since the daily limit: every AI request needs a verified sign-in, and usage is stored in Firestore (set all three) |
 | `FIREBASE_CLIENT_EMAIL` | **Required** (same three) |
 | `FIREBASE_PRIVATE_KEY` | **Required** (paste the key with its `\n` sequences) |

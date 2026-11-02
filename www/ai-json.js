@@ -109,13 +109,14 @@ var LinguaHubAI = (function () {
     if (usage) usage.fromHeaders(response.headers);
 
     if (!response.ok) {
-      var httpError = new Error("http " + response.status);
+      var errorBody = null;
+      try { errorBody = await response.json(); } catch (err) { errorBody = null; }
+      var serverMsg = (errorBody && (errorBody.reply || errorBody.error)) ? String(errorBody.reply || errorBody.error) : "";
+      var httpError = new Error(serverMsg);
       httpError.status = response.status;
-      httpError.userMessage = describeError(httpError);
+      httpError.serverMessage = serverMsg;
+      httpError.userMessage = (serverMsg && response.status !== 429 && response.status !== 401) ? serverMsg : describeError(httpError);
       if ((response.status === 429 || response.status === 401) && usage) {
-        // a daily limit opens the paywall, a required sign-in the sign-in dialog (www/usage.js)
-        var errorBody = null;
-        try { errorBody = await response.json(); } catch (err) { errorBody = null; }
         var handled = usage.handleErrorBody(response.status, errorBody);
         if (handled) { httpError.code = handled.code; httpError.userMessage = handled.message; }
       }

@@ -500,6 +500,10 @@ function aiChain(...limiters) {
 return [authenticateAi, ...limiters, aiGate.usageGate];
 }
 
+function resolveModel(modeModel) {
+  return process.env.OPENAI_MODEL || modeModel;
+}
+
 async function handleChat(req, res) {
 
 const parsed = validateChatBody(req, res);
@@ -511,7 +515,7 @@ try {
 
 const completion = await openai.chat.completions.create(
 {
-model: parsed.mode.model,
+model: resolveModel(parsed.mode.model),
 messages: context.messages,
 temperature: parsed.mode.temperature,
 max_tokens: parsed.mode.maxOutputTokens,
@@ -546,15 +550,25 @@ usage
 
 } catch (error) {
 
-logger.error("provider error", { requestId: req.id, mode: parsed.mode.id, category: "openai", status: error?.status });
+const errorStatus = Number(error?.status) || (error?.statusCode ? Number(error.statusCode) : 500);
+const errorMessage = error?.message || (error?.error && error.error.message) || String(error);
+logger.error("provider error", { requestId: req.id, mode: parsed.mode.id, category: "openai", status: errorStatus, message: errorMessage });
 
-const message =
-error?.status === 401
-? "❌ Invalid OpenAI API key. Check your .env file."
-: "❌ Error connecting to AI";
+let message;
+if (errorStatus === 401) {
+message = "❌ Invalid OpenAI API key. Check your .env file or environment variables.";
+} else {
+message = `❌ AI Error (${errorStatus}): ${errorMessage}`;
+}
 
 await aiGate.refund(req); // the AI never answered: the request is given back
-res.status(500).json({ reply: message, requestId: req.id });
+res.status(500).json({
+reply: message,
+error: errorMessage,
+status: errorStatus,
+code: error?.code || "OPENAI_ERROR",
+requestId: req.id
+});
 
 }
 
@@ -678,15 +692,19 @@ return;
 }
 
 if (!wroteDelta) await aiGate.refund(req);
-logger.error("provider error", { requestId: req.id, mode: parsed.mode.id, category: "openai-stream", status: error?.status });
+const errorStatus = Number(error?.status) || (error?.statusCode ? Number(error.statusCode) : 500);
+const errorMessage = error?.message || (error?.error && error.error.message) || String(error);
+logger.error("provider error", { requestId: req.id, mode: parsed.mode.id, category: "openai-stream", status: errorStatus, message: errorMessage });
 
-const message =
-error?.status === 401
-? "❌ Invalid OpenAI API key. Check your .env file."
-: "❌ Error connecting to AI";
+let message;
+if (errorStatus === 401) {
+message = "❌ Invalid OpenAI API key. Check your .env file or environment variables.";
+} else {
+message = `❌ AI Error (${errorStatus}): ${errorMessage}`;
+}
 
 if (!res.writableEnded) {
-res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+res.write(`data: ${JSON.stringify({ error: message, status: errorStatus, message: errorMessage })}\n\n`);
 res.end();
 }
 
