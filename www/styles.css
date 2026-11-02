@@ -305,10 +305,13 @@ padding: 18px var(--space-4) var(--space-3);
 .lh-logo{
 display: block;
 flex-shrink: 0;
+filter: drop-shadow(0 2px 8px var(--accent-glow));
+transition: transform var(--duration-base) var(--ease-standard), filter var(--duration-base) var(--ease-standard);
 }
 
 .lh-logo-bubble{
 fill: var(--accent);
+transition: fill var(--duration-base) var(--ease-standard);
 }
 
 .lh-logo-glyphs{
@@ -332,6 +335,17 @@ height: 32px;
 .lh-logo-lg{
 width: 56px;
 height: 56px;
+}
+
+.sidebar-brand .lh-logo{
+filter: drop-shadow(0 0 10px var(--neon-cyan-glow)) drop-shadow(0 2px 8px var(--accent-glow));
+transition: transform var(--duration-base) var(--ease-standard), filter var(--duration-base) var(--ease-standard);
+cursor: pointer;
+}
+
+.sidebar-brand .lh-logo:hover{
+transform: scale(1.12) rotate(-4deg);
+filter: drop-shadow(0 0 14px var(--neon-cyan)) drop-shadow(0 0 24px var(--neon-cyan-glow));
 }
 
 /* Inside the desktop app the title bar already shows the logo and name, so

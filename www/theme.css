@@ -208,45 +208,45 @@ color-scheme: light;
    dark-mode accent (#E07A52) would only reach ~3:1.
    --------------------------------------------------------------------- */
 :root[data-theme="dark"]{
---bg: #171412;
---surface: #18181b;
---surface-2: #12100e;
---border: #27272a;
---border-strong: #3f3f46;
---border-hairline: rgba(244, 244, 245, 0.08);
---text: #f4f4f5;
---text-muted: #a1a1aa;
---text-muted-strong: #d4d4d8;
+--bg: #080c14;
+--surface: #0f172a;
+--surface-2: #050811;
+--border: #1e293b;
+--border-strong: #334155;
+--border-hairline: rgba(56, 189, 248, 0.08);
+--text: #f8fafc;
+--text-muted: #94a3b8;
+--text-muted-strong: #cbd5e1;
 
---accent: #E07A52;
---accent-hover: #EA8E6A;
---accent-soft: #2e1e17;
+--accent: #0084ff;
+--accent-hover: #0099ff;
+--accent-soft: rgba(0, 132, 255, 0.16);
 --on-accent: #ffffff;
---accent-text: #E07A52;
---accent-glow: rgba(224, 122, 82, 0.35);
+--accent-text: #38bdf8;
+--accent-glow: rgba(0, 132, 255, 0.45);
 
 --danger: #F04438;
 --danger-text: #F97066;
 --danger-soft: rgba(240, 68, 56, 0.14);
---on-danger: #171412;
+--on-danger: #080c14;
 --success: #4ADE80;
 --success-text: #4ADE80;
 --success-soft: rgba(74, 222, 128, 0.14);
 --warning: #FBBF24;
 --warning-soft: rgba(251, 191, 36, 0.14);
---info: #60A5FA;
---info-soft: rgba(96, 165, 250, 0.14);
+--info: #38bdf8;
+--info-soft: rgba(56, 189, 248, 0.14);
 
---overlay: rgba(0, 0, 0, 0.7);
---shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
---shadow-2: 0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+--overlay: rgba(2, 6, 16, 0.75);
+--shadow-1: 0 1px 3px rgba(0, 0, 0, 0.40), 0 1px 2px rgba(0, 132, 255, 0.08);
+--shadow-2: 0 12px 32px rgba(0, 0, 0, 0.60), 0 2px 10px rgba(0, 132, 255, 0.12);
 
---code-bg: #09090b;
---code-text: #f4f4f5;
---code-comment: #71717a;
---code-keyword: #c084fc;
---code-string: #fca5a5;
---code-number: #86efac;
+--code-bg: #050811;
+--code-text: #f8fafc;
+--code-comment: #64748b;
+--code-keyword: #38bdf8;
+--code-string: #34d399;
+--code-number: #f472b6;
 
 color-scheme: dark;
 }
@@ -297,41 +297,41 @@ color-scheme: dark;
    the same way theme.js itself resolves "system" mode. */
 @media (prefers-color-scheme: dark){
 :root:not([data-theme]){
---bg: #171412;
---surface: #211D1A;
---surface-2: #2A2521;
---border: #3A332D;
---border-strong: #4A423B;
---border-hairline: rgba(245, 240, 234, 0.08);
---text: #F5F0EA;
---text-muted: #A8A29E;
---text-muted-strong: #A8A29E;
---accent: #E07A52;
---accent-hover: #EA8E6A;
---accent-soft: #3A2A22;
---on-accent: #171412;
---accent-text: #E07A52;
---accent-glow: rgba(224, 122, 82, 0.35);
+--bg: #080c14;
+--surface: #0f172a;
+--surface-2: #050811;
+--border: #1e293b;
+--border-strong: #334155;
+--border-hairline: rgba(56, 189, 248, 0.08);
+--text: #f8fafc;
+--text-muted: #94a3b8;
+--text-muted-strong: #cbd5e1;
+--accent: #0084ff;
+--accent-hover: #0099ff;
+--accent-soft: rgba(0, 132, 255, 0.16);
+--on-accent: #ffffff;
+--accent-text: #38bdf8;
+--accent-glow: rgba(0, 132, 255, 0.45);
 --danger: #F04438;
 --danger-text: #F97066;
 --danger-soft: rgba(240, 68, 56, 0.14);
---on-danger: #171412;
+--on-danger: #080c14;
 --success: #4ADE80;
 --success-text: #4ADE80;
 --success-soft: rgba(74, 222, 128, 0.14);
 --warning: #FBBF24;
 --warning-soft: rgba(251, 191, 36, 0.14);
---info: #60A5FA;
---info-soft: rgba(96, 165, 250, 0.14);
---overlay: rgba(0, 0, 0, 0.6);
---shadow-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
---shadow-2: 0 12px 32px rgba(0, 0, 0, 0.40), 0 2px 8px rgba(0, 0, 0, 0.25);
---code-bg: #100E0C;
---code-text: #F5F0EA;
---code-comment: #A8A29E;
---code-keyword: #C586C0;
---code-string: #CE9178;
---code-number: #B5CEA8;
+--info: #38bdf8;
+--info-soft: rgba(56, 189, 248, 0.14);
+--overlay: rgba(2, 6, 16, 0.75);
+--shadow-1: 0 1px 3px rgba(0, 0, 0, 0.40), 0 1px 2px rgba(0, 132, 255, 0.08);
+--shadow-2: 0 12px 32px rgba(0, 0, 0, 0.60), 0 2px 10px rgba(0, 132, 255, 0.12);
+--code-bg: #050811;
+--code-text: #f8fafc;
+--code-comment: #64748b;
+--code-keyword: #38bdf8;
+--code-string: #34d399;
+--code-number: #f472b6;
 color-scheme: dark;
 }
 }

@@ -153,8 +153,8 @@ test("palette matches the Phase 1 spec (light + dark accent and background)", ()
   const darkBlock = THEME_CSS.split(':root[data-theme="dark"]')[1].split("}")[0];
   assert.match(lightBlock, /--accent:\s*#C2562F/i);
   assert.match(lightBlock, /--bg:\s*#FAF8F5/i);
-  assert.match(darkBlock, /--accent:\s*#E07A52/i);
-  assert.match(darkBlock, /--bg:\s*#171412/i);
+  assert.match(darkBlock, /--accent:\s*#0084ff/i);
+  assert.match(darkBlock, /--bg:\s*#080c14/i);
 });
 
 test("type scale defines xs through 3xl; heading family is Fraunces and body family is Inter", () => {
