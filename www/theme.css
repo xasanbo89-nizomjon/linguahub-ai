@@ -67,6 +67,13 @@
 --blur-md: 18px;
 --blur-lg: 28px;
 
+/* ---- neon electro tokens ---- */
+--neon-cyan: #00f0ff;
+--neon-cyan-glow: rgba(0, 240, 255, 0.32);
+--neon-purple-glow: rgba(147, 51, 234, 0.18);
+--neon-cyan-soft: rgba(0, 240, 255, 0.08);
+--neon-cyan-shadow: rgba(0, 240, 255, 0.18);
+
 /* ---- z-index layers ---- */
 /* Lets real chat content (.chat-box, .empty-state) paint above the
    decorative background pattern (.chat-scroll-wrapper::before, Phase 14)

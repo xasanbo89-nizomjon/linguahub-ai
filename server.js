@@ -141,32 +141,37 @@ const DEFAULT_ALLOWED_ORIGINS = [
 // FRONTEND_ORIGINS=https://app.example.com,https://example.com
 const ALLOWED_ORIGINS = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...envResult.frontendOrigins]));
 
-function isAllowedOrigin(origin) {
+function isAllowedOrigin(origin, host) {
   if (!origin) return true;
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  if (/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(origin)) return true;
+  if (/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin)) return true;
+  if (/^https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.vercel\.app$/i.test(origin)) return true;
+  if (/^https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:web\.app|firebaseapp\.com)$/i.test(origin)) return true;
+  if (/^https?:\/\/(?:[a-z0-9-]+\.)*?[a-z0-9-]+\.uz(?::\d+)?$/i.test(origin)) return true;
+  if (host) {
+    try {
+      const parsed = new URL(origin);
+      if (parsed.host === host || parsed.hostname === host) return true;
+    } catch (e) {}
+  }
   return false;
 }
 
-app.use(cors({
-origin(origin, callback) {
-// no Origin header: Electron file://, curl, mobile webviews - see
-// docs/production-network-and-cors.md ("Electron/Capacitor origin
-// handling") for why this is safe and unavoidable (CORS is a
-// browser-enforced mechanism; a non-browser client that omits Origin
-// bypasses it regardless of what this server does).
-if (isAllowedOrigin(origin)) {
-callback(null, true);
-} else {
-// Safe to log: an Origin header is just a hostname, never a secret.
-logger.warn("cors origin rejected", { origin });
-callback(new Error("Not allowed by CORS"));
-}
-},
-allowedHeaders: ["Content-Type", "Authorization"],
-// the page (also when it is not served from this origin, e.g. the desktop app) reads
-// how many free requests are left from these headers on every AI response
-exposedHeaders: EXPOSED_HEADERS
+app.use(cors((req, callback) => {
+  const origin = req.header("Origin");
+  const host = req.header("Host");
+  if (isAllowedOrigin(origin, host)) {
+    callback(null, {
+      origin: true,
+      credentials: true,
+      methods: ["GET", "POST", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+      exposedHeaders: EXPOSED_HEADERS
+    });
+  } else {
+    logger.warn("cors origin rejected", { origin });
+    callback(new Error("Not allowed by CORS"));
+  }
 }));
 app.use(express.json({ limit: "10mb" }));
 

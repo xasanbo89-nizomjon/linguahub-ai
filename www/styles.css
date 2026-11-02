@@ -5379,7 +5379,7 @@ grid-template-columns: minmax(0, 1fr);
   justify-content: center;
   margin: var(--space-4) auto var(--space-3);
   position: relative;
-  z-index: 2;
+  z-index: var(--z-content);
   user-select: none;
 }
 
@@ -5401,7 +5401,7 @@ grid-template-columns: minmax(0, 1fr);
   justify-content: center;
   border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--duration-slow) var(--ease-standard);
 }
 
 .neon-orb-container:hover {
@@ -5416,7 +5416,7 @@ grid-template-columns: minmax(0, 1fr);
   height: 100%;
   border-radius: 50%;
   pointer-events: auto;
-  z-index: 2;
+  z-index: var(--z-content);
 }
 
 .neon-orb-core-glow {
@@ -5424,11 +5424,11 @@ grid-template-columns: minmax(0, 1fr);
   width: 130px;
   height: 130px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.32) 0%, rgba(147, 51, 234, 0.18) 50%, transparent 75%);
+  background: radial-gradient(circle, var(--neon-cyan-glow) 0%, var(--neon-purple-glow) 50%, transparent 75%);
   filter: blur(14px);
   pointer-events: none;
   animation: neon-core-pulse 3.4s ease-in-out infinite alternate;
-  z-index: 1;
+  z-index: var(--z-content);
 }
 
 @keyframes neon-core-pulse {
@@ -5447,27 +5447,27 @@ grid-template-columns: minmax(0, 1fr);
 .neon-orb-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #00f0ff;
-  background: rgba(0, 240, 255, 0.08);
-  border: 1px solid rgba(0, 240, 255, 0.32);
-  box-shadow: 0 0 14px rgba(0, 240, 255, 0.18);
-  padding: 3px 12px;
-  border-radius: 9999px;
-  margin-top: 10px;
-  backdrop-filter: blur(8px);
+  color: var(--neon-cyan);
+  background: var(--neon-cyan-soft);
+  border: 1px solid var(--neon-cyan-glow);
+  box-shadow: 0 0 14px var(--neon-cyan-shadow);
+  padding: 3px var(--space-3);
+  border-radius: var(--radius-full);
+  margin-top: var(--space-2);
+  backdrop-filter: blur(var(--blur-sm));
 }
 
 .neon-orb-badge-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #00f0ff;
-  box-shadow: 0 0 8px #00f0ff;
+  background: var(--neon-cyan);
+  box-shadow: 0 0 8px var(--neon-cyan);
   animation: neon-dot-blink 1.4s ease-in-out infinite;
 }
 
@@ -5481,4 +5481,8 @@ grid-template-columns: minmax(0, 1fr);
   .neon-orb-badge-dot {
     animation: none !important;
   }
+}
+
+#hero-neon-orb ~ .empty-state-icon {
+  display: none;
 }

@@ -55,7 +55,7 @@ var LinguaHubApiConfig = (function () {
     }
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
     if (parsed.search || parsed.hash) return false;
-    if (parsed.pathname !== "/" && parsed.pathname !== "") return false;
+    if (parsed.pathname !== "/" && parsed.pathname !== "" && parsed.pathname !== "/api" && parsed.pathname !== "/api/") return false;
     return true;
   }
 
@@ -123,6 +123,15 @@ var LinguaHubApiConfig = (function () {
       return DEV_BACKEND_DEFAULT;
     }
 
+    // When the frontend is hosted on Firebase Hosting (*.web.app or *.firebaseapp.com)
+    // while backend serverless functions run on Vercel, forward API calls to Vercel.
+    var isFirebaseHosting = Boolean(
+      hostname && (hostname.endsWith(".web.app") || hostname.endsWith(".firebaseapp.com"))
+    );
+    if (isFirebaseHosting) {
+      return "https://linguahub-ai-tau.vercel.app";
+    }
+
     // Served by this Express app itself: same-origin relative requests,
     // whatever host/port it actually runs on (dev or production).
     return "";
@@ -131,6 +140,9 @@ var LinguaHubApiConfig = (function () {
   function buildApiUrl(base, path) {
     var normalizedBase = base ? normalizeBaseUrl(base) : "";
     var normalizedPath = "/" + String(path).replace(/^\/+/, "");
+    if (normalizedBase.endsWith("/api") && normalizedPath.startsWith("/api/")) {
+      normalizedBase = normalizedBase.slice(0, -4);
+    }
     return normalizedBase + normalizedPath;
   }
 

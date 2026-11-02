@@ -114,6 +114,24 @@ test("CORS allows a configured dev frontend origin", async () => {
   assert.equal(res.headers.get("access-control-allow-origin"), "http://127.0.0.1:5500");
 });
 
+test("CORS allows Vercel, Firebase Hosting, and .uz domains automatically", async () => {
+  const allowed = [
+    "https://linguahub-ai-tau.vercel.app",
+    "https://preview-123.vercel.app",
+    "https://linguahub-ai.web.app",
+    "https://linguahub-ai.firebaseapp.com",
+    "https://linguahub.uz",
+    "http://test.sub.uz:8080"
+  ];
+  for (const origin of allowed) {
+    const res = await fetch(`${baseUrl}/health`, {
+      headers: { Origin: origin }
+    });
+    assert.equal(res.status, 200, `origin ${origin} should be allowed`);
+    assert.equal(res.headers.get("access-control-allow-origin"), origin);
+  }
+});
+
 test("CORS blocks an unrecognized origin with a safe 403 JSON response", async () => {
   const res = await fetch(`${baseUrl}/health`, {
     headers: { Origin: "http://evil.example.com" }

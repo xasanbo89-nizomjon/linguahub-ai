@@ -255,7 +255,7 @@ return counter ? counter.messageFor(err.code) : "You've used all your free reque
 }
 if (isOffline()) return "You're offline. Check your connection, then try again.";
 if (status === 429) return "You're sending messages too quickly. Wait a moment, then try again.";
-if (status === 401) return "Authentication issue. Please retry or continue as guest.";
+if (status === 401 || status === 403) return "Your session isn't authorized for this request. Sign in again, then try again.";
 if (status === 403) return "Connection forbidden. Please check backend CORS or origin.";
 if (status === 415) return "That picture type isn't supported. Use a PNG, JPG or WebP image.";
 if (status === 413) return "That message is too long, or the picture is too large. Shorten it or use a smaller picture, then try again.";

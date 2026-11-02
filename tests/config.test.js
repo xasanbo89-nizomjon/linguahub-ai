@@ -134,6 +134,21 @@ test("a valid override reports no config error", () => {
   assert.equal(resolved.API_BASE_URL_CONFIG_ERROR, null);
 });
 
+test("Firebase Hosting domains automatically point to the Vercel backend", () => {
+  assert.equal(
+    config.computeApiBase(loc({ protocol: "https:", hostname: "linguahub-ai.web.app", port: "" })),
+    "https://linguahub-ai-tau.vercel.app"
+  );
+  assert.equal(
+    config.computeApiBase(loc({ protocol: "https:", hostname: "linguahub-ai.firebaseapp.com", port: "" })),
+    "https://linguahub-ai-tau.vercel.app"
+  );
+  assert.equal(
+    config.buildApiUrl("https://linguahub-ai-tau.vercel.app/api", "/api/chat"),
+    "https://linguahub-ai-tau.vercel.app/api/chat"
+  );
+});
+
 test("no scenario in this file ever produces an API base targeting port 5500 or a file:// resolution", () => {
   const scenarios = [
     loc({ hostname: "127.0.0.1", port: "5500" }),

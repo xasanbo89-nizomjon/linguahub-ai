@@ -74,6 +74,12 @@ var LinguaHubAI = (function () {
   // rejects  Error with .userMessage (friendly), .status, .aborted
   async function request(options) {
     var usage = window.linguahubUsage || null;
+    if (usage && typeof usage.canUseAi === "function" && !usage.canUseAi()) {
+      var blocked = new Error("sign-in required");
+      blocked.code = "SIGN_IN_REQUIRED";
+      blocked.userMessage = "Sign in to continue - it's free.";
+      throw blocked;
+    }
     var headers = Object.assign({ "Content-Type": "application/json" }, await authHeaders());
     var response;
     try {

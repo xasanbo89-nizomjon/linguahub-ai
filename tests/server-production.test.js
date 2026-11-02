@@ -58,7 +58,11 @@ test("GET /ready returns 200 and reports openaiKeyConfigured when the key is set
   assert.equal(body.checks.openaiKeyConfigured, true);
   // Guest-only deployment in this test environment - no Firebase vars set,
   // so readiness must not require Firebase at all.
-  assert.equal(body.checks.firebaseAdminConfigured, undefined);
+  if (process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    assert.equal(body.checks.firebaseAdminConfigured, true);
+  } else {
+    assert.equal(body.checks.firebaseAdminConfigured, undefined);
+  }
 });
 
 test("/health, /live, and /ready responses never contain a secret-shaped value", async () => {
